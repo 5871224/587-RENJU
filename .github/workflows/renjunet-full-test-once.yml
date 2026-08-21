@@ -38,7 +38,7 @@ jobs:
           RENJUNET_RIF: /tmp/renjunet.rif
           RENJUNET_SITE_URL: https://587.renju.org.tw
         run: |
-          import hashlib, json, sys, xml.etree.ElementTree as ET
+          import sys
           from pathlib import Path
           sys.path.insert(0, 'scripts')
           import renjunet_sync as r
