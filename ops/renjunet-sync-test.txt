@@ -1,4 +1,0 @@
-PUBLIC_RENJUNET_SYNC=PASS
-database_date=2026-08-20
-database_version=1.0
-sha256=45959a840a293bbb0952fa9fdf2892bd54d3d5558d1adafc472f6d0858e00c24
