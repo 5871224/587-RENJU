@@ -8,6 +8,7 @@ import re
 import secrets
 import time
 import urllib.request
+import urllib.error
 import xml.etree.ElementTree as ET
 from collections import Counter
 from pathlib import Path
@@ -84,6 +85,16 @@ throw new RuntimeException('invalid operation');
                 with urllib.request.urlopen(req,timeout=300) as response: data=json.loads(response.read().decode("utf-8"))
                 if "error" in data: raise RuntimeError(data["error"])
                 return data
+            except urllib.error.HTTPError as exc:
+                body=exc.read().decode("utf-8",errors="replace").strip()
+                try:
+                    parsed=json.loads(body)
+                    detail=str(parsed.get("error",body)) if isinstance(parsed,dict) else body
+                except Exception:
+                    detail=body
+                last=RuntimeError(f"HTTP {exc.code}: {detail}")
+                if attempt==attempts: raise last
+                time.sleep(min(15,attempt*2))
             except Exception as exc:
                 last=exc
                 if attempt==attempts: raise
