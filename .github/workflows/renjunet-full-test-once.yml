@@ -1,0 +1,78 @@
+name: RenjuNet full staging validation once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/renjunet-full-test-once.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: renjunet-database-sync
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download current RenjuNet RIF
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 5 --retry-delay 3 -A 'Mozilla/5.0 RenjuNet-RIF-validation' 'https://www.renju.net/game/download/xml/' -o /tmp/renjunet.rif
+          test -s /tmp/renjunet.rif
+
+      - name: Import into staging and validate without publishing
+        shell: python
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
+          RENJUNET_RIF: /tmp/renjunet.rif
+          RENJUNET_SITE_URL: https://587.renju.org.tw
+        run: |
+          import hashlib, json, sys, xml.etree.ElementTree as ET
+          from pathlib import Path
+          sys.path.insert(0, 'scripts')
+          import renjunet_sync as r
+          meta, sha = r.parse_metadata()
+          counts = None
+          with r.Bridge() as db:
+              r.ensure_schema(db)
+              try:
+                  counts = r.import_to_staging(db, meta, sha)
+                  live, mapping = r.validate_live(db)
+                  print('Staging validation passed:', dict(counts))
+                  print('Live data remains:', live)
+                  print('PLAYER_RENJUNET mappings:', mapping)
+              finally:
+                  for table in reversed(r.TABLES):
+                      try: db.exec(f'DROP TABLE IF EXISTS `{r.STAGE[table]}`')
+                      except Exception as exc: print('cleanup warning', table, repr(exc))
+          if counts is None:
+              raise SystemExit('No staging validation result')
+          Path('ops').mkdir(exist_ok=True)
+          Path('ops/renjunet-full-test.txt').write_text(
+              'RENJUNET_FULL_STAGING_TEST=PASS\n'
+              + 'database_date=' + meta['date'] + '\n'
+              + 'sha256=' + sha + '\n'
+              + 'player_count=' + str(counts['player']) + '\n'
+              + 'game_count=' + str(counts['game']) + '\n',
+              encoding='utf-8')
+
+      - name: Save test result
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ops/renjunet-full-test.txt
+          git commit -m '[renjunet-full-test] Full staging validation passed'
+          git push
