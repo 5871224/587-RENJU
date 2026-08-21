@@ -1,0 +1,37 @@
+name: Patch RenjuNet error diagnostics once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/patch-renjunet-error-report-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - shell: python
+        run: |
+          from pathlib import Path
+          p=Path('scripts/renjunet_sync.py')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('import urllib.request\n', 'import urllib.request\nimport urllib.error\n', 1)
+          old='''            except Exception as exc:\n                last=exc\n                if attempt==attempts: raise\n                time.sleep(min(15,attempt*2))\n'''
+          new='''            except urllib.error.HTTPError as exc:\n                body=exc.read().decode("utf-8",errors="replace").strip()\n                try:\n                    parsed=json.loads(body)\n                    detail=str(parsed.get("error",body)) if isinstance(parsed,dict) else body\n                except Exception:\n                    detail=body\n                last=RuntimeError(f"HTTP {exc.code}: {detail}")\n                if attempt==attempts: raise last\n                time.sleep(min(15,attempt*2))\n            except Exception as exc:\n                last=exc\n                if attempt==attempts: raise\n                time.sleep(min(15,attempt*2))\n'''
+          if old not in s:
+              raise SystemExit('Expected Bridge.call block not found')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+      - shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/renjunet_sync.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add scripts/renjunet_sync.py
+          git commit -m 'Show RenjuNet database error details'
+          git push
