@@ -1,0 +1,126 @@
+name: RenjuNet audit once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/renjunet-audit-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message || '', '[renjunet-audit]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Audit production RenjuNet tables
+        shell: python
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
+        run: |
+          import ftplib, io, json, os, secrets, time, urllib.request
+          from pathlib import Path
+
+          server=os.environ.get('FTP_SERVER','').strip()
+          username=os.environ.get('FTP_USERNAME','').strip()
+          password=os.environ.get('FTP_PASSWORD','')
+          server_dir=os.environ.get('FTP_SERVER_DIR','').strip()
+          if not server or not username or not password:
+              raise SystemExit('Missing FTPS settings in this repository.')
+
+          token=secrets.token_hex(32)
+          filename='rn_audit_'+secrets.token_hex(8)+'.php'
+          expires=int(time.time())+1200
+          php=f'''<?php
+          declare(strict_types=1);
+          header('Content-Type: application/json; charset=UTF-8');
+          header('Cache-Control: no-store');
+          header('X-Robots-Tag: noindex, nofollow');
+          if (time() > {expires}) {{ http_response_code(410); echo json_encode(['error'=>'expired']); exit; }}
+          $provided=(string)($_SERVER['HTTP_X_RENJUNET_TOKEN'] ?? '');
+          if (!hash_equals('{token}', $provided)) {{ http_response_code(404); echo json_encode(['error'=>'not found']); exit; }}
+          if ($_SERVER['REQUEST_METHOD'] !== 'POST') {{ http_response_code(405); echo json_encode(['error'=>'method']); exit; }}
+          $config=require __DIR__ . '/config.local.php';
+          $db=(string)($_GET['db'] ?? 'renjuorg_587');
+          if (!in_array($db, ['renjuorg_587','renjuorg_renjunet'], true)) {{ http_response_code(400); echo json_encode(['error'=>'database']); exit; }}
+          $body=json_decode((string)file_get_contents('php://input'), true);
+          $sql=is_array($body) ? trim((string)($body['sql'] ?? '')) : '';
+          if ($sql==='' || !preg_match('/^(SELECT|SHOW|DESCRIBE|EXPLAIN)\\b/i', ltrim($sql))) {{ http_response_code(400); echo json_encode(['error'=>'read only']); exit; }}
+          try {{
+            $pdo=new PDO('mysql:host='.$config['host'].';dbname='.$db.';charset=utf8mb4', $config['user'], $config['password'], [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
+            $rows=$pdo->query($sql)->fetchAll();
+            echo json_encode(['rows'=>$rows], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+          }} catch (Throwable $e) {{ http_response_code(500); echo json_encode(['error'=>$e->getMessage()], JSON_UNESCAPED_UNICODE); }}
+          '''
+
+          ftp=ftplib.FTP_TLS()
+          ftp.connect(server,21,timeout=60)
+          ftp.login(username,password)
+          ftp.prot_p()
+          def cd_path(path):
+              path=path.replace('\\\\','/').strip()
+              if not path: return
+              if path.startswith('/'): ftp.cwd('/')
+              for part in path.strip('/').split('/'):
+                  if part: ftp.cwd(part)
+          cd_path(server_dir)
+          ftp.storbinary('STOR '+filename, io.BytesIO(php.encode('utf-8')))
+
+          url='https://587.renju.org.tw/'+filename
+          def query(sql, db='renjuorg_587'):
+              payload=json.dumps({'sql':sql}).encode('utf-8')
+              req=urllib.request.Request(url+'?db='+db, data=payload, method='POST', headers={'Content-Type':'application/json','X-Renjunet-Token':token,'User-Agent':'renjunet-audit/1.0'})
+              with urllib.request.urlopen(req,timeout=120) as r:
+                  data=json.loads(r.read().decode('utf-8'))
+              if 'error' in data: raise RuntimeError(data['error'])
+              return data.get('rows',[])
+
+          lines=[]
+          try:
+              schemas=query("SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME IN ('renjuorg_587','renjuorg_renjunet') ORDER BY SCHEMA_NAME")
+              visible=[r['SCHEMA_NAME'] for r in schemas]
+              lines.append('VISIBLE_SCHEMAS='+','.join(visible))
+              names=['RENJUNET_COUNTRY','RENJUNET_CITY','RENJUNET_MONTH','RENJUNET_RULE','RENJUNET_OPENING','RENJUNET_PLAYER','RENJUNET_TOURNAMENT','RENJUNET_GAME','RENJUNET_IMPORT','PLAYER_RENJUNET']
+              for db in visible:
+                  tbl=query("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA='"+db+"' AND (TABLE_NAME LIKE 'RENJUNET\\_%' OR TABLE_NAME='PLAYER_RENJUNET') ORDER BY TABLE_NAME")
+                  table_names=[r['TABLE_NAME'] for r in tbl]
+                  lines.append('['+db+'] TABLES='+','.join(table_names))
+                  for name in names:
+                      if name in table_names:
+                          rows=query(f'SELECT COUNT(*) AS n FROM `{db}`.`{name}`')
+                          lines.append(f'[{db}] {name}='+str(rows[0]['n']))
+                  if 'RENJUNET_IMPORT' in table_names:
+                      rows=query(f'SELECT * FROM `{db}`.`RENJUNET_IMPORT` ORDER BY `imported_at` DESC LIMIT 3')
+                      for i,row in enumerate(rows,1):
+                          safe={k:v for k,v in row.items() if k not in ('id',)}
+                          lines.append(f'[{db}] IMPORT_{i}='+json.dumps(safe,ensure_ascii=False,sort_keys=True))
+              if not visible:
+                  lines.append('NO_EXPECTED_DATABASE_VISIBLE')
+          finally:
+              try: ftp.delete(filename)
+              except Exception: pass
+              try: ftp.quit()
+              except Exception: pass
+
+          Path('ops').mkdir(exist_ok=True)
+          Path('ops/renjunet-state.txt').write_text('\n'.join(lines)+'\n',encoding='utf-8')
+          print('\n'.join(lines))
+
+      - name: Save sanitized audit report
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ops/renjunet-state.txt
+          git commit -m '[renjunet-audit] Record current RenjuNet state'
+          git push
