@@ -39,7 +39,9 @@ DDL = {
 
 def qstr(value):
     if value is None: return "NULL"
-    return "CONVERT(0x" + str(value).encode("utf-8").hex() + " USING utf8mb4)"
+    raw=str(value).encode("utf-8")
+    if not raw: return "''"
+    return "CONVERT(0x" + raw.hex() + " USING utf8mb4)"
 
 def qint(value):
     if value is None or str(value).strip() == "": return "NULL"
