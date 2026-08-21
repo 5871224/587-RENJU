@@ -1,15 +1,10 @@
 name: Sync RenjuNet database
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/renjunet-sync.yml'
-      - 'scripts/renjunet_sync.py'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: renjunet-database-sync
@@ -49,27 +44,3 @@ jobs:
           RENJUNET_RIF: /tmp/renjunet.rif
           RENJUNET_SITE_URL: https://587.renju.org.tw
         run: python scripts/renjunet_sync.py
-
-      - name: Record initial workflow verification
-        if: github.event_name == 'push'
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p ops
-          python - <<'PY'
-          import hashlib, xml.etree.ElementTree as ET
-          from pathlib import Path
-          p=Path('/tmp/renjunet.rif')
-          root=next(ET.iterparse(p,events=('start',)))[1]
-          Path('ops/renjunet-sync-test.txt').write_text(
-              'PUBLIC_RENJUNET_SYNC=PASS\n'
-              + 'database_date=' + str(root.attrib.get('date','')) + '\n'
-              + 'database_version=' + str(root.attrib.get('version','')) + '\n'
-              + 'sha256=' + hashlib.sha256(p.read_bytes()).hexdigest() + '\n',
-              encoding='utf-8')
-          PY
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add ops/renjunet-sync-test.txt
-          git commit -m '[renjunet-sync-test] Verify public RenjuNet sync'
-          git push
