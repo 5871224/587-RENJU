@@ -1,0 +1,56 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link href="../renju.css" rel="stylesheet" type="text/css">
+<link rel=stylesheet href="../bb/bb.css">
+    <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+  <script src="../bb/bb55.js"></script>
+    
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+  </head>
+  <body>
+  <div id="myDiv"></div>
+    <h1>進攻材料</h1>
+    <hr>
+    <p>在基本勝型篇有介紹，五子棋靠是做出<strong>雙四、四三、雙三</strong>獲勝，然而要形成勝型，盤面上就要有足夠的材料，一般在說的進攻材料就是指<strong>死三和活二。<br>
+    </strong>本篇介紹進攻材料及其勢力範圍，並利用勢力交點做出基本勝型。<br>
+    </p>
+    <h2>進攻材料的勢力</h2>
+    <p><strong>勢力是指進攻材料可選擇的進攻點</strong>，材料越多，勢力範圍越大，取勝的機會自然越多。<br>
+    當做出活三或死四進攻後，對方防守會讓可選擇的進攻點減少。下棋時應減少無意義的進攻，避免消耗已方材料及其勢力範圍。</p>
+    <div class="board587" move="1!1HD!100!1ID!100!1HH!100!1JH!100!1HL!100!1KL!500!2FD!2GD!2JD!2KD!2IH!2GH!2KH!2IL!0JL" num="0" heading="F" comment="F"></div>
+    <br>
+    活二的進攻點就是活三點<br>
+    盤面的○，即是三種活二的活三點
+    <div style="clear: left;"><br>
+    </div>
+    <div class="board587" move="1!100!1EN!1DN!1EL!1DL!1EJ!1DJ!1EG!1DG!1EE!1DE!1EC!1DC!1FN!100!1GN!100!1FL!100!1HL!100!1FJ!100!1IJ!100!1GG!100!1HG!100!1GE!100!1IE!100!1HC!100!1IC!500^HNA|INA|GLA|ILA|HJA|GJA|FGA|IGB|HEB|FEA|FCA|GCB|JCC|KCC|JEC|JGC|KEC|KGC!2HN!2IN!2GL!2IL!2GJ!2HJ!2FG!3IG!1FG!2JG!0KG!3HE!1FE!2JE!0KE!2FE!2FC!1GC!1FC!2JC!0KC"
+
+      num="0" heading="F" comment="F"></div>
+    <br>
+    死三的進攻點為衝四點，<br>
+    盤面的Ａ點及Ｂ點都是衝四點<br>
+    下方三排比較特別，白方下在Ｂ點衝四，<br>
+    黑方防守後，白方還可以往Ｃ再衝一個四，其勢力範圍較大
+    <div style="clear: left;"><br></div>
+ <h2>勢力的交點</h2>
+ <p>若兩個進攻材料的勢力範圍有交點，那就可以做出基本勝型</p>
+  <div class="board587" move="1!1HH!1IH!1HF!1HE!1HI!1GG!1FJ!1IG!1EI!5GI^HJ%u2191|HK%u2191|GK%u2197|DH%u2199|CG%u2199|HLX!1HJ!1HG!0HL"
+
+      num="0" heading="F" comment="F"></div>
+    <br>
+    
+    <p>盤面上黑方直向的死三及斜向的活二，其勢力交會於Ｘ<br>
+    只要簡單連接兩線即可獲勝<br>
+    黑方先衝四後，就可做出四三
+    </p>
+    <div style="clear: left;"><br></div>
+    <p>在資源＞<a href="https://587.renju.org.tw/test.htm">詰棋</a>，有三種入門詰棋可以練習</p>
+  </body>
+</html>

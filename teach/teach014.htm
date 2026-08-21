@@ -1,0 +1,212 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel=stylesheet href="../bb/bb.css">
+  <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+  <script src="../bb/bb55.js"></script>
+<link href="../renju.css" rel="stylesheet" type="text/css">
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+</head>
+
+<body>
+<div id="myDiv"></div>
+
+
+<h1>多重禁手</h1><hr />
+
+<p>請充份了解<a href="../forbidden.htm">禁手</a>再來看本篇<br>
+  <br>
+  多重禁手是<strong>雙活三</strong>禁手的特有情況，因在實戰出現的機會非常低，加上判斷有些複雜，初學者簡單看過留個印象就好。<br>
+  <br>
+  活三的定義：<br>
+  <strong>１.次一手可形成活四</strong><br>
+<strong>２.其活四點不可同時形成五或禁手</strong><br>
+<br>
+第２點為造成多重禁手的主因，使得活三還需考慮活四點在其他三個方向上的棋型<br>
+<br>
+</p>
+<hr />
+<H2>補子法</H2>
+<p>  判斷活三的可否形成活四的方法，稱之為補子法，此法<strong>只補黑子，不補白子<br>
+  </strong><br>
+方法如下：  <br> 
+先在雙三點補上一子，若無法判斷是否兩個皆為活三，則分別驗證兩個三的活四點
+<br>
+  將活四點補上黑子，判斷這子在其他方向的棋型，是否形成五或禁手<br>
+  若有，則判為不可活四，若無，則判為可活四<br>
+  若出現疑似雙活三禁手，重複上述步驟判斷是否都是真的活三<br>
+</p>
+<p>以下舉例：<br>
+</p>
+
+<div class="board587" move='1!1HH!1IH!1HI!1II!1GG!1GI!1IG!1IF!1JG!1JF!1JH!5KG^HFA!0HF^HG%u7981!HG' num='0' heading='F' comment='F'></div>
+
+<br />
+
+要判斷Ａ點是否為雙三禁手，我們先在Ａ補子<br />
+斜的三明顯是活三<br />
+直的跳三要形成活四只能下中間，但再補第二子後會形成四四禁<br />
+所以直的跳三判為不可活四，不算活三<br />
+因此Ａ點只形成一個活三，Ａ不是禁點
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1IH!1HI!1II!1GG!1GI!1IG!1IF!1JG!1JF!1FG!1EG!1KG!1LG!1GE!5GH^HG%u7981|HFB!0HF^HG%u7981!HG' num='0' heading='F' comment='F'></div>
+
+<br />
+Ｂ點是否為雙三禁手？<br />
+先在Ｂ補子<br />
+斜的三是活三<br />
+直的三要形成活四，再補子會變長連，判為不可活四，非活三<br />
+Ｂ不是禁點
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1IH!1II!1KI!1HG!1IG!1GH!1GG!1GI!1FH!1GJ!1GK!1EH!5FJ^HIC|FI%u7981!0HI' num='0' heading='F' comment='F'></div>
+<br />
+先在Ｃ補子<br />
+直的三明顯是活三<br />
+橫的三右邊有個白子，形成活四只能往左邊<br />
+但左邊再補子形成雙三禁點<br />
+兩邊都無法活四（只要任一邊可形成活四即算活三）<br />
+Ｃ不是禁點
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1II!1IH!1FH!1HJ!1FJ!1IJ!1JJ!1IK!1JL!1JK!1JI!1KH!1JH!1KF!1HF!1LI!1NK!1MJ!5KJ^HKD|HIE!1HK^HIE!100^HIE!0HI^JG%u7981' num='0' heading='F' comment='F'></div>
+<br />
+先在Ｄ補子<br />
+橫的三明顯是活三<br />
+直的三在Ｅ點活四時，似乎形成雙三禁（二個斜三）？<br />
+但是Ｅ點真的是雙三禁嗎？<br />
+<br />
+Ｅ再補一子<br />
+發現其中一個三的活四點為四四禁<br />
+所以Ｅ點不是雙三禁手<br />
+Ｄ點直的三就可以形成活四<br />
+所以Ｄ點形成二個活三，Ｄ為禁手
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1GH!1GG!1GI!1HI!1IH!1IG!1II!1FH!1EI!1FI!1HL!1HJ!1GJ!1HK!5IJ^FGF!0FG' num='0' heading='F' comment='F'></div>
+<br />
+Ｆ點是否為禁點？<br />
+先在Ｆ補子<br />直的三為活三<br />
+橫的三再補子會形成五，判為不可活四，
+所以橫三不算活三<br />
+則Ｆ非禁手<br />
+當然，實戰不會出現有五卻不下的情況，只有在斷判多重禁手時派的上用場<br />
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1HI!1HG!1HD!1HF!1IH!1GE!1FH!1FF!1GJ!1JG!1IE!3GH!1FI!1FJ!5FE^GFG!1GF^GGH!100^GGH!1GG^IGI!100^IGI!0IG^GIJ!0FJ' num='0' heading='F' comment='F'></div>
+<br />
+
+Ｇ點是否為禁點？<br />
+把Ｇ點補上，但其中一個三的活四點Ｈ疑似雙活三禁手？<br>
+把Ｈ點補上，但其中一個三的活四點Ｉ疑似雙活三禁手？ <br>
+把Ｉ點補上去，發現其中一個三活四點Ｊ再補子形成連五<br />
+所以Ｊ禁，Ｉ不禁，Ｈ禁，Ｇ不禁
+<div style="clear: left;"><br /></div>
+
+<hr />
+<span class="b18"><b>相關詰棋</b></span><br />
+
+<div class="board587" move='1!1HH!1IG!1IH!1IE!1II!1JJ!1IJ!1LJ!1HJ!1GK!1GJ!1GM!1GI!1FH!1GH!1DH!1ID!1KL!1JC!5KB!1FI^EJA|ILB!1HL!1GF!1GG!0HI^FGC|HGD' numminus='20' heading='F' comment='F'></div>
+<br />
+黑先四手連五勝<br />
+黑１做Ａ及Ｂ二個四三前<br />
+白２是唯一的雙防點<br />
+黑３衝四解禁<br />
+黑５活四，看似形成三三三禁手<br />
+但Ｃ點為四四禁，Ｄ點為雙三禁手<br />
+使得其中的二個三變成假三<br />
+所以黑５並非禁手
+<div style="clear: left;"><br /></div>
+
+詰棋中的<a href="../test/japantest.htm">日本連珠社段位題</a>的最後一題，也是用到以禁解禁的觀念<hr />
+
+<b>警告：以下內容初學者不宜觀看＞＜<br />
+	適用：對五子棋走火入魔者<br /></b><br />
+
+<div class="board587" move='1!1HH!100!1GH!100!1HI!100!1HJ!100!1JI!100!1JH!100!1KH!100!1LH!100!1JF!100!1KF!100!1JE!100!1JD!100!1HF!100!1HE!100!1GF!100!1FF!500^IGA!1IG^GIB|GEB|KEB|KIB|IGA!100^KIB|IGA!1KI^KGC|IID|LH%u25B3|JF%u25B3|JH%u25A1|HJ%u25A1|HH%u2606|FF%u2606|IGA|KIB!100^KGC|IID|IGA|KIB!3II^GGE|GH%u25B3|GF%u25B3|HF%u25A1|JD%u25A1|IGA|KIB|IID!100^GGE|IGA|KIB|IID!0GG^GI5|GE5|GH%u25B3|GF%u25B3|IGA|KIB|IID|GGE!0KG^II禁|IGA|KIB|KGC' heading='F' comment='F' num=0></div>
+<p><br />
+  如圖，Ａ是否為禁手？<br>
+  解法同上，Ａ點補一子<br />
+  Ｂ點是否為雙三禁（直橫各一個三）？<br />
+  （四個點對稱，驗證一個點即可）<br>
+  <br />
+  Ｂ點補一子，Ｃ點是否為雙三禁（△□）及Ｄ點是否為雙三禁（□☆）？<br>
+  <br />
+  先在Ｃ補一子，Ｃ點形成的其中一個三因會形成四四禁，所以Ｃ不是禁手<br />
+則對Ｂ來說，直的是活三<br>
+<br />
+  Ｃ點補子先拿掉，再於Ｄ補一子，Ｅ點是否雙三禁（△□）？<br />
+  <br>
+  於Ｅ補一子，△的三，往上或下都會形成五<br />
+  所以非活三，反推Ｅ非禁手，則Ｄ為禁手<br />
+  則對Ｂ來說，橫的不是活三，所以Ｂ非禁手，Ａ為禁手</p>
+<div style="clear: left;"><br /></div>
+<br /><br /><br />
+題一<br />
+15┌┬┬┬┬┬┬┬┬┬┬┬┬┬┐Ａ是否為禁？<br />
+14├┼┼┼┼┼┼┼┼┼┼┼┼┼┤<br />
+13├┼┼┼┼┼┼┼┼┼┼┼┼┼○<br />
+12├┼┼┼┼┼┼┼┼┼┼┼┼┼┤<br />
+11├┼┼┼┼┼┼○○┼●●Ａ┼┤<br />
+10├┼┼┼●┼○┼┼○┼●┼┼┤<br />
+09├┼┼┼┼●┼┼┼┼●┼┼┼┤<br />
+08├┼┼┼○┼┼●●┼┼○┼┼┤<br />
+07├┼┼○┼┼●┼┼●┼┼○┼┤<br />
+06├┼┼○┼┼●┼┼●┼┼○┼┤<br />
+05├┼┼┼○┼┼●●┼┼○┼┼┤<br />
+04├┼┼┼┼●┼┼┼┼●┼┼┼┤<br />
+03├┼┼┼●┼○┼┼○┼●┼┼┤<br />
+02├┼┼┼┼┼┼○○┼┼┼┼┼┤<br />
+01└┴┴┴┴┴┴┴┴┴┴┴┴┴┘<br />
+　ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯ<br />
+<br />題二<br />
+15┌┬┬┬┬┬┬┬┬┬┬┬┬┬┐Ａ是否為禁？<br />
+14├┼┼┼┼┼┼┼┼┼┼┼┼┼┤<br />
+13├┼┼┼┼┼┼┼┼┼┼┼┼┼┤<br />
+12├┼┼┼┼┼○●○┼┼┼┼┼┤<br />
+11├┼┼┼┼┼●●┼┼┼┼┼┼┤<br />
+10├┼┼┼┼○○┼┼○┼┼┼┼┤<br />
+09├┼┼┼┼○●┼●○●○┼┼┤<br />
+08├┼┼●●Ａ┼┼┼┼●●┼┼┤<br />
+07├┼┼┼┼○●┼●┼┼○┼┼┤<br />
+06├┼┼┼┼○┼┼○○┼┼┼┼┤<br />
+05├┼┼┼┼┼┼●●┼┼┼┼┼┤<br />
+04├┼┼┼┼┼○●○┼┼┼┼┼┤<br />
+03├┼┼┼┼┼┼┼┼┼┼┼┼┼┤<br />
+02├┼┼┼┼┼┼┼┼┼┼┼┼┼┤<br />
+01└┴┴┴┴┴┴┴┴┴┴┴┴┴┘<br />
+　ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯ<br />
+<br />題三<br />
+15┌┬┬┬┬┬┬┬┬○┬┬○┬○　據說是殺手文前輩用來練習禁手判斷的題目<br />
+14├○┼┼┼Ａ┼Ｂ●Ｃ●┼○○○　判斷以下各點是否為禁手<br />
+13├┼┼○┼┼●●●○┼●┼┼┤　聽說沒有人第一次就全部正解過<br />
+12├┼┼＋┼●○●Ｄ┼○＋●┼┤<br />
+11├○┼○┼●┼┼Ｅ●●Ｆ┼○┤<br />
+10├○●┼┼Ｇ●○┼ＨＩ●●┼○<br />
+09├┼●┼┼Ｊ○Ｋ┼●┼┼○┼┤<br />
+08○●Ｌ┼ＭＮ●●ＯＰ┼○○●┤<br />
+07├┼Ｑ●●ＲＳＴ○┼●┼┼┼┤<br />
+06├┼┼●●○●●●┼┼●●┼○<br />
+05├○○┼ＵＶ●Ｗ●┼Ｘ○Ｙ○┤<br />
+04├┼┼＋┼┼Ｚ┼●┼○●●┼○<br />
+03├┼○●○●○┼○┼ａ●ｂ●┤<br />
+02○┼┼○┼┼○┼┼●○┼┼●┤<br />
+01└┴┴○┴○┴┴┴┴┴○┴○┘<br />
+　ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯ<br />
+　<br /><br />
+解答<br />
+題一：Ａ為禁<br />
+題二：Ａ非禁<br />
+題三：ＥＦＧＨＪＬMＯＱＳＴＶＷＹａｂ為禁<br />
+
+</body>
+
+</html>

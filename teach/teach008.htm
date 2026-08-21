@@ -1,0 +1,116 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel=stylesheet href="../bb/bb.css">
+  <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+  <script src="../bb/bb55.js"></script>
+<link href="../renju.css" rel="stylesheet" type="text/css">
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+</head>
+
+<body>
+<div id="myDiv"></div>
+<h1>空間</h1>
+<hr />
+
+空間是下五子棋的一個重要概念，可以想像成未來的連接，算是強手與新手的分水嶺，為高手之必爭，初學者在下棋時往往只考慮到棋子的連接，但若沒有空間，縱使有再多的連接也無用武之地。就組織進攻來說黑子比白子需要更多的空間，因白子有抓禁的手段，可以單靠簡單的連接取勝。
+<hr />
+
+
+<h2>在外側落子</h2>
+棋局通常從中間往外發展，子力漸增時，中央空間變少，在外側子力的效果就會顯現<b><br /></b>
+<div class="board587" move='1!1HH!1HI!5IG!1GI!1II!1GG!1GJ!1HJ!1FH!1IH!1GF!1FG!1EF!1FF!1DG!1CH!1EE!1EG!1GE!1FE!1FD!1HF!1DF!1CG!1DH!1DI!0EH' heading='F' comment='F'></div>
+<br />
+前七子正常，白８較弱<br />
+黑９防活二，白10擋黑的雙三點<br />
+黑11佔白的連接點，注意此後黑的落子<br />
+白12做二個活二，並想分斷黑９及11的連接<br />
+黑13擋住一個活二，擋在外側<br />
+白14也擋住黑的活二<br />
+黑15從外面連接黑７及13，也擋住白６,12的活二<br />
+白16防住一個活二<br />
+黑17、19繼續在外側落子，連接子力<br />
+黑21時機成熟，發動攻擊
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1HI!5IH!1IG!1GH!1FH!1HG!1GF!1GG!1FF!1FI!1IF!1HF!1HE!1FG!1EG!1GE!1GD!3FC!1HC!1EF!0ID!1JG!1EF!1DF!1ED!1EE!1FD!1DD!1FC!1EB!0FE' heading='F' comment='F'></div>
+<br />前八手是黑優局面<br />
+黑９、13、15都下在內側<br />
+白10、14、16順勢包住<br />
+黑17不得不防<br />
+之後白很容易就組織攻勢，黑在中間的棋子因無發空間，效率極差
+<div style="clear: left;"><br /></div>
+<hr />
+
+<h2>往空地進攻</h2>
+先拓展進攻空間，再製造連接，使對手防不勝防，另可參考VC2教學的花月浦月變化<br />
+
+<div class="board587" move='1!1HH!1HG!1IG!1II!1IH!1JH!1JG!1HJ!1KG!5GI!3GK!1HI!3FI!0JK!1JI!0GH!3HI!1GK!1FL!0GJ!1IK!0GJ' heading='F' comment='F'></div>
+<br />
+白８活三<br />
+黑９弱防<br />
+白10後白有多條攻擊線，上方的空間充足，黑必敗<br />
+白10也可先下四再做棋
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1HI!1HG!1HF!1II!1GG!1FH!1IH!1GJ!1FJ!1GI!1HJ!1HK!5GK!1EH!1FI!1DH!1GH!1EF!3CH!1EG!1EE!1FF!1GE!0DF!3EG!1CH!1BH!1DG!3BI!1DF!3DE!1CF!3BF!1DI!1DJ!0GF!1FF!1CG!3CI!1DI!1DJ!1AF!1BF!1BE!1AD!1CD!1CE!1DC!1EB!1FE!1GD!0GF!1CE!1DI!1DJ!0CJ!1DI!1CF!1CI!1EI!1BF!1BE!1AD!1DE!1DD!1FE!1GD!1CE!1EE!0CD!1FE!1DI!3DJ!1DF!1DE!1CF!3BF!0GF!1FF!1CJ!1BK!1AF!1BF!1EJ!1BG!1BI!1AJ!1CI!1CG!1EI!1AI!0EL!1DF!1DK!1DJ!1CJ!1BI!1CK!1CI!0BK!1DF!1EG!3EI!1FE!1CH!1GE!1FF!0EE!1EE!1CI!1BJ!1CJ!3CH!1DI!1BK!1DK!1DJ!1EI!1EJ!0BI!3BH!1CG!1CH!1DI!1BK!1EI!1EJ!1BI!1AI!1FG!1GF!1DG!1BG!0DK!1CG!1BH!1CH!1DI!1BK!1DK!1DJ!1EI!1EJ!0BI' heading='F' comment='F'></div>
+<br />
+黑15活三，白只能擋中間<br />
+黑17往空地做死四，擺脫白子糾纏（黑子在左方以多打少）<br />
+19再做棋，左邊有空間又有連接，白敗
+<div style="clear: left;"><br /></div>
+
+<hr />
+
+<h2>往空間多的地方做棋</h2>
+在對方無立即攻勢時，搶先占據有發展性（有空間）的地方，遠離對手子力干擾<br />
+<div class="board587" move='1!1HH!1HI!1HG!1HF!1JG!1GH!1IG!1GG!1GI!1JF!1IE!1IH!1IF!5HE!1LI!1LG!1JK!1KJ!0IK' heading='F' comment='F'></div>
+<br />
+目前局面白只有一個活二，黑若往下攻，白防守後無威脅<br />
+黑15決定搶佔右方空間，白16防守<br />
+黑17再搶到右上空間，並限制住白的活二，白18再防守<br />
+黑19將子力連接，至此黑右上方大優<br />
+並有足夠的空間及資源可以進攻，白難防
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1HI!1JJ!1II!1IH!1GI!1JI!1JH!1HJ!1KJ!1FI!1EH!1KH!1IJ!5JK!1EF!3EG!1FG!1GH!1FE!1GF!1GD!1HC!1FD!1FF!0DE!3FG!1EG!1EI!0FF!1GH!1EG!3EI!0FE!1EE!1EJ!1EI!0CH' heading='F' comment='F'></div>
+<br />
+疏星開局，黑13手較弱，15擋活二後<br />
+白16有是搶佔空間的好手段，黑17無論怎麼防<br />
+因下方空間很大，白都可在下方做棋取勝
+<div style="clear: left;"><br /></div>
+<hr />
+
+結論：<br />
+
+<b>
+１</b>佔空間最基本的方式，就是<b>儘量將棋子下在外側</b>，又稱為搶<b>外勢</b>，當雙方棋子愈來愈多，棋盤中間可落子的地方愈來愈少，因為空間不足，想要在棋盤中間發動攻擊，也愈來愈困難，所以外勢較多的一方，其攻擊機會也較多。外圍的棋子較易連接子力，被包在中間通常不易發展；就如同初學者在時機未成熟時就亂攻一通，對方在防守的同時，順便佔盡外勢，所以當攻勢結束後，就只能任人宰割了。<br />
+<b>２往空地拉攻擊線</b>，就算只有一條攻擊線，但因空間大，很容易就做出多條攻擊線，並有充足的空間可發揮。<br />
+<b>３</b>對手無攻勢或攻勢<b>不具威脅時，可以用跳躍的方式來佔空間</b>，形成一個模樣，並將戰場轉移至此，藉著空間及子力數量的優勢來進攻，但要注意若飛太遠子力容易被切斷而形成廢子。<br /><br />
+
+<hr />
+
+
+<span class="b18"><b>斜線比直線更容易拓展空間</b></span><br />
+類似的形狀，直線的死四，黑不好下，斜線的死四，黑是必勝。<br />
+
+<div class="board587" move='1!1HH!1HI!1IH!1IG!1JH!1KH!1GH!5FH!3JI!1JJ!3HG!1GF!1IF!0JE!1GF!1HG!1GG!1GE!1FF!0EE!3II!1JJ!1HJ!1KG!1GK!1FL!1GJ!1GI!3EJ!1FJ!1FI!1HG!0JG!1FJ!1EJ!1HL!0EI!1JJ!1II!1JI!1JK!1HG!1GF!1IF!0JE' heading='F' comment='F'></div>
+
+<div class="board587" move='1!1HH!1II!1IG!1HF!1JF!1KE!1GI!5FJ!1GH!3HG!1FH!1EH!1HJ!1IK!1FG!1HI!1GF!3GE!1FF!1FE!1DF!1EG!1EF!1CF!1DE!1CD!1GG!1GJ!0DD!1GG!1FF!1FE!1EG!1DF!1HD!1GE!1IE!1GC!1ID!1IF!1JD!1KD!0JC!3FH!1GG!3GF!1JG!3HG!1IH!3JH!0GJ!1GJ!0JH!1FG!1FI!1HG!1IH!3JH!0GJ!1GJ!0JH!1GJ!1HG!3FG!1FI!3EJ!1JE!1IF!0JG!1IF!1JI!3JG!0GF!1GF!0JG!1JG!1FG!1EG!1GF!1GE!1HE!3EH!1IF!1JE!0ID!1ID!1FI!1EJ!0DI!1GG!1FH!1EH!1HJ!1IK!1HI!1HK!1FG!3EF!1JG!1JH!1KG!1LG!1HD!1IE!1FF!1FE!0EG!1IJ!1IH!1JH!1FF!1FE!1EF!1DE!0DF' heading='F' comment='F'></div>
+
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1EI!1KI!1EH!4JH^DI1|DH2|FI3|FH4|JJ1|II2|JI3|KH4|LH5|KG6' num='0' heading='F' comment='F'></div>
+<br />
+另一有說是，次一手能做出兩個活二的點<br />直的有４個，而斜線有６個
+
+</body>
+
+</html>

@@ -1,0 +1,166 @@
+﻿<!DOCTYPE HTML>
+<html>
+<HEAD>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=600px, initial-scale=1, maximum-scale=1.4">
+	<link rel=stylesheet href="bb.css">
+	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+	<script src="html2canvas.min.js"></script>
+	<script src="keyin.js"></script>
+	<meta property="og:title" content="《Renju Gomoku》">
+	<meta property="og:image" content="bb/renju.png">
+</HEAD>
+<body style='border: none; margin:auto; padding=0'>
+
+			<div class="board587"></div>
+
+			<br style="clear: both;" /><input class='readme' type='button' value='說明' check='0'>
+			
+			<div class='readmediv' style='font-size:1rem; display: none;'>
+			<hr>
+			建議用Google Chrome開啟本頁面
+			<table>
+				<tbody>
+					<tr>
+						<td>※使用說明</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<td><span style="background-color: #99ccff;">左鍵點棋盤</span></td>
+						<td>次一手，編輯模式可落新子，若要PASS一手，可下在左下角</td>
+					</tr>
+					<tr>
+						<td><span style="background-color: #99ccff;">右鍵點棋盤</span></td>
+						<td>前一手，<span style="background-color: #99ccff;">手機點棋盤座標文字</span>，也可回前一手</td>
+					</tr>
+					<tr>
+						<td colspan="2">棋盤上方為標題欄，右方為解說欄，編輯模式下可輸入文字</td>
+					</tr>
+					<tr>
+						<td colspan="2">標題不隨盤面改變，解說會隨盤面變動，右下角可拖曳縮放</td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<td>※按鈕說明</td>
+						<td>&nbsp;</td>
+					</tr>
+					<tr>
+						<td><span style="background-color: #99ccff;">&lt;&lt;</span></td>
+						<td>前一個分支，或起始點</td>
+					</tr>
+					<tr>
+						<td><span style="background-color: #99ccff;">&lt;</span></td>
+						<td>前一手</td>
+					</tr>
+					<tr>
+						<td><span style="background-color: #99ccff;">&gt;</span></td>
+						<td>次一手</td>
+					</tr>
+					<tr>
+						<td><span style="background-color: #99ccff;">&gt;&gt;</span></td>
+						<td>次一個分支，或起始點</td>
+					</tr>
+					<tr>
+						<td><span style="background-color: #99ccff;">↻</span></td>
+						<td>重新整理（可跳到起始點）</td>
+					</tr>
+					<tr>
+						<td><span style="background-color: #FFFB82;">Share</span></td>
+						<td>分享選項開關</td>
+					</tr>
+					<tr>
+						<td>　<span style="background-color: #99ccff;">Image</span></td>
+						<td>截圖（若只要棋盤截圖，設定選項可隱藏標題及解說欄）</td>
+					</tr>
+					<tr>
+						<td>　<span style="background-color: #99ccff;">TinyURL</span></td>
+						<td>將代碼欄做成縮網址，上限約６９００字</td>
+					</tr>
+					<tr>
+						<td>　<span style="background-color: #99ccff;">Copy</span></td>
+						<td>將代碼欄複製到剪貼簿</td>
+					</tr>
+					<tr>
+						<td><span style="background-color: #FFFB82;">Edit</span></td>
+						<td>編輯模式開關</td>
+					</tr>
+					<tr>
+						<td>　<span style="background-color: #FFFB82;">A</span></td>
+						<td>標記模式開關（<span style="background-color: #99ccff;">左鍵點棋盤</span>：標記。<span style="background-color: #99ccff;">右鍵點</span>或標記欄為空：刪除）</td>
+					</tr>
+					<tr>
+						<td>　　<span style="background-color: #99ccff;">ABC/△/↖</span></td>
+						<td>切換並填入預設文字至標記欄</td>
+					</tr>
+					<tr>
+						<td>　　<span style="background-color: #99ccff;">Del</span></td>
+						<td>清空標記欄</td>
+					</tr>
+					<tr>
+						<td>　　<span style="background-color: #99ccff;">標記欄</span></td>
+						<td>可手動增減文字</td>
+					</tr>
+					<tr>
+						<td>　<span style="background-color: #99ccff;">X</span></td>
+						<td>刪除分支</td>
+					</tr>
+					<tr>
+						<td>　<span style="background-color: #99ccff;">New</span></td>
+						<td>開新檔案（開新分頁）</td>
+					</tr>
+					<tr>
+						<td>　<span style="background-color: #99ccff;">！</span></td>
+						<td>設定起始盤面</td>
+					</tr>
+					<tr>
+						<td>　<span style="background-color: #99ccff;">↔</span></td>
+						<td>鏡像盤面</td>
+					</tr>
+					<tr>
+						<td>　<span style="background-color: #99ccff;">↶</span></td>
+						<td>旋轉90度盤面</td>
+					</tr>
+					<tr>
+						<td>　<span style="background-color: #FFFB82;">Set</span></td>
+						<td>設定選項開關（其他人打開分享棋譜也會是相同設定）</td>
+					</tr>
+					<tr>
+						<td>　　<span style="background-color: #99ccff;">Title</span></td>
+						<td>標題欄開關</td>
+					</tr>
+					<tr>
+						<td>　　<span style="background-color: #99ccff;">Comment</span></td>
+						<td>解說欄開關</td>
+					</tr>
+					<tr>
+						<td>　　<span style="background-color: #99ccff;">Boradsize</span></td>
+						<td>設定棋盤大小（２～１９）</td>
+					</tr>
+					<tr>
+						<td>　　<span style="background-color: #99ccff;">①</span></td>
+						<td>手順開關</td>
+					</tr>
+					<tr>
+						<td>　　<span style="background-color: #99ccff;">NumMinus</span></td>
+						<td>設定手順減少值，若減為０以下不顯示</td>
+					</tr>
+					<tr>
+						<td>　　<span style="background-color: #99ccff;">NumHide</span></td>
+						<td>設定隱藏前幾手手順</td>
+					</tr>
+				</tbody>
+			</table>
+
+		
+			<script>
+				$(".readme").click(function() {
+					$(this).attr("check", Math.abs($(this).attr("check") - 1))
+					$(".readmediv").toggle()
+				});
+			</script>
+
+</body>
+</html>

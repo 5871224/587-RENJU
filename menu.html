@@ -1,0 +1,194 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>五子棋教學</title>
+
+	<style type="text/css">
+		#menu {
+			width: 100%;
+			height: 40px;
+			position: fixed;
+			left: 0px;
+			top: 0px;
+			font-size: 14px;
+			font-family: Arial, Helvetica, sans-serif;
+			z-index: 9999;
+		}
+
+		#menu ul {
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			flex-wrap: nowrap;
+			background: #009933;
+		}
+
+		#menu ul li {
+			flex: 1 1 auto;
+			position: relative;
+		}
+
+		#menu ul li a {
+			display: block;
+			height: 40px;
+			text-align: center;
+			padding: 0 5px;
+			color: #FFF;
+			text-decoration: none;
+			line-height: 40px;
+			font-size: 25px;
+		}
+
+		#menu ul li ul {
+			position: absolute;
+			width: 100%;
+			overflow: visible;
+			top: 40px;
+			left: 0;
+			margin: 0;
+			padding: 0;
+			padding-inline-start: 0;
+			list-style: none;
+			display: block;
+			background: #00bce4;
+			visibility: hidden;
+		}
+
+		#menu ul li ul li {
+			text-align: center;
+			flex: none;
+		}
+
+		#menu ul li ul li a {
+			font-size: 25px;
+			color: #333333;
+		}
+
+		#menu ul li ul li ul {
+			top: 0;
+			left: 100%;
+			width: auto;
+		}
+
+		#menu ul li:hover ul {
+			visibility: visible;
+		}
+
+		#menu ul li:hover ul li ul {
+			visibility: hidden;
+		}
+
+		#menu ul li ul li:hover ul {
+			visibility: visible;
+		}
+
+		#menu ul li ul li:hover ul li ul {
+			visibility: hidden;
+		}
+
+		#menu ul li ul li ul li:hover ul {
+			visibility: visible;
+		}
+
+		#menu ul li a:hover {
+			background: #83E46A;
+			color: #333333;
+		}
+
+		#menu ul li ul li a:hover {
+			background: #74d2e7;
+		}
+
+		/* 響應式設計 - 行動裝置 */
+		@media screen and (max-width: 768px) {
+			#menu {
+				height: 45px !important;
+			}
+
+			#menu ul {
+				display: flex !important;
+				flex-wrap: nowrap !important;
+			}
+
+			#menu ul li {
+				flex: 1 1 auto !important;
+				float: none !important;
+			}
+
+			#menu ul li a {
+				height: 45px !important;
+				font-size: 18px !important;
+				/* 統一第一層字體大小 */
+				line-height: 45px !important;
+				width: 100% !important;
+				box-sizing: border-box !important;
+				min-width: auto !important;
+				padding: 0 3px !important;
+				float: none !important;
+				display: block !important;
+			}
+
+			#menu ul li ul li a {
+				font-size: 18px !important;
+				/* 第一層與第二層一致 */
+				height: 45px !important;
+				line-height: 45px !important;
+			}
+
+			#menu ul li ul {
+				display: block !important;
+				top: 45px !important;
+				margin-top: 0 !important;
+			}
+		}
+	</style>
+
+</head>
+
+<body>
+	<div id="menu">
+		<ul>
+			<li> <a>首頁</a>
+				<ul>
+					<li><a href="https://587.renju.org.tw/index.html">新訊</a></li>
+					<li><a href="https://587.renju.org.tw/history.htm">歷史</a></li>
+				</ul>
+			</li>
+			<li> <a>教學</a>
+				<ul>
+					<li><a href="https://587.renju.org.tw/rule.htm">規則</a></li>
+					<li><a href="https://587.renju.org.tw/open.htm">開局</a></li>
+					<li><a href="https://587.renju.org.tw/teach.htm">教學</a></li>
+				</ul>
+			</li>
+			<li> <a>比賽</a>
+				<ul>
+					<li><a href="https://587.renju.org.tw/Sched/" target="new">賽程系統</a></li>
+					<li><a href="https://587.renju.org.tw/riftw/toura.php">歷年比賽</a></li>
+					<li><a href="https://587.renju.org.tw/riftw/den.php">棋士名單</a></li>
+					<li><a href="https://587.renju.org.tw/riftw/record.php">各項紀錄</a></li>
+					<li><a href="https://587.renju.org.tw/riftw/rank.php">台灣排名</a></li>
+					<li><a href="https://rating.renju.net/" target="new">世界排名</a></li>
+				</ul>
+			<li> <a>資源</a>
+				<ul>
+					<li><a href="https://587.renju.org.tw/net.htm">線上</a></li>
+					<li><a href="https://587.renju.org.tw/program.htm">下載</a></li>
+					<li><a href="https://587.renju.org.tw/5.php" target="new">打譜</a></li>
+					<li><a href="https://587.renju.org.tw/test.htm">詰棋</a></li>
+					<li><a href="https://587.renju.org.tw/CH/" target="new">挑戰</a></li>
+				</ul>
+			</li>
+
+			</li>
+		</ul>
+	</div>
+	<br />
+
+</body>
+
+</html>

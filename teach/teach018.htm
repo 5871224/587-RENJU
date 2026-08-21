@@ -1,0 +1,164 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <link href="../renju.css" rel="stylesheet" type="text/css">
+  <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+</head>
+
+<body>
+<div id="myDiv"></div>
+
+<h1>禁手</h1>
+<hr />
+
+　　五子棋上手之後，若雙方實力相當的情況下，黑方先下的優勢極大，白方基本上只能靠黑方失誤才有機會，為了讓遊戲更公平，當時的人們開始對黑棋做了一些行棋的限制，以目前來看，增加的公平性不是很多，但對棋局的複雜性及趣味性倒是提升不少。<br>
+禁手演變歷程如下：<br />
+最初，黑白雙方無限制，但「長連」不算勝<br />
+1891年規定，禁止黑白雙方走「雙活三」，走出算負<br />
+1903年規定，只禁止黑方走「雙活三」<br />
+1912年規定，黑方被迫走「雙活三」亦算負，白方走「長連」算勝<br />
+1917年規定，黑方走「長連」亦算負<br />
+1918年規定，黑方走「四三三」亦算負<br />
+1936年規定，黑方不許走「雙四」，並將 19×19 的棋盤改為 15×15 的連珠專用棋盤<br />
+1940年規定，黑方連五和禁手同時形成，算黑勝<br />
+<br />
+　　至此，黑方不能下雙活三、雙四、長連的標準規則就此成形，限制黑方基本上只能用四三來獲勝，白方除了原有的獲勝方式外，還可以迫使黑方下出禁手（逼禁）來取勝。<br />
+　　也有人會想，黑棋有那麼多限制要怎麼下呢？事實上，就算黑棋有了禁手，還是因為先下而占有優勢，若能掌握這一子之先，就表示棋力至少有一定程度了。<br />
+<hr />
+<h2>禁點勝負的判斷</h2>
+<p>※黑方下出禁手判黑敗，白方沒有限制，白長連也算勝。<br />
+  ※黑方下出五同時出現禁手，判黑勝，五最大。<br />
+  ※三個三、三個四、四三三、四四三、同樣為黑棋禁手。</p>
+<p>黑棋的三種禁手包含<b>長連、雙四、雙活三</b>，以下簡單介紹</p>
+<table width="552" border="1">
+  <tr>
+    <td width="337"><b>長連</b>：<br />
+  六子或六子以上的連線。<br>
+  白方沒禁手，白長連也算勝。</td>
+    <td width="199"><img src="../p/teach/RENJU-6.png" width="198" height="58"></td>
+  </tr>
+  <tr>
+    <td><p><b>雙四或稱四四</b>：<br />
+      一子同時形成二個四，無論是活四或死四。<br>
+  <br>
+      另外四四有可能形成在同一線上</p>
+      <p><br>
+    </p></td>
+    <td><img src="../p/teach/RENJU-44-1.png" width="198" height="506"><br>
+    <br>      <img src="../p/teach/RENJU-44-2.png" width="282" height="226"></td>
+  </tr>
+  <tr>
+    <td><b>雙活三或簡稱雙三</b>：<br />
+    一子同時形成二個活三，<br>
+    且此子為兩個活三的交點。</td>
+    <td><img src="../p/teach/RENJU-33.png" width="198" height="198"></td>
+  </tr>
+</table>
+<p><br />
+</p>
+<hr />
+
+
+<h2>有禁規則之下單線棋型判斷</h2>
+<p>有禁規則之下，白方棋型的定義與無禁手規則相同，但黑方棋型，但因長連禁手的影響而有差異。<br>
+  <br>
+  黑方差異主要有兩點<br>
+  １.<strong>判斷子力延伸的方向，是否可能形成長連</strong>。<br>
+  ２.活三的定義，除了<strong>次一手可形成活四</strong>，且限制<strong>活四點，不可同時形成五或禁手</strong>。<br>
+  <br>
+  以下介紹，有禁規則下，黑方活四、死四、活三判斷。
+<br>
+  至於黑方死三、活二、死二、活一、死一，同樣也受長連影響，
+  但這幾個棋型和禁點判斷無關，就不贅述。</p>
+<table width="594" border="1">
+  <tr>
+    <td>棋型</td>
+    <td>圖例</td>
+  </tr>
+  <tr>
+    <td width="300"><b>活四</b>：<br>
+次一手兩端皆可形成五。<br>
+要注意Ｘ點不可以有黑子</td>
+    <td width="278"><img src="../p/teach/RENJU-L4.png" width="254" height="58"></td>
+  </tr>
+  <tr>
+    <td><p><b>死四</b>：<br>
+      次一手有一點可形成五。<br>
+    上方的四往左邊是長連，只有往右可形成五<br>
+    下方的四右邊三子不能形成活四，不可將三子單獨當做活三</p></td>
+    <td><img src="../p/teach/RENJU-D4.PNG" width="226" height="114"></td>
+  </tr>
+  <tr>
+    <td><p><strong>不算四</strong>：<br>
+    因長連關係，無任一點可形成五。</p></td>
+    <td><img src="../p/teach/RENJU-NO4.PNG" width="254" height="170"></td>
+  </tr>
+  <tr>
+    <td><p><strong>活三：</strong><br>
+      次一手可形成活四。<br>
+      且<strong>形成活四的點不可同時形成五或禁手</strong>。 <br>
+      <br>
+    上方活三，注意兩個□不可同時有黑子<br>
+    下方活三，注意△不可有黑子<br>
+    否則會因長連無法成為活四</p></td>
+    <td><img src="../p/teach/RENJU-L3.png" width="282" height="114"></td>
+  </tr>
+  <tr>
+    <td><p><strong>不算活三</strong>：<br>
+      三的兩端有其他棋子影響<br>
+    下在盤面上的４時，只能成死四</p></td>
+    <td><img src="../p/teach/RENJU-NOL3-1.PNG" width="282" height="226"></td>
+  </tr>
+  <tr>
+    <td><p><strong>不算活三</strong>：<br>
+      <strong>      其活四點不可同時形成五或禁手</strong>
+      <p>        △△△的活四點，往左會形成五，往右會形成雙活三禁手<br>
+        □□□的活四點，往左會形成長連禁手，往右與自身會形成雙四禁手<br>
+        <br>
+      所有活四點皆會形成五或禁，△△△和□□□都無法活四，則皆不算活三</td>
+    <td><img src="../p/teach/RENJU-NOL3-2.PNG" width="254" height="254"></td>
+  </tr>
+
+</table>
+<p>因活三的定義變複雜，因此判斷雙三禁，有可能出現很複雜的局面，另在<a href="teach014.htm">多重禁手</a>篇詳述。</p>
+<hr />
+<h2>易誤判情況：</h2>
+<p>  Ａ點直的是四，橫的會變長連，不能形成五，不算四，所以不是四四禁<br />
+  <img border="0" src="../p/n44a.jpg" width="206" height="153"><br />
+</p>
+<p>Ａ點直的是活三，橫的不是活三，因不能形成活四，不算禁手。<br />
+  <img border="0" src="../p/n33a.jpg" width="180" height="127"><br />
+  <br />
+  Ｂ點直的是活三，橫的是假三，因不能形成活四，不算禁手。<br /><img border="0" src="../p/n33b.jpg" width="206" height="128"><br />
+  <br />
+  Ｃ點直的是活三，橫的不是，不能形成活四，不算禁手。<br />
+  <img border="0" src="../p/n33c.jpg" width="232" height="127"><br />
+  <br />
+  黑子雖有二個活三，但非一子同時形成，不算禁手。<br /><img border="0" src="../p/n33d.jpg" width="180" height="129"><br />
+  <br />　<br />
+</p>
+<hr />
+
+
+<h2>如何逼黑棋下禁手</h2>
+如圖，輪到白子下，如何逼禁呢？<br />
+<img border="0" src="../p/bg.jpg" width="206" height="205"><br />
+Ｘ為黑子的雙三禁點<br />白先下Ｂ形成活三，黑必須防守活三，但因不能下Ｘ，所以只能黑防守Ｄ點<br />
+白再下Ａ形成死四，黑不防守，白即形成五，黑防守Ｘ就形成禁手了<br />
+其實白先下Ａ也可以禁到黑棋，大家可以試試<br />
+<br />
+結論，只要黑棋的禁點在白的攻擊線上，白就有機會可以抓黑棋禁手<br />
+<a href="teach009.htm">逼禁</a>教學<br />
+<hr />
+
+</body>
+
+</html>

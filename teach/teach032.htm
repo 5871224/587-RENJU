@@ -1,0 +1,78 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+<meta charset="UTF-8" />
+<link rel=stylesheet href="../bb/bb.css">
+	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+	<script src="../bb/bb55.js"></script>
+<link href="../renju.css" rel="stylesheet" type="text/css">
+
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+</head>
+<body>
+<div id="myDiv"></div>
+
+  <h1>複雜進攻的防點</h1>
+<hr />
+
+<p>在碰到複雜的進攻局面時，任何一步都可能左右最終的勝負，往往想計算防點時，卻苦於進攻方式太多，不知從何處下手，這裡提供一個計算技巧給大家參考。<br>
+本章以VC3的攻擊為例，需要先知道如何尋找VC3的防點。</p>
+<p><b>１找出一組最簡單的勝法，以減少需要計算的防點<br />
+  ２找出影響此勝法的所有防點</b><br />
+  <b>３計算這些防點</b>，建議從最強的防點開始計算，剔除失敗的防點，若全部防點都無效，那可判定此局面已終結，若有效防點不只一個，再從中做選擇<br>
+</p>
+<p><img src="../p/teach/43-1.png" width="170" height="198" align="absmiddle"></p>
+<p>就拿基本勝型來說，假想對方下出一個基本的［死四活三］，我們將死四和活三看成兩組進攻<br>
+  第一步，找最簡單的勝法，死四獲勝最簡單<br>
+  第二步，死四的所有防點只有一個<br>
+  第三步，計算所有防點，對手還是能將活三變成活四取勝<br>
+那就可以確定這局面對方已經必勝</p>
+<hr />
+<div class="board587" move='1!1HH!1HI!1IH!1GH!1IJ!1II!1JI!1KJ!1KH!1LG!1JH!1LH!1JF!1JG!1IG!1KE!1HF!1GE!1GF!1IF!1HG!1FE!1HE!1HD!1FG!1EH!5FH^GGA|FJB|EG1|EI1|IE1|DH1|FF2|IC1!3FF!1EG!1GG!0GI!3IC!0FJ!3IE!0FJ!3EG!0FJ!3DH!0FJ!3EI!0FJ!1GG!0FJ' num='0' heading='F' comment='F'></div>
+第一步，發現Ａ為黑方一步四三的勝法<br>
+第二步，找出Ａ勝法所有防點，共７個，即棋盤上有○的位置<br>
+第三步，計算所有防點，若防Ａ，黑方可下Ｂ取勝，防在１的位置，同樣不能阻止Ｂ點，勝法相同可快速剔除，只剩下一個防點２，但黑方仍有其他勝法（可點棋盤○看勝法）<br>
+確定此局面黑方必勝 <br />
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1HI!1II!1IG!1GG!1FF!1HJ!1JH!1JJ!1KK!1GJ!1IJ!1GH!1GI!1EH!1FH!1FI!1DG!1EJ!1DK!1EK!1EI!1DJ!1FJ!1FL!1GM!5GL^ILA|HK1|JL1|HL2|EL2!3EL!1HK!1IL!1GK!1EM!0FK!3HL!1HK!1IL!1GK!1EM!0FK!3JL!1EM!1GK!0EL!3IL!1EM!1GK!0EL!1HK!1EM!1GK!0EL' num='0' heading='F' comment='F'></div>
+第一步，發現Ａ為黑方一步四三的勝法<br>
+第二步，找出Ａ勝法所有防點，共５個，即棋盤上有○的位置<br>
+第三步，計算所有防點，若防Ａ或１，黑方可兩步四三，若防在２，黑有三步四三<br>
+確定此局面黑方必勝<br />
+<div style="clear: left;"><br /></div>
+<div class="board587" move='1!1HH!1JH!1IH!1KG!1KH!1IE!1IF!1JD!1IG!1GF!1ID!1EG!1GH!1EJ!1FI!5GJ!3FF^FHA|IIA!1FJ!3II!0IJ!1FH!0EH!3FG^FHA|IJA!1EF!3IJ!0II!1FH!0EH!3HE^HGA!1JG!1HG!0JE!3LG^JEA|MG%u6B63|NG%u89E3|IJB!3JE!1IJ!1II!0JI!1IJ!1JE!1HG!0KF!3HI^HGA|IIA|IJA!1HJ!3HG!0JE!3II!0IJ!1IJ!0II!3GI^IIA!1FJ!1II!0IJ!1FJ^FHA!1EK!1FH!0EH' numminus='16' heading='F' comment='F'></div>
+<br /> 
+有一種<strong>四手連五勝</strong>詰棋 ，非常適合練習計算防點 <br>
+ 故名思義，題目限制四顆子就要形成五，超過不算正解<br />
+ 常見的解法是第二手就做出四三<br>
+<br>
+如題，黑先四手連五勝，為方便練習，已先把第一手看似有兩種獲勝方式的點標出，但只有一點是正確的，
+其他點白棋都可以找到共用的防點<br />
+實戰中雖沒有限制使用子數，但常運用到類似的計算方法
+<div style="clear: left;"><br /></div>
+<p><b>注意事項：</b><br />
+一般的局面不需要算那麼細，選擇重點計算即可，只有在攸關勝負的關鍵時刻才需要如此細算<br />
+不要只注意計算防守，而忽略可以攻擊的局面<br /><br />
+</p>
+<hr />
+
+<h2>實戰賞析</h2>
+
+<div class="board587" move='1!1HH!1II!1IH!1JH!1KI!1KG!1LF!1JG!1JF!1LG!1IG!1KE!1IF!1KF!1KD!1JE!1ID!1IE!1LE!1GI!1HD!1JD!1HF!1GF!1HE!1HG!1FD!500!1EC!1GE!1GD!1ED!1FC!1EB!0HC' heading='F' comment='F'></div>
+這譜是小ｕ在２０１０世團賽的對局<br />
+對手黑方27，若28不理，黑方做了衝四勝，白棋不得不防<br />
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1II!1IH!1JH!1KI!1KG!1LF!1JG!1JF!1LG!1IG!1KE!1IF!1KF!1KD!1JE!1ID!1IE!1LE!1GI!1HD!1JD!1HF!1GF!1HE!1HG!5FD^HBA|GHB!3FE!1JC!3MF!1IB!1HA!1HB!1HC!0KB!1IB!1IC!3HC!0GE!1GE!0HC!3GA!1GE!1EC!1IC!1JB!1JC!1IB!0HC!3IC!1HB!1HC!1EE!1GC!1GD!1ED!1FC!1EB!1GE!1EC!0FE!3GC!1GD!1ED!1FE!3HC!0FC!1FC!0HC!3DC!1GD!1ED!1FE!3HC!0FC!1FC!0HC!2HB!3HC!1GE!1EC!1FF!1IC!1GD!1ED!0FC!3EB!1GE!1EC!1IC!1JB!1JC!1IB!0HC!3FC!1GE!1EC!1IC!1JB!1JC!1MF!0HC!3ED!1JC!3IB!1IC!3HC!0GE!1GE!0HC!1MF!1IB!1HA!1HB!1HC!0KB!3GD!1GE!1EC!1IC!1JB!1JC!1IB!0HC!3EC!1GD!1ED!1FE!3EF!1EE!3HB!0FC!1FC!0HB!3FC!0HC!1HC!0FC!3GE!1GD!1ED!1FE!3HC!0FC!1FC!0HC!3GG!1GE!1EC!1FF!1IC!1GD!1ED!0FC!1GH!1GG!1HB!1EE^ICA|EFa|EDa|GDa|GCa|GBa|EBa|GEb|ECb!3IC!1GA^EFa|EDa|EBa|GDa|GCa|GBa|GEb|ECb!3EB!1FF!1DD!1GE!1EC!0FE!3ED!1FF!1DD!1GE!1EC!0FE!3EF!1FF!1DD!1GE!1EC!0FE!3GB!1FF!1DD!1GE!1EC!0FE!3GC!1FF!1DD!1GE!1EC!0FE!3GD!1FF!1DD!1GE!1EC!0FE!3GE!1GD!1ED!1FC!1EB!0FF!1EC!1GD!1ED!1FC!1EB!0FF!3GB!1FF!1DD!0GE!3GC!1FF!1DD!0GE!3EB!1FF!1DD!0GE!3EF!1FF!1DD!0GE!3GE!1GD!1ED!1FC!1EB!0FF!3EC!1GD!1ED!1FC!1EB!0FF!3ED!1FF!1DD!0GE!1GD!1FF!1DD!0GE' heading='F' comment='F'></div>
+小ｕ發揮強大的計算力，臨場找到唯一防點Ａ，若先Ｂ再Ａ，黑仍可勝
+
+
+<div style="clear: left;"><br /></div>
+</body></html>

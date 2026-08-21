@@ -1,0 +1,121 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="zh-tw">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link href="../renju.css" rel="stylesheet" type="text/css">
+<link rel=stylesheet href="../bb/bb.css">
+	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+	<script src="../bb/bb55.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+</head>
+
+<body>
+<div id="myDiv"></div>
+<h1>先手</h1>
+<hr />
+
+棋諺說，不思爭先，勝如登天，其中的爭先就是搶先手的意思。先手簡單的說，就是下出<b>具有威脅的手段</b>，迫使對手必須防守，或者說<b>掌握主動權</b>，讓對手只能跟著你的步調行棋。<br />
+但要如何一直保持先手呢？首先要學會判斷誰有先手，會判斷後就可了解攻守的時機，以及可以使用的進攻手斷。<hr />
+
+<h2>進攻等級</h2>
+
+要判斷誰有先手，不是計算要花幾顆子才能連五，而是取決於進攻的等級，等級愈高取勝愈快，愈快取勝的那方有先手。
+<table class="tb">
+	<colgroup>
+		<col width="180">
+		<col width="520">
+	</colgroup>
+	<tr>
+		<th>等級</th>
+		<th>判斷方法</th>
+	</tr>
+	<tr>
+		<td>VC5</td>
+		<td>連五</td>
+	</tr>
+	<tr>
+		<td>VC4（VCF，衝四勝）</td>
+		<td>次一手可以連五（只能下四）</td>
+	</tr>
+	<tr>
+		<td>VC3（VCT，攻擊勝）</td>
+		<td>次一手有VC4下法（如活三、VCF前等，即一般常說&quot;做VCF&quot;）</td>
+	</tr>
+	<tr>
+		<td>VC2（連接子力）</td>
+		<td>次一手有VC3下法（常說&quot;做VCT&quot;）</td>
+	</tr>
+	<tr>
+		<td >VC1（空間與連接）</td>
+		<td >次一手有VC2下法</td>
+	</tr>
+	<tr>
+		<td >VC0（空間）</td>
+		<td >次一手有VC1下法</td>
+	</tr>
+</table>
+
+
+<br />VC4及VC3即是進攻階段，主要是<b>運用連接</b><br />
+VC2及VC1則是組織進攻及佈局階段，除了<b>製造連接</b>外需考慮<b>空間</b><br />
+至於VC0，因為最少要三子才能形成VC2，我想黑第一手或是全局無任何可能的攻勢時，應該屬於VC0，那有沒有VC-1呢？個人覺得有，在落下VC0那子之前的狀態即VC-1，應該沒有再低了<br />
+<br />當我們每下一手棋，最多可使已方子力提升的一個等級，有效的防守可降低對手一個或一個以上的等級，下出攻守兼備的棋，如有<a href="teach011.htm">牽制</a>手段的棋，可同時提升自己和降低對手等級<br />
+就防點來說，等級越高防點最少，如VC4，的因每一手都是衝四，防點唯一；進攻等級越低，防點越多計算越複雜，先手也越難掌握，所以若沒有一定的計算能力，很容易會錯判等級<br />
+<br />
+<div class="board587" move='1!1HH!1HI!1JI!1JH!1IG!1IH!1GI!1FJ!1JG!5GG!1IF!1KH!1HE!1KE!1ID!1KG!1KD!1LF!1GD!1FC!1HD!1JD!0HG' heading='F' comment='F'></div>
+<br />
+殘月開局<br />
+至白10，這個局面下黑直接進攻是會失敗的<br />
+但可以做11個這個妙手，次一手有VC3所以這手是VC2<br />
+白12強防，黑13再做VC2<br />
+白14是攻守兼備的棋，也形成VC2，並把黑子打回VC1<br />
+黑15再做VC2，這手也是攻守兼備，<br />
+增加攻勢外還牽制到白進攻，白變回VC1，<br />
+若這時白活三進攻，黑棋防17(VC3)會比白棋還快取勝
+<div style="clear: left;"><br /></div>
+開局時，黑方先行，因此一開始先手在黑棋<br />基本上，當你有先手時即有主導權，可以選擇要進攻或防守，來保持先手；當你落了後手，除非有攻守兼備的手段，否則只能乖乖防守，等待搶先的機會。<br />一局棋大部份的時候都在VC1～VC3間徘徊，當雙方都在佈子階段或雙都有攻勢時的先手最難掌握，而要保持先手並不是一昧的攻擊，預先防守<b>及靈活的佈局</b>也是不可或缺的。<br />
+<br />
+
+<h2>暫時與實質的先手</h2>
+先手又可細分為<b>暫時的先手</b>及<b>實質的先手</b>，而實質的先手才是最重要的<br />
+其主要的差別為，暫時的先手不能取勝，實質的先手有可能勝<br />
+暫時先手很好判斷，即是<b>比較目前自己的VC？和對手的VC？</b>，看哪個大<br />
+舉例來說，初學者下棋時，一有機會就不停的活三或衝四，但未考慮是否有勝，這時看似掌握主動，卻只是暫時的，被守住後，主動權自然就交給對手，可以說初學者在進攻時只有暫時的先手，因先手遲早會失去，所以他的對手才是擁有實質先手<br />
+暫時的先手也不是完全沒用，通常是為了防守或搶佔要點，例如先衝四不是為了取勝，為的是破壞對手的進攻要點，或為進攻鋪路的拓展空間等<br />
+<br />
+實質先手除了考慮敵我的VC？外，還要<b>判斷的就是能否取勝</b>，主要還是個人計算能力問題，計算力越高判斷越準確<br />
+若你看到一組進攻的取勝的方式為：死四，死四，活三，死四活三（四三），活四，五<br />
+其實質的進攻等級為VC3，因其<b>攻擊最弱的一環</b>活三是VC3<br />
+假設對手有衝四勝或衝四的防守方法，就會你在下出活三的那一刻發動<br />
+活三過後，若對手無沒有四可用，那實質先手就變為VC4，因為之後最弱的手段是四了<br /><br />
+<div class="board587" move='1!1HH!1HI!1II!1IH!1JI!1JG!1GJ!1IG!5JJ!1GG!0HG' heading='F' comment='F'></div>
+<br />
+黑９活三，白10反三，黑11單防<br />
+白10的反三屬於暫時的先手，黑仍需防一手，防了之後黑上方有VC3的攻勢，而白子下方沒有後續手段
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1II!1IG!1GI!1JG!1JI!1HI!1HG!1IH!5GJ!1JH!1GH!1GG^!3GL!1GK!1HK!0KH!3IJ!1KH!1LH!1KI!1HF!0KF!3HK!0KH!3EJ!1KH!1LH!0IF!3FI!1KH!1LH!0IF!1IF!0JE^JFA|KEB|LEC' heading='F' comment='F'></div>
+<br />
+再舉個較複雜的例子<br />
+黑11活三，白12反活三，黑13防守活三，感覺黑讓出主動權<br />
+但次一手黑子右邊有VC3進攻<br />
+黑11雖然感覺失去先手，且白左上看似有後續手段<br />
+但不論怎麼攻，黑右下都有反擊<br />
+白沒勝，最終先手還是會回到黑棋手上<br />
+黑棋握有實質的先手
+<div style="clear: left;"><br /></div>
+
+這種先手有人稱為後中先，高手在對局中，常會看到一方突然下了看似無關緊要的一手，讓出先手給對方有攻擊的機會，但其實他已經算出對手將無法取勝，等攻勢結束後，先手自然回到他手上，<b>實質的先手權</b>才是重要的<br />
+
+
+<br />
+</body>
+
+</html>

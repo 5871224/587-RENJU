@@ -1,0 +1,165 @@
+.board587{
+	border: 2px solid #BBFFEE;
+	padding: 0;
+	float:left;
+	font-size: 18px;	
+}
+input[type='button']{
+	height: 60px; 
+	width: 150px;
+	border-radius: 10px; 
+	line-height: 18px;
+	font-size: 36px;
+	background-color: #e88df0;
+	color: white;
+}
+
+input[type='text']{
+	height: 30px; 	
+	font-size: 18px;
+	background-color: #99BBFF;
+}
+
+input[type='checkbox']{
+	transform: scale(1.5);
+}
+
+textarea {
+	width: 100%;
+	padding: 0;
+	vertical-align: bottom; 
+	border: none; 
+	background-color: #99BBFF;
+	font-size: 18px;
+}
+
+textarea.comment {
+	height: 100%; 
+}
+
+td.TDcomment{
+	height:1px;
+
+}
+
+table.board {
+	width: 448px;
+	height: 448px;
+	padding: 0px;
+	border-spacing: 0;
+	table-layout: fixed;
+	-ms-user-select: none;
+	user-select: none;
+	overflow: hidden;
+	text-align: center;
+	background:#33FFAA;
+}
+
+table.board [XY]{
+	font-family:monospace!important;
+	background-image: 
+	linear-gradient(90deg, transparent 47%,#666 49%,#666 51%, transparent 53%),
+	linear-gradient(transparent 47%,#666 49%,#666 51%, transparent 53%);
+}
+
+
+/* 上 Line */
+table.board tr:first-child td:not(:first-child) {
+	background-image: 
+	linear-gradient(#33FFAA 47%,#666 49%,#666 51%, transparent 53%),
+	linear-gradient(90deg, transparent 47%,#666 49%,#666 51%, transparent 53%);
+}
+
+/* 左 Line */
+table.board tr:not(:last-child) td:nth-child(2) {
+	background-image: 
+	linear-gradient(90deg, #33FFAA 47%,#666 49%,#666 51%, transparent 53%),
+	linear-gradient(transparent 47%,#666 49%,#666 51%, transparent 53%);
+}
+
+/* 下 Line */
+
+table.board tr:nth-last-child(2) td:not(:first-child) {
+	background-image: 
+	linear-gradient(transparent 47%,#666 49%,#666 51%, #33FFAA 53%),
+	linear-gradient(90deg, transparent 47%,#666 49%,#666 51%, transparent 53%);
+}
+
+
+/* 右 Line */
+table.board tr:not(:last-child) td:last-child {
+	background-image: 
+	linear-gradient(90deg, transparent 47%,#666 49%,#666 51%, #33FFAA 53%),
+	linear-gradient(transparent 47%,#666 49%,#666 51%, transparent 53%);
+}
+
+/*左上*/
+table.board tr:first-child td:nth-child(2) {
+	background-image:
+	linear-gradient(135deg, #33FFAA 49%,transparent 50%), 
+	linear-gradient(90deg, transparent 47%,#666 49%,#666 51%, transparent 53%),
+	linear-gradient(transparent 47%,#666 49%,#666 51%, transparent 53%);
+}
+/*右上*/
+table.board tr:first-child td:last-child {
+	background-image:
+	linear-gradient(45deg, transparent 50%,#33FFAA 51%), 
+	linear-gradient(90deg, transparent 47%,#666 49%,#666 51%, transparent 53%),
+	linear-gradient(transparent 47%,#666 49%,#666 51%, transparent 53%);
+}
+
+/*左下*/
+table.board tr:nth-last-child(2) td:nth-child(2) {
+	background-image:
+	linear-gradient(45deg, #33FFAA 49%, transparent 50%), 
+	linear-gradient(90deg, transparent 47%,#666 49%,#666 51%, transparent 53%),
+	linear-gradient(transparent 47%,#666 49%,#666 51%, transparent 53%);
+}
+/*右下*/
+table.board tr:nth-last-child(2) td:last-child {
+	background-image:
+	linear-gradient(135deg,transparent 50%, #33FFAA 51%), 
+	linear-gradient(90deg, transparent 47%,#666 49%,#666 51%, transparent 53%),
+	linear-gradient(transparent 47%,#666 49%,#666 51%, transparent 53%);
+}
+
+table.board [star='1'] {
+	background-image: 
+	radial-gradient(#666 15%, transparent 17%),
+	linear-gradient(90deg, transparent 47%,#666 49%,#666 51%, transparent 53%),
+	linear-gradient(#33FFAA 47%,#666 49%,#666 51%, #33FFAA 53%);
+}
+
+
+/*table.board [BW='N'] {
+	background-image: 
+	radial-gradient(#33FFAA 59%,#666 61% ,#666 65% ,transparent 68%),
+	linear-gradient(90deg, transparent 47%,#666 49%,#666 51%, transparent 53%),
+	linear-gradient(#33FFAA 47%,#666 49%,#666 51%, #33FFAA 53%)!important;
+	color: blue;
+}*/
+table.board [BW='0'] {
+	background-image: 
+	radial-gradient(white 60%,black 62% ,black 65% ,transparent 68%),
+	linear-gradient(90deg, transparent 47%,#666 49%,#666 51%, transparent 53%),
+	linear-gradient(#33FFAA 47%,#666 49%,#666 51%, #33FFAA 53%)!important;
+	color: black;
+}
+table.board [BW='1'] {	
+	background-image: 
+	radial-gradient(black 65%, transparent 68%),
+	linear-gradient(90deg, transparent 47%,#666 49%,#666 51%, transparent 53%),
+	linear-gradient(#33FFAA 47%,#666 49%,#666 51%, #33FFAA 53%) !important;
+	color: white;
+}
+
+.m { 	
+	background-image: 
+	radial-gradient(#33FFAA 70%,transparent 71%);
+	color: blue;
+}
+
+[check='1'] {
+ background-color: #CCCCCC; 
+ background-image: linear-gradient(135deg, #FFFB82 13px ,transparent 14px);
+}

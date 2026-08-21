@@ -1,0 +1,27 @@
+﻿<html>
+
+<head>
+<meta http-equiv="Content-Language" content="zh-tw">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title></title>
+<base target="bottom">
+<link href="../renju.css" rel="stylesheet" type="text/css">
+<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+</head>
+<body>
+<div id="myDiv"></div>
+
+<h1>規則</h1>
+	<hr>
+
+<a href="rulehome.htm"><b>行棋規則</b></a>│<a target="bottom" href="renju-rule.htm"><b>禁手開局規則</b></a>│<a target="bottom" href="gomoku-rule.htm"><b>無禁開局規則</b></a>│<a target="bottom" href="other.htm"><b>其他玩法</b></a>
+
+</body>
+
+</html>

@@ -1,0 +1,208 @@
+body {
+	font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+	font-size: 1.125rem;
+	line-height: 25px;
+	background-color: #EDF9EC;
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 1600px;
+	margin: 0 auto;
+	padding: 52px clamp(40px, 6vw, 100px) 32px;
+}
+
+*, *::before, *::after {
+	box-sizing: inherit;
+}
+
+h1 {
+	font-size: 1.7rem;
+	font-family: DFKai-sb;
+	font-weight: bold;
+	color: #53A0EE;
+	text-shadow: 0.2em 0.2em 0.1em #CCC;
+}
+
+h2 {
+	font-family: DFKai-sb;
+	font-size: 1.4rem;
+	font-weight: bold;
+	color: #339933;
+}
+
+/* 共用表格：保留既有 .tb / .rank class，改為淡綠色系 */
+table.tb,
+table.rank {
+	width: 100%;
+	max-width: 100%;
+	table-layout: auto;
+	border-collapse: separate;
+	border-spacing: 0;
+	background: #FFFFFF;
+	border: 1px solid #BFD8BC;
+	border-radius: 10px;
+	box-shadow: 0 2px 10px rgba(46, 92, 49, 0.10);
+	overflow: hidden;
+	line-height: 1.45;
+}
+
+table.tb th,
+table.rank th {
+	padding: 9px 12px;
+	background: #78CF93;
+	color: #26382A;
+	font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+	font-weight: 700;
+	text-align: center;
+	border-right: 1px solid #C8DEC5;
+	border-bottom: 1px solid #B9D4B6;
+	white-space: nowrap;
+}
+
+table.tb td,
+table.rank td {
+	padding: 8px 12px;
+	background: #FFFFFF;
+	color: #26382A;
+	font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+	font-weight: 400;
+	border-right: 1px solid #DDE9DB;
+	border-bottom: 1px solid #DDE9DB;
+	transition: background-color 0.15s ease;
+}
+
+table.rank td {
+	text-align: center;
+}
+
+table.tb tr:last-child td,
+table.rank tr:last-child td {
+	border-bottom: 0;
+}
+
+table.tb th:last-child,
+table.tb td:last-child,
+table.rank th:last-child,
+table.rank td:last-child {
+	border-right: 0;
+}
+
+table.tb tbody tr:nth-child(even) td,
+table.rank tbody tr:nth-child(even) td {
+	background: #F7FBF5;
+}
+
+table.tb tbody tr:hover td,
+table.rank tbody tr:hover td {
+	background: #EDF7E9;
+}
+
+/* Swiss 戰績表不使用斑馬紋與整列 hover，普通欄位維持白底。 */
+table.swiss-rank tbody tr:nth-child(even) td,
+table.swiss-rank tbody tr:hover td {
+	background: #FFFFFF !important;
+}
+
+/* Swiss 戰績表：僅保留勝和負與總分的語意底色 */
+table.swiss-rank tbody tr:nth-child(even) td.score-win,
+table.swiss-rank tbody tr:hover td.score-win,
+table.swiss-rank td.score-win {
+	background: #E7F7D5 !important;
+}
+
+table.swiss-rank tbody tr:nth-child(even) td.score-draw,
+table.swiss-rank tbody tr:hover td.score-draw,
+table.swiss-rank td.score-draw {
+	background: #FFF4C7 !important;
+}
+
+table.swiss-rank tbody tr:nth-child(even) td.score-loss,
+table.swiss-rank tbody tr:hover td.score-loss,
+table.swiss-rank td.score-loss {
+	background: #FBE4E4 !important;
+}
+
+table.swiss-rank tbody tr:nth-child(even) td.name,
+table.swiss-rank tbody tr:hover td.name,
+table.swiss-rank td.name,
+table.swiss-rank tbody tr:nth-child(even) td.rank-name,
+table.swiss-rank tbody tr:hover td.rank-name,
+table.swiss-rank td.rank-name,
+table.swiss-rank tbody tr:nth-child(even) td.place,
+table.swiss-rank tbody tr:hover td.place,
+table.swiss-rank td.place {
+	background: #FFFFFF !important;
+}
+
+table.swiss-rank tbody tr:nth-child(even) td.total,
+table.swiss-rank tbody tr:hover td.total,
+table.swiss-rank td.total {
+	background: #E6F0FF !important;
+}
+
+/* Swiss 升段／升級區塊：有資料只顯示表格，沒有資料則整段隱藏。 */
+.promotion-card h3 {
+	display: none !important;
+}
+
+.promotion-card:has(.promotion-empty) {
+	display: none !important;
+}
+
+/* 表格內超連結：藍色字，表格內容維持正黑體一般字重 */
+table.tb a,
+table.rank a,
+table.tb a:visited,
+table.rank a:visited {
+	color: #0066CC;
+	font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+	font-weight: 400;
+	text-decoration: none;
+	text-underline-offset: 3px;
+	transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+table.tb a:hover,
+table.rank a:hover {
+	color: #004C99;
+	background: transparent;
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-decoration-color: #78AEE3;
+}
+
+table.tb a:focus-visible,
+table.rank a:focus-visible {
+	outline: 2px solid #78AEE3;
+	outline-offset: 2px;
+	border-radius: 3px;
+}
+
+@media (max-width: 768px) {
+	body {
+		padding: 0 12px 24px;
+	}
+
+	table.tb,
+	table.rank {
+		font-size: 0.95rem;
+	}
+
+	table.tb th,
+	table.tb td,
+	table.rank th,
+	table.rank td {
+		padding: 7px 9px;
+	}
+}
+
+a:hover {
+	background-color: #FFE16A;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:visited {
+	font-weight: bold;
+}

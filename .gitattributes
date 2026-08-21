@@ -1,0 +1,16 @@
+* text=auto
+*.htm text
+*.html text
+*.css text
+*.js text
+*.php text
+*.svg text
+*.bmp binary
+*.gif binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.lib binary
+*.rar binary
+*.swf binary
+*.exe binary

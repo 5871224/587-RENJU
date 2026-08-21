@@ -1,0 +1,317 @@
+html,
+body {
+	touch-action: manipulation;
+	/* 停用雙擊縮放，僅保留捲動與縮放手勢 */
+	font-family: Verdana, Arial, Helvetica, Roboto, "Noto Sans", sans-serif;
+}
+
+.board587 {
+	border: none;
+	padding: 0;
+	float: left;
+	font-size: 18px;
+	z-index: -1;
+	font-family: Verdana, Arial, Helvetica, "Roboto", "Noto Sans", sans-serif;
+}
+
+/* 棋盤寬 448px，按鈕寬 = 棋盤/6，高 = 寬×0.618 */
+input[type='button'],
+button {
+	width: calc(448px / 6);
+	min-width: calc(448px / 6);
+	height: calc(448px / 6 * 0.618);
+	min-height: calc(448px / 6 * 0.618);
+	padding: 0;
+	border-radius: 8px;
+	border: 1px solid #ddd;
+	background-color: #f8f9fa;
+	color: #333;
+	font-size: 16px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	outline: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	vertical-align: middle;
+	box-sizing: border-box;
+}
+
+input[type='button']:hover {
+	background-color: #e9ecef;
+	border-color: #ccc;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+input[type='button']:active {
+	background-color: #dee2e6;
+	transform: translateY(1px);
+	box-shadow: none;
+}
+
+input[type='text'] {
+	height: 30px;
+	font-size: 18px;
+	background-color: #99BBFF;
+	font-family: inherit;
+}
+
+input[type='checkbox'] {
+	transform: scale(1.5);
+}
+
+textarea {
+	width: 100%;
+	padding-left: 5px;
+	box-sizing: border-box;
+	vertical-align: bottom;
+	border: none;
+	background-color: #99BBFF;
+	font-size: 18px;
+	font-family: inherit;
+	border-radius: 8px;
+}
+
+textarea.comment {
+	height: 100%;
+}
+
+td.TDcomment {
+	height: 1px;
+}
+
+/* 棋盤主體 */
+table.board {
+	width: 448px;
+	height: 448px;
+	padding: 0px;
+	border-spacing: 0;
+	table-layout: fixed;
+	-ms-user-select: none;
+	user-select: none;
+	overflow: hidden;
+	text-align: center;
+	background: #33FFAA;
+	border-collapse: collapse;
+	font-family: inherit;
+	border-radius: 8px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* 基本格子 - 十字線（使用 SVG 背景）*/
+table.board [XY] {
+	background-size: 103% 103%;
+	background-repeat: no-repeat;
+	background-position: center;
+	/* 將座標從 14 改為與邊界重疊的設定 */
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><line x1="14" y1="-1" x2="14" y2="29" stroke="%23666" stroke-width="1"/><line x1="-1" y1="14" x2="29" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 上邊線（實際是棋盤下方，因為 prepend）*/
+table.board tr:first-child td:not(:first-child)[XY] {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="14" x2="14" y2="28" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="28" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 左邊線 */
+table.board tr:not(:last-child) td:nth-child(2)[XY] {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="28" stroke="%23666" stroke-width="1"/><line x1="14" y1="14" x2="28" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 下邊線（實際是棋盤上方，因為 prepend）*/
+table.board tr:nth-last-child(2) td:not(:first-child)[XY] {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="14" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="28" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 右邊線 */
+table.board tr:not(:last-child) td:last-child[XY] {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="28" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="14" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 左上角 */
+table.board tr:first-child td:nth-child(2)[XY] {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="14" x2="14" y2="28" stroke="%23666" stroke-width="1"/><line x1="14" y1="14" x2="28" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 右上角 */
+table.board tr:first-child td:last-child[XY] {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="14" x2="14" y2="28" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="14" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 左下角 */
+table.board tr:nth-last-child(2) td:nth-child(2)[XY] {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="14" stroke="%23666" stroke-width="1"/><line x1="14" y1="14" x2="28" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 右下角 */
+table.board tr:nth-last-child(2) td:last-child[XY] {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="14" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="14" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 星位標記 */
+table.board [star='1'] {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><circle cx="14" cy="14" r="3" fill="%23666"/><line x1="14" y1="0" x2="14" y2="28" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="28" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 次一手落點 */
+table.board [BW='N'] {
+	background-size: 103% 103%;
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="29" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="29" y2="14" stroke="%23666" stroke-width="1"/><circle cx="14" cy="14" r="13" fill="%2333FFAA"/><circle cx="14" cy="14" r="13" fill="none" stroke="%23666" stroke-width="1.5"/></svg>') !important;
+	color: blue
+}
+
+/* 白子：先畫線，再畫圓，確保圓在最上方 */
+table.board [BW='0'] {
+	background-size: 103% 103%;
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="29" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="29" y2="14" stroke="%23666" stroke-width="1"/><circle cx="14" cy="14" r="13" fill="white"/><circle cx="14" cy="14" r="13" fill="none" stroke="black" stroke-width="1"/></svg>') !important;
+	color: black;
+}
+
+/* 黑子：先畫線，再畫圓，確保圓在最上方 */
+table.board [BW='1'] {
+	background-size: 103% 103%;
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="29" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="29" y2="14" stroke="%23666" stroke-width="1"/><circle cx="14" cy="14" r="13" fill="black"/><circle cx="14" cy="14" r="13" fill="none" stroke="black" stroke-width="1"/></svg>') !important;
+	color: white;
+}
+
+/* 移動標記 */
+.m {
+	background-image: radial-gradient(#33FFAA 70%, transparent 71%);
+	color: blue;
+}
+
+/* 下子動畫 */
+@keyframes stoneAni {
+	0% {
+		transform: scale(1.4);
+	}
+
+	50% {
+		transform: scale(0.8);
+	}
+
+	75% {
+		transform: scale(1.1);
+	}
+
+	100% {
+		transform: scale(1);
+	}
+}
+
+.ani {
+	animation: stoneAni 0.4s ease-out;
+	will-change: transform;
+}
+
+/* 檢查標記 */
+[check='1'] {
+	background-color: #96f184 !important;
+	color: white !important;
+	border-color: #96f184 !important;
+}
+
+.share-wrapper,
+.set-wrapper {
+	display: inline-block;
+	position: relative;
+	vertical-align: middle;
+	z-index: 0;
+}
+
+/* Share & Set 浮動選單 */
+.sharemenu,
+.setdiv {
+	position: absolute;
+	bottom: 100%;
+	margin-bottom: 0;
+}
+
+.sharemenu {
+	left: 0;
+}
+
+.setdiv {
+	right: 0;
+	width: calc(448px / 3);
+}
+
+.sharemenu button,
+.setdiv button {
+	margin: 0;
+	width: calc(448px / 6);
+	min-width: calc(448px / 6);
+	height: calc(448px / 6 * 0.618);
+	min-height: calc(448px / 6 * 0.618);
+	border-radius: 8px;
+	background-color: #f8f9fa;
+	border: 1px solid #ddd;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+/* Set 面板上方四顆按鈕：每行顯示 2 個 */
+.setdiv button {
+	flex: 1 1 50%;
+	min-width: 0;
+}
+
+.indent {
+	margin-left: 3px !important;
+}
+
+/* 手機：棋盤與解說區垂直堆疊，COMMENT 移到棋盤下方（只改 td，不動 tr 避免表格亂掉） */
+@media screen and (max-width: 800px) {
+
+	td.TDboard:not([style*="display: none"]),
+	td.TDcomment:not([style*="display: none"]) {
+		display: block;
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	td.TDcomment {
+		height: auto;
+	}
+}
+
+/* === 手機瀏覽時固定按鈕在底部 === */
+@media (max-width: 768px) {
+
+	/* 手機斷點 */
+	.page-with-fixed-buttons .button-fixed-bottom {
+		position: fixed;
+		/* 固定定位 */
+		bottom: 0;
+		/* 貼在底部 */
+		left: 0;
+		/* 貼在左邊 */
+		width: 100%;
+		/* 寬度佔滿 */
+		background-color: transparent;
+		/* 背景透明 */
+		display: flex;
+		/* 彈性排版 */
+		justify-content: center;
+		/* 水平置中 */
+		flex-wrap: wrap;
+		/* 按鈕過多時換行 */
+		gap: 0;
+		/* 按鈕之間不要有間距 */
+		z-index: 1000;
+		/* 確保在其他內容之上 */
+	}
+
+	/* 調整 .page-with-fixed-buttons 頁面的 body 內邊距，避免內容被按鈕條遮擋 */
+	.page-with-fixed-buttons.body {
+		padding-bottom: 70px;
+		/* 根據按鈕條實際高度調整 */
+	}
+
+	/* 調整浮動選單位置 */
+	.page-with-fixed-buttons .sharemenu,
+	.page-with-fixed-buttons .setdiv {
+		bottom: calc(100% + 10px);
+		/* 距離按鈕條上方 10px */
+	}
+
+}

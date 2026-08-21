@@ -1,0 +1,16 @@
+.vscode/
+**/_notes/
+**/_vti_cnf/
+chrome_tabs.json
+config.local.php
+
+# Local or generated data must not be published.
+**/guest.dat
+**/*.bak
+
+# Archived server-side code is not part of the current website.
+/舊資料/
+/riftw/舊/Ggame/
+/riftw/舊/play/
+/riftw/舊/chess/
+/test/testgb/

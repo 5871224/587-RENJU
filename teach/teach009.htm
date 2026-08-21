@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link href="../renju.css" rel="stylesheet" type="text/css">
+<link rel=stylesheet href="../bb/bb.css">
+    <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+  <script src="../bb/bb55.js"></script>
+    
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+  </head>
+  <body>
+  <div id="myDiv"></div>
+<h1>逼禁</h1>
+<hr />
+
+由之前的介紹可知黑棋的禁手分為<b>雙活三</b>、<b>雙四</b>及<b>長連</b>，逼禁是白棋特有的攻撀手法，抓準黑棋不能下禁手的弱點來攻擊取勝。禁手的限制不僅減弱了黑子先行的優勢，也增加了五子棋的技術性及趣味性，因雙方必須更精確的掌握對手棋子的落點，初學者可能因此喜歡拿白棋，只因不用擔心被禁，但相信下久之後一定可以體會禁手的樂趣。
+<hr />
+
+
+
+<h2>利用攻擊線控制落點</h2>
+白棋要抓禁手首先要學會控制黑棋的落點，使黑棋出現禁點再抓之<br />
+
+<b>死四</b>：可控制黑下在連五點，黑只能擋四，別無選擇，是最容易控制的<br />
+<div class="board587" move='1!1HH!1HI!1IH!1GH!1JH!1KH!1FG!1IJ!1LG!1JI!1LI!1KI!1KG!1IG!1HK!1JG!5LH!1GI!1II!1KL!1JK!0KJ' heading='F' comment='F'></div>
+<br />
+黑目前有活三，白靠連續衝四來禁黑棋雙三
+<div style="clear: left;"><br /></div>
+
+<b>直三</b>：可控制黑下在左右兩邊<br />
+<div class="board587" move='1!1HH!1HI!1JJ!1II!1JI!1JH!1HJ!1IH!1IJ!1GJ!1JG!1HK!1FI!1FK!5EL!1GK^EKA|IKA!3IK!1DK!1EK^GIX!1GL!1GM!0GH!1EK!1JK!1IK^GIX!1GL!1GM!0GH' heading='F' comment='F'></div>
+<br />
+黑13敗著，白16活三，迫使黑下在兩側Ａ點，再抓雙三禁
+<div style="clear: left;"><br /></div>
+
+<b>跳三</b>：可控制黑下在中間<br />
+<div class="board587" move='1!1HH!1HG!1GI!1IG!1GG!1II!5HJ!1IF^IHA!3IH!1JE!1KD!1FI!0GH!3IE!1IJ!1IH!1JE!1KD!0FI!1IJ!1IE!1IH!1JE!1KD!0FI' heading='F' comment='F'></div>
+<br />黑７敗著，白８跳三迫使黑下在中間Ａ點，再抓雙三禁
+<div style="clear: left;"><br /></div>
+
+<b>二條攻擊線交點</b>：可控制黑棋下在交點<br />
+<div class="board587" move='1!1HH!1HI!1IJ!1IH!1JG!1JI!1KI!1KJ!1LK!1FI!5GI!1IF^HGA!3HG^IGX!1IE!3II!0ID!1ID!0II!3JE!1GF!1HG^IGX!1IE!3ID!0II!1II!0ID!3GH!1GF!1HG^IGX!1IE!3ID!0II!1II!0ID!3GF!1GH!3HG^IGX!0IE!3JE!1EJ!1HG^IGX!0IE!1EJ!1JE!1HG^IGX!0IE!3EJ!1GF!1HG^IGX!1IE!3II!0ID!1ID!0II!1IG!0HG' heading='F' comment='F'></div>
+<br />
+黑用小馬步防守，之前提過小馬步一有機會就要攻<br />
+黑９應擋另一邊才對，因已有連接可攻，黑大優<br />
+白12，做四三前一手迫使黑下Ａ點，再抓雙三禁
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1II!1HF!1GI!1HG!1HI!1FI!1GJ!5GH!1KI!1JI!0IF^IHX' heading='F' comment='F'></div>
+<br />
+黑５敗著，黑９活三，至白12時，<br />
+黑的雙三禁點恰巧也是白的雙三點
+<div style="clear: left;"><br /></div>
+
+<hr />
+
+<h2>利用禁點</h2>
+<b>長連禁點</b>：白用死三準備抓禁(VC3)，黑無法解禁，只能防在衝四點，別無選擇<br />
+<div class="board587" move='1!1HH!1IH!1HI!1JH!1II!1HK!1HJ!1HL!1GK!1GH!1FK!1FH!1FF!1FG!1EG!1EF!1HF!1GG!5HE^HGX!1JG^IGA!1IG!1GF!1GE!0GJ' num='0' heading='F' comment='F'></div>
+<br />
+白１做一死三，黑無法解禁，必下Ａ點，白再抓雙三禁
+<div style="clear: left;"><br /></div>
+
+<b>雙三、雙四禁點</b>：白用死三準備抓禁，黑有很多點可以解禁，但最終會下到Ａ點（雙三的解禁方式有，使一邊變成四或變成長連，雙四的解禁方式有，使一邊變長連或直接衝四）<br />
+<div class="board587" move='1!1HH!1HI!1GG!1II!1JI!1JH!1KG!1IG!1HF!1IH!1IJ!1JG!5KF^KHX!1MH^LHA!3HK!1KH!1LH!0IF!3LH!0IF!3LG!1KH!1LH!0IF!3MF!1KH!1LH!0IF!3GL!1KH!1LH!0IF!3KI!1KH!1LH!0IF!3KJ!1KH!1LH!0IF!3KE!1KH!1LH!0IF!1KD!1KH!1LH!0IF' heading='F' comment='F'></div>
+<br />
+黑９敗著，白12準備抓禁，黑有很多點可以解禁<br />
+最後還是會下到Ａ，白再抓雙三禁
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1HI!1HG!1II!1JI!1IH!1JG!1JH!1KG!1IG!1IF!1HF!1KI!1IJ!1IK!1GH!1FG!1GG!1GI!1FH!1EI!1JD!1IE!0MH^KHX|LHX' heading='F' comment='F'></div>
+<br />
+黑11子敗著，白逼迫黑子下形成雙重禁手<br />
+這時就有<b>雙抓</b>的手段
+<div style="clear: left;"><br /></div>
+
+<b>三個三的禁點</b>：白用死三準備抓禁，黑無法解禁，只能防在衝四點，別無選擇<br />
+<div class="board587" move='1!1HH!1HI!1FH!1GH!1EI!1FI!1GJ!1GI!1HK!1GK!1IJ!1HJ!1JK!1IK!1II!1JI!1IG!1IF!5HG!1GF^GEA|GGX!3GE!0FF!3DJ!0GE!3CK!0GE!3FF!0GE!3FG!0GE!3EE!0GE!3JG!0GE!3KG!0GE!3JJ!0GE!3KK!0GE!3EG!0GE!3HF!0GE!1IE!0GE' num='0' heading='F' comment='F'></div>
+<br />
+白１做死三準備抓禁<br />
+黑除了Ａ，其他選擇都會被抓四三三禁手<br />
+白３再抓雙三禁手
+<div style="clear: left;"><br /></div>
+
+黑不會自己製造禁點讓白去抓禁，上面的例子可知，白可用死四，活三，死三或前一手等攻擊手段，迫使黑下在必要的子，再來抓禁。<br />其中長連禁點及三個三的禁點，若用死三去抓，黑正常情況下無解禁手段，只能乖乖擋住衝四點，很容易被白利用。<br />用死三準備抓三個四、四三三、四四三禁點的情況類似雙三、雙四禁點。<br />
+要逼黑棋禁手還有一個重要的問題，就是對禁手的敏感度，這就只能靠經驗了。<br /><br />
+<hr />
+
+用活二(VC2)準備抓禁是實戰中較少碰到的情況，要注意的是，下棋需<b>順勢而為</b>，刻意的去抓禁，有時反而弄巧成拙，在此舉成功及失敗各一例。<br />
+<div class="board587" move='1!1HH!1HI!1JJ!1II!1KI!1FI!1GI!1FJ!5FH^!1IJ^IKX!3LH!1IK!1IH!1GH!1JK!0JH!3IH!1GH!1JK!0EJ!3EG!1HJ!3GH!1IH!1IK!0GJ!3IH!1GH!1FG!0EJ!1IK!0HL!3GH!1IH!1IG!0IL!3JL!1IK!1IH!1GH!1JK!0JI!1HJ!1IK!1IH!1GH!0JK' heading='F' comment='F'></div>
+<br />
+黑９敗著，白10瞄準黑的雙三禁點做棋取勝
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1HI!1JJ!1II!1IH!1GI!5JI!1HJ^JHX!1KJ!3LK!1KH!3JH!1KG!1KI!1LG!1MF!1NG!3MG!1LI!1MH!1HG!1GF!0JG!1JG!1MH!1LI!1KF!3JE!1MG!1OG!1KE!1KD!1NH!3JD!1JF!1NI!0LH!1LF!0NI!1NI!1JE!1ID!1HG!1GF!0KD!3GH!0JH!1LH!0JH!1HG!1LJ!1MJ!1LH!3JH!0LK!1LK!0JH' heading='F' comment='F'></div>
+<br />
+黑７正確，白８刻意瞄準黑的禁點去做棋<br />
+但正確下法是防在黑棋的雙三點<br />
+現在黑可直接攻勝
+<div style="clear: left;"><br /></div>
+
+如黑棋要形成雙三禁，至少會有二個活二可用，再配合其他子力，常可形成有效的攻勢，白若沒有好的手段，還是防在雙三點較穩當。<br />但雙四或長連的禁點，因變化較少較好掌握，在沒有手段時，通常也不需再防一手。
+
+</body>
+
+</html>

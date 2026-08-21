@@ -1,0 +1,530 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
+
+body {
+	font-family: 'Outfit', 'monospace', 'Microsoft JhengHei', 'Microsoft YaHei';
+	text-align: left;
+	background-color: #040038;
+	color: white;
+	font-size: 20px;
+	margin: 0;
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-height: 100vh;
+}
+
+/* 現代化容器 */
+.container {
+	background: rgba(255, 255, 255, 0.05);
+	backdrop-filter: blur(10px);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 24px;
+	padding: 30px;
+	width: 100%;
+	max-width: 900px;
+	box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+	margin-bottom: 20px;
+}
+
+.section-title {
+	font-size: 24px;
+	font-weight: 600;
+	color: #ff8307;
+	margin-bottom: 15px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.section-title::before {
+	content: '';
+	width: 12px;
+	height: 12px;
+	background: #ff8307;
+	border-radius: 50%;
+	box-shadow: 0 0 10px rgba(255, 131, 7, 0.5);
+}
+
+.board587 {
+	padding: 0;
+	font-size: 18px;
+}
+
+.boardtable {
+	margin: 0px auto 20px auto;
+}
+
+.board587.black-turn table.board {
+	background: #62bcfc;
+}
+
+/* 基本格子 - 十字線（使用 SVG 背景）*/
+table.board [XY] {
+	background-size: 103% 103%;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><line x1="14" y1="-1" x2="14" y2="29" stroke="%23666" stroke-width="1"/><line x1="-1" y1="14" x2="29" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+	font-family: monospace !important;
+}
+
+/* 上邊線 */
+table.board tr:first-child td {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="14" x2="14" y2="28" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="28" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 左邊線 */
+table.board tr:not(:last-child) td:first-child {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="28" stroke="%23666" stroke-width="1"/><line x1="14" y1="14" x2="28" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 棋盤下邊緣 */
+table.board tr:last-child td {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="14" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="28" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 右邊線 */
+table.board tr:not(:last-child) td:last-child {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="28" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="14" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 左上角 */
+table.board tr:first-child td:first-child {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="14" x2="14" y2="28" stroke="%23666" stroke-width="1"/><line x1="14" y1="14" x2="28" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 右上角 */
+table.board tr:first-child td:last-child {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="14" x2="14" y2="28" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="14" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 左下角 */
+table.board tr:last-child td:first-child {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="14" stroke="%23666" stroke-width="1"/><line x1="14" y1="14" x2="28" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 右下角 */
+table.board tr:last-child td:last-child {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="14" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="14" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 特殊處理：倒數第二列最左側格子的格線 (左邊線樣式) */
+table.board tr:nth-last-child(2) td:first-child {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="28" stroke="%23666" stroke-width="1"/><line x1="14" y1="14" x2="28" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 特殊處理：倒數第二列最右側格子的格線 (右邊線樣式) */
+table.board tr:nth-last-child(2) td:last-child {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="28" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="14" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+/* 星位標記 */
+table.board [star='1'] {
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><circle cx="14" cy="14" r="3" fill="%23666"/><line x1="14" y1="0" x2="14" y2="28" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="28" y2="14" stroke="%23666" stroke-width="1"/></svg>');
+}
+
+
+/* 白子：使用徑向漸變營造立體感 */
+table.board [BW='0'] {
+	background-size: 103% 103%;
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><defs><radialGradient id="gradWhite" cx="35%" cy="35%" r="50%" fx="35%" fy="35%"><stop offset="0%" style="stop-color:white;stop-opacity:1" /><stop offset="100%" style="stop-color:%23d0d0d0;stop-opacity:1" /></radialGradient></defs><line x1="14" y1="0" x2="14" y2="29" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="29" y2="14" stroke="%23666" stroke-width="1"/><circle cx="14" cy="14" r="13" fill="url(%23gradWhite)"/><circle cx="14" cy="14" r="13" fill="none" stroke="%23999" stroke-width="0.5"/></svg>') !important;
+	color: black;
+}
+
+/* 黑子：使用徑向漸變營造立體感 */
+table.board [BW='1'] {
+	background-size: 103% 103%;
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><defs><radialGradient id="gradBlack" cx="35%" cy="35%" r="50%" fx="35%" fy="35%"><stop offset="0%" style="stop-color:%23666;stop-opacity:1" /><stop offset="100%" style="stop-color:black;stop-opacity:1" /></radialGradient></defs><line x1="14" y1="0" x2="14" y2="29" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="29" y2="14" stroke="%23666" stroke-width="1"/><circle cx="14" cy="14" r="13" fill="url(%23gradBlack)"/><circle cx="14" cy="14" r="13" fill="none" stroke="%23333" stroke-width="0.5"/></svg>') !important;
+	color: white;
+}
+
+/* 次一手標記 
+table.board [BW='N'] {
+	background-size: 103% 103%;
+	background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><line x1="14" y1="0" x2="14" y2="29" stroke="%23666" stroke-width="1"/><line x1="0" y1="14" x2="29" y2="14" stroke="%23666" stroke-width="1"/><circle cx="14" cy="14" r="13" fill="none" stroke="%23666" stroke-width="1.5"/></svg>') !important;
+	color: blue
+}*/
+
+
+input[type='button'],
+button {
+	box-sizing: border-box;
+	height: 52px;
+	width: auto;
+	min-width: 180px;
+	position: relative;
+	border-radius: 10px;
+	cursor: pointer;
+	overflow: hidden;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	/* 經典 Glossy 反光帶結構 + 粉紫色底 */
+	background:
+		linear-gradient(180deg,
+			rgba(255, 255, 255, 0.45) 0%,
+			rgba(255, 255, 255, 0.28) 44%,
+			rgba(255, 255, 255, 0) 45%,
+			rgba(255, 255, 255, 0) 72%,
+			rgba(255, 255, 255, 0.08) 100%),
+		rgba(232, 141, 240, 0.15);
+	/* 粉紫基底 */
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.5),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+		0 6px 20px rgba(0, 0, 0, 0.35),
+		0 2px 4px rgba(0, 0, 0, 0.2);
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.95);
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+	letter-spacing: 0.1em;
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	margin: 8px;
+	padding: 0 25px;
+	font-size: 18px;
+}
+
+input[type='button']:hover,
+button:hover {
+	background:
+		linear-gradient(180deg,
+			rgba(255, 255, 255, 0.55) 0%,
+			rgba(255, 255, 255, 0.35) 44%,
+			rgba(255, 255, 255, 0) 45%,
+			rgba(255, 255, 255, 0) 72%,
+			rgba(255, 255, 255, 0.12) 100%),
+		rgba(232, 141, 240, 0.25);
+	/* Hover 時背景稍微加亮 */
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.6),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.15),
+		0 10px 30px rgba(0, 0, 0, 0.45),
+		0 2px 6px rgba(0, 0, 0, 0.25);
+	transform: translateY(-2px);
+}
+
+input[type='button']:active,
+button:active {
+	transform: translateY(1px) scale(0.98);
+}
+
+/* 按鈕已統一繼承基礎 Glossy 樣式 */
+
+#refresh {
+	/* 合併 Glossy 反光帶與原本的 SVG 圖示 */
+	background:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'%3E%3Cpath fill='white' d='M339.5-108.5q-65.5-28.5-114-77t-77-114Q120-365 120-440h80q0 117 81.5 198.5T480-160q117 0 198.5-81.5T760-440q0-117-81.5-198.5T480-720h-6l62 62-56 58-160-160 160-160 56 58-62 62h6q75 0 140.5 28.5t114 77q48.5 48.5 77 114T840-440q0 75-28.5 140.5t-77 114q-48.5 48.5-114 77T480-80q-75 0-140.5-28.5Z'/%3E%3C/svg%3E") no-repeat center,
+		linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.28) 44%, rgba(255, 255, 255, 0) 45%, rgba(255, 255, 255, 0) 72%, rgba(255, 255, 255, 0.08) 100%),
+		rgba(232, 141, 240, 0.15);
+	background-size: 35px, auto, auto;
+}
+
+#giveup {
+	/* 合併 Glossy 反光帶與原本的 SVG 圖示 */
+	background:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'%3E%3Cpath fill='white' d='m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z'/%3E%3C/svg%3E") no-repeat center,
+		linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.28) 44%, rgba(255, 255, 255, 0) 45%, rgba(255, 255, 255, 0) 72%, rgba(255, 255, 255, 0.08) 100%),
+		rgba(232, 141, 240, 0.15);
+	background-size: 40px, auto, auto;
+}
+
+input[type='text'],
+select {
+	height: 52px;
+	font-size: 18px;
+	font-weight: 600;
+	padding: 0 15px;
+	border-radius: 10px;
+	background-color: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	color: white;
+	outline: none;
+	transition: all 0.3s;
+	letter-spacing: 0.1em;
+	backdrop-filter: blur(5px);
+}
+
+select option {
+	background-color: #040038;
+}
+
+input[type='text']:focus,
+select:focus {
+	border-color: #ff8307;
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+input[type='checkbox'] {
+	transform: scale(1.5);
+}
+
+textarea {
+	width: 100%;
+	padding: 0;
+	vertical-align: bottom;
+	border: none;
+	background-color: #99BBFF;
+	font-size: 18px;
+}
+
+textarea.comment {
+	height: 100%;
+}
+
+td.TDcomment {
+	height: 1px;
+
+}
+
+table.board {
+	display: block;
+	width: 448px;
+	height: auto;
+	min-width: 448px;
+	min-height: auto;
+	padding: 0;
+	-ms-user-select: none;
+	user-select: none;
+	overflow: hidden;
+	text-align: center;
+	background: #32f5a4;
+	color: black;
+	border-radius: 12px;
+}
+
+table.board tbody {
+	display: block;
+}
+
+table.board tr {
+	display: flex;
+	height: var(--cell-px, 29px);
+}
+
+table.board td {
+	flex: 1 0 0;
+	min-width: 0;
+	height: var(--cell-px, 29px);
+	min-height: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	overflow: hidden;
+	box-sizing: border-box;
+	font-size: calc(var(--cell-px, 29px) * 0.6);
+	line-height: 1;
+}
+
+table.board td * {
+	line-height: 1;
+	margin: 0;
+	padding: 0;
+}
+
+.m {
+	background-image: radial-gradient(rgba(51, 255, 170, 0.5) 70%, transparent 71%);
+	color: red;
+}
+
+/* 下子動畫 */
+@keyframes stoneAni {
+	0% {
+		transform: scale(1.4);
+	}
+
+	50% {
+		transform: scale(0.8);
+	}
+
+	75% {
+		transform: scale(1.1);
+	}
+
+	100% {
+		transform: scale(1);
+	}
+}
+
+table.board td.ani {
+	animation: stoneAni 0.4s ease-out;
+}
+
+
+[check='1'] {
+	background-color: #CCCCCC;
+	background-image: linear-gradient(135deg, #FFFB82 13px, transparent 14px);
+}
+
+/*.progress { 進度條底色
+  width: 99%;
+  background: #DBDBDB;
+  
+}*/
+
+.rc {
+	height: 30px;
+	line-height: 30px;
+	border-radius: 15px;
+	text-align: center;
+}
+
+.alert {
+	display: none;
+	position: fixed;
+	top: 80px;
+	left: 200px;
+	z-index: 99999;
+}
+
+.ww {
+	width: 45px;
+	height: 45px;
+	border-radius: 50px;
+	background-image: -webkit-radial-gradient(circle at left top, #efefef, #aaaaaa);
+	background-image: radial-gradient(circle at left top, #efefef, #aaaaaa);
+}
+
+.bb {
+	width: 45px;
+	height: 45px;
+	border-radius: 50px;
+	background-image: -webkit-radial-gradient(circle at left top, #888888, #000000);
+	background-image: radial-gradient(circle at left top, #888888, #000000);
+}
+
+table.line,
+table.rank {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0 8px;
+	margin-top: 10px;
+	font-size: 16px;
+}
+
+table.line th,
+table.rank th {
+	background: rgba(255, 255, 255, 0.1);
+	padding: 12px;
+	font-weight: 600;
+	color: #ff8307;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	border: none;
+}
+
+table.line td,
+table.rank td {
+	padding: 12px;
+	background: rgba(255, 255, 255, 0.03);
+	border: none;
+	transition: background 0.3s;
+}
+
+table.line tr td:first-child,
+table.rank tr td:first-child {
+	border-radius: 12px 0 0 12px;
+}
+
+table.line tr td:last-child,
+table.rank tr td:last-child {
+	border-radius: 0 12px 12px 0;
+}
+
+table.line tr:hover td,
+table.rank tr:hover td {
+	background: rgba(255, 255, 255, 0.08);
+	color: #ffca28;
+}
+
+/* 選項卡片樣式 */
+.type-selector {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	gap: 12px;
+	margin-bottom: 20px;
+}
+
+.type-option {
+	position: relative;
+	cursor: pointer;
+}
+
+.type-option input {
+	display: none;
+}
+
+.type-card {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 52px;
+	padding: 0 20px;
+	background:
+		linear-gradient(180deg,
+			rgba(255, 255, 255, 0.3) 0%,
+			rgba(255, 255, 255, 0.15) 44%,
+			rgba(255, 255, 255, 0) 45%,
+			rgba(255, 255, 255, 0) 72%,
+			rgba(255, 255, 255, 0.05) 100%),
+		rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	border-radius: 10px;
+	text-align: center;
+	font-size: 18px;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	transition: all 0.3s;
+	box-sizing: border-box;
+}
+
+.type-option input:checked+.type-card {
+	background:
+		linear-gradient(180deg,
+			rgba(255, 255, 255, 0.45) 0%,
+			rgba(255, 255, 255, 0.28) 44%,
+			rgba(255, 255, 255, 0) 45%,
+			rgba(255, 255, 255, 0) 72%,
+			rgba(255, 255, 255, 0.08) 100%),
+		rgba(255, 131, 7, 0.25);
+	/* 更新為稍亮的橘色基底且保有反光帶 */
+	border-color: #ff8307;
+	box-shadow: 0 0 20px rgba(255, 131, 7, 0.4);
+	color: white;
+}
+
+.type-option:hover .type-card {
+	background: rgba(255, 255, 255, 0.1);
+}
+
+.G {
+	color: #27f72e;
+}
+
+.B {
+	color: #2dbcff;
+}
+
+.Y {
+	color: #ffee00;
+}
+
+.O {
+	color: #ff8307;
+}
+
+.P {
+	color: #ff44fb;
+}
+
+
+.controls {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 20px;
+	width: 100%;
+}

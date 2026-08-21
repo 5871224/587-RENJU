@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>規則</title>
+	<link href="renju.css" rel="stylesheet" type="text/css">
+	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function () {
+			// 載入主選單
+			htmlobj = $.ajax({
+				url: "https://587.renju.org.tw/menu.html",
+				async: false
+			});
+			$("#myDiv").html(htmlobj.responseText);
+
+			// 預設載入行棋規則
+			loadContent('rule/rulehome.htm');
+		});
+
+		function loadContent(url) {
+			if (!url) return;
+			$.ajax({
+				url: url,
+				success: function (data) {
+					// 移除動態載入內容中的多餘結構，只取 body 內的內容
+					var bodyContent = data.match(/<body[^>]*>([\s\S.]*)<\/body>/i);
+					var content = bodyContent ? bodyContent[1] : data;
+
+					// 移除內容中可能重複的選單 div
+					var div = document.createElement('div');
+					div.innerHTML = content;
+					$(div).find('#myDiv').remove();
+
+					$("#contentBody").html(div.innerHTML);
+					window.scrollTo(0, 0);
+				}
+			});
+		}
+	</script>
+	<style>
+		.rule-selector-container {
+			margin: 20px 0;
+			padding: 15px;
+			background: #e8f5e9;
+			border-radius: 8px;
+			text-align: center;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+		}
+
+		.rule-selector {
+			padding: 10px 15px;
+			font-size: 16px;
+			font-family: "Microsoft JhengHei", sans-serif;
+			border: 2px solid #66bb6a;
+			border-radius: 5px;
+			background-color: white;
+			color: #333;
+			cursor: pointer;
+			width: 100%;
+			max-width: 300px;
+			outline: none;
+		}
+
+		.rule-selector:focus {
+			border-color: #009933;
+			box-shadow: 0 0 5px rgba(0, 153, 51, 0.2);
+		}
+
+		label[for="rule-select"] {
+			display: block;
+			margin-bottom: 8px;
+			font-weight: bold;
+			color: #009933;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="myDiv"></div>
+	<div style="padding: 10px;">
+		<h1>規則</h1>
+		<hr>
+
+		<div class="rule-selector-container">
+			<label for="rule-select">選擇規則分類：</label>
+			<select id="rule-select" class="rule-selector" onchange="loadContent(this.value)">
+				<option value="rule/rulehome.htm">行棋規則</option>
+				<option value="rule/renju-rule.htm">禁手開局規則</option>
+				<option value="rule/gomoku-rule.htm">無禁開局規則</option>
+				<option value="rule/other.htm">其他玩法</option>
+			</select>
+		</div>
+
+		<div id="contentBody">
+			<!-- 動態加載內容 -->
+		</div>
+	</div>
+</body>
+
+</html>

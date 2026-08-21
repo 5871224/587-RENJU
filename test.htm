@@ -1,0 +1,117 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<HEAD>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="renju.css" rel="stylesheet">
+	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function () {
+			htmlobj = $.ajax({ url: "https://587.renju.org.tw/menu.html", async: false });
+			$("#myDiv").html(htmlobj.responseText);
+		});
+	</script>
+</head>
+
+<body>
+	<div id="myDiv"></div>
+	<h1>詰棋</h1>
+	<hr />
+	　　詰棋是出於實戰或刻意安排的棋局，其含有一些巧妙的獲勝手法，可用來訓練計算力及測試棋力，就像象棋的殘局，圍棋的詰棋一樣饒富趣味，常常會有一些意想不到的妙手蘊藏其中，這也是加強棋力的主要方式之一。<br>
+	　　初學者可以先從最容易的入門詰棋下手，若覺得入門的太簡單，可以試試三手勝詰棋，四手連五勝詰棋可訓練做出二個四三前一手及防守技巧，也不錯玩。<br>　　練習的時候，儘量用目算的，算不出時再打譜，且儘量將所有可能的變化都算清，如此一來對算棋深度、廣度、準度及速度都有很大的幫助。<br>
+	<br>
+	詰棋大概分成兩類<br>
+	一、追勝類：題目不一定會限制取勝方式，若有限制，通常分為三種，追四勝(VCF)、追詰勝(VCT)、追準勝(VC2)。<br>
+	二、限珠類：即限制幾子之內必需取勝，最常見的就是四手五連勝或二手四三勝了。<br>
+	<br>
+	有些瀏覽器會出現排版混亂的情況，可按<a href="test/test.rar">這裡</a>下載部份文字詰棋
+	<table class="rank">
+		<tr>
+			<th>內容</th>
+			<th>題數</th>
+			<th>難度</th>
+			<th>解答</th>
+		</tr>
+		<tr>
+			<td><a href="test/33.htm">入門詰棋（雙活三）</a></td>
+			<td align="center">20</td>
+			<td align="center">易</td>
+			<td align="center">有</td>
+		</tr>
+		<tr>
+			<td><a href="test/43.htm">入門詰棋（四三）</a></td>
+			<td align="center">20</td>
+			<td align="center">易</td>
+			<td align="center">有</td>
+		</tr>
+		<tr>
+			<td><a href="test/44.htm">入門詰棋（雙四）</a></td>
+			<td align="center">20</td>
+			<td align="center">易</td>
+			<td align="center">有</td>
+		</tr>
+		<tr>
+			<td><a href="test/riftest.htm">RIF五級測試題</a></td>
+			<td align="center">4</td>
+			<td align="center">易~中</td>
+			<td align="center"><a href="test/riftestans.htm">解答</a></td>
+		</tr>
+		<tr>
+			<td><a href="test/russiatest.htm">俄羅斯五級測試題</a></td>
+			<td align="center">10</td>
+			<td align="center">易~中</td>
+			<td align="center"><a href="test/russiatestans.htm">解答</a></td>
+		</tr>
+		<tr>
+			<td><a href="test/chinatest.htm">大陸七級測試題</a></td>
+			<td align="center">10</td>
+			<td align="center">易~中</td>
+			<td align="center"><a href="test/chinatestans.htm">解答</a></td>
+		</tr>
+		<tr>
+			<td><a href="test/japantest.htm">日本連珠社段級位題</a></td>
+			<td align="center">10</td>
+			<td align="center">中</td>
+			<td align="center"><a href="test/japantestans.htm">解答</a></td>
+		</tr>
+		<tr>
+			<td><a href="test/Nakamura.htm">中村名人作詰棋</a></td>
+			<td align="center">10</td>
+			<td align="center">中</td>
+			<td align="center"><a href="test/Nakamuraans.htm">解答</a></td>
+		</tr>
+		<tr>
+			<td><a href="test/45.htm">四手五連勝詰棋</a></td>
+			<td align="center">20</td>
+			<td align="center">中~難</td>
+			<td align="center"><a href="test/45ans.htm">解答</a></td>
+		</tr>
+		<tr>
+			<td><a href="test/bw1.htm">坂田吾朗之白勝詰棋上</a></td>
+			<td align="center">100</td>
+			<td align="center">中~難</td>
+			<td align="center"><a href="test/bw1ans.htm">解答</a></td>
+		</tr>
+		<tr>
+			<td><a href="test/bw2.htm">坂田吾朗之白勝詰棋下</a></td>
+			<td align="center">100</td>
+			<td align="center">中~難</td>
+			<td align="center">無</td>
+		</tr>
+		<tr>
+			<td><a href="test/bb.htm">坂田吾朗之珠玉詰棋</a></td>
+			<td align="center">100</td>
+			<td align="center">中~難</td>
+			<td align="center"><a href="test/bbans.htm">解答</a></td>
+		</tr>
+		<tr>
+			<td><a href="test/vcf.htm">衝四勝VCF詰棋</a></td>
+			<td align="center">40</td>
+			<td align="center">中~難</td>
+			<td align="center">無</td>
+		</tr>
+	</table>
+</body>
+
+</html>

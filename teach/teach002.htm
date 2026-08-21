@@ -1,0 +1,93 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+<meta charset="UTF-8" />
+<link rel=stylesheet href="../bb/bb.css">
+	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+	<script src="../bb/bb55.js"></script>
+<link href="../renju.css" rel="stylesheet" type="text/css">
+
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+</head>
+<body>
+<div id="myDiv"></div>
+
+<h1>防守選點１</h1>
+<hr />
+
+有人說防守是五子棋的精華，憑著限制對手的發展來取得優勢。國中的時候學過燃燒的三要素是，可燃物、助燃物、燃點，要滅火就是設法讓其中一個條件不成立；而五子棋取勝的三要素是，<b>先手、空間、連接</b>，要澆熄對手進攻的氣焰，也是從這三方面下手。另外，藉由熟練攻擊技巧，也可以幫助判斷對手的攻擊要點，進而知道該如何去防守。<br /><br />
+<hr />
+
+
+
+<h2>子力的連接點</h2>
+四四、四三、三三，是最常見的取勝方式，防守點通常都有４個以上，若是好幾手的連續進攻，防點也會增加，這裡先介紹最簡單的前一手防守<br /><br /><b>四四</b>：<br />
+如圖，黑子下一子可在Ａ形成四四，白子有幾種防守方式呢？<br />
+
+<div class="board587" move='1!1HH!1IH!1GH!1FI!1FG!1EF!1HG!1GG!1HF!1HE!5IJ^HIA|HJB|JKB!3JK!1HI!0HJ!3HJ!1HI!0JK!0HI' numminus='11' heading='F' comment='F'></div><br />白有下列下法<br />下Ａ：擋住交點<br />下Ｂ：擋住其中一邊，使黑子下Ａ只能形成一個四
+<div style="clear: left;"><br /></div>
+
+<b>四三</b>：<br />如圖，黑下一步可在Ａ形成四三，白子有幾種防守方式呢？<br />
+<div class="board587" move='1!1HH!1IG!1HF!1GF!1HE!1HD!1GE!1FE!1FG!1FH!5EF^HIA|GHB|EDC|DEB|DCC|IJB|IHC|HGB|JIC!3JI!1HI!1HG!1IH!0GH!3IH!1HI!0HG!3DC!1HI!1HG!1ED!0GH!3ED!1HI!0HG!2HG!3DE!1HI!0HG!3GH!1HI!0HG!3IJ!1HI!0HG!0HI' numminus='11' heading='F' comment='F'></div><br />白有下列下法<br />下Ａ：擋住交點<br />下Ｂ：擋住其中一邊<br />下Ｃ：利用其他棋子防守，使黑子下Ａ點後必須回防
+<div style="clear: left;"><br /></div>
+
+<b>三三</b>：<br />如圖，白下一步可在Ａ形成三三，黑子有幾種防守方式呢？<br />
+<div class="board587" move='1!1HH!1IG!1IH!1JH!1JI!1KJ!1LJ!1IF!1KG!5KF^HFA|GFB|HGC|GEB|FEC|FDB|KIB|JFB|LFB!3FE!1HF!1GF!1HG!0GE!3HG!1HF!1GF!1FE!0GE!3FD!1HF!0JF!3KI!1HF!0JF!3LF!1HF!0GE!3JF!1HF!0GE!3GF!1HF!0GE!3GE!1HF!0JF!0HF' numminus='10' heading='F' comment='F'></div>
+
+<br />黑有下列下法<br />下Ａ：擋住交點<br />下Ｂ：擋住其中一邊，注意最左下的Ｂ點！<br />
+下Ｃ：利用其他棋子防守，使白子下Ａ點後必須回防
+<div style="clear: left;"><br /></div>
+
+<hr />
+
+我們可以將防守分成直接防守和間接防守<br />
+直接防守：直接破壞對手的攻擊資源，如上面各例的Ａ及Ｂ點<br />間接防守：需算準對手的攻擊，藉由其他子力配合，讓對手進攻時形成反擊，如上面例子的Ｃ點<br /><br />初學者先要做到不要漏看Ａ點而被簡單取勝<br />並沒有哪個防點是最好，要看全盤來決定，通常自己沒有攻勢時，直接防守是比較穩妥的<br />
+間接防守容易被忽略，這些點往往是妙手出現的地方，但間接防守不一定每次都有，還需要其他子力配合，四四前就沒有間接防守的下法，稍微想一想便知<br />
+
+<hr />
+
+<h2>實例</h2>
+
+<div class="board587" move='1!1HH!1IH!1JG!1IF!1JF!1JE!1IG!1KE!1HG!1GG!1GF!1II!1HF!1HE!1JH!1GE!1IE!1IJ!1IK!3GI!5KF^KGA|KIB|JJC|LHD!2LH!3JJ!0KG!3KI!0KG!1KG!1KI!1LJ!0JJ!1HJ!0HI' numminus='21' heading='F' comment='F'></div>
+<br />黑下一手可在Ａ四三，或者ＢＣ四三，白如何防？<br />若守在ＡＢＣ其中一點，黑可在另一邊四三<br />只有Ｄ點能一子守住兩邊的攻擊<br />所以稱Ｄ點為共用的防點
+<div style="clear: left;"><br /></div>
+
+
+
+<div class="board587" move='1!1HH!1II!1GG!1HI!1IH!1JH!1JI!5HG!1HJ^IH%u25B3|HH%u25B3|GG%u25B3|HJ%u25B3!1FH^HI%u25B3|II%u25B3|HG%u25B3|FH%u25B3!1FI^HJ%u25B3|FI%u25B3|GG%u25B3!1GJ!1GL!1HL!1EK^EK%u25B3|GL%u25B3|FI%u25B3!0EJ' heading='F' comment='F'></div>
+<br />黑９後，白10防在黑△的交點，防止黑一子做三路<br />黑11同理，防在△的交點<br />白12也防在△的交點<br />
+黑13佔上方空間並與７做一個活二，等等在左右都可發展<br />且壓制白棋發展空間<br />白14若擋住活二中間，黑可舒服的將白棋包住<br />於是白貼住13，不讓黑在上方有太多空間<br />黑15與１做活二，並和13,７的活二有連接<br />白16防在△的交點<br />
+<br /><br />白的防守策略就是防在黑子力的連接點，黑如太急於進攻，白棋容易搶到優勢<br />
+<div style="clear: left;"><br /></div>
+
+<br /><hr />
+<h2>兩塊棋的連接</h2>
+<div class="board587" move='1!1HH!1II!1GF!1JG!1HF!1IF!1GG!1HE!1GD!1GE!1IE!1FH!1HG!1IH!1HD^!1IG!5IJ^KCA|JDC|IDD|FDE|KDB!2FD!3ID!1FE!3FD!1EF!1DG!1EC!3ED!1GC!1FB!0HC!1DC!1FB!1GC!1DD!1CE!0EE!3ED!1EF!3HC!1DG!1CH!1FG!1EG!1GH!1HI!1DE!1CD!0DF!1DG!1GC!1FB!1FF!1DF!1HI!1HJ!1FG!1GH!1FC!1FD!0HC!3EF!1FB!1GC!1ED!1DC!0FD!1HI!1ED!1DC!1DD!1FD!1FF!1EE!0EF!3JD!1ED!1FD!1EF!3FF!0FE!1FE!1FF!1DF!0EE!3KD!1GC!1FB!1JD!1KC!1FD!1ID!1DD!1ED!0EE!1KC!1ED!1FD!1EF!3FF!0FE!1FE!1FF!1DF!0EE' heading='F' comment='F'></div>
+<br />黑下一子可於Ｃ點四三，白有五個防點<br />若守在Ａ或Ｂ，明顯太寬鬆了<br />大多數初學者會下在Ｃ點，但９,15這個活二還是連得到左邊<br />若下在Ｄ點，雖擋住了９,15這個活二，<br />
+但仍未切開其與左邊子力的連接<br />11,15這個活二也連得到左邊，黑還是能贏<br />正確是擋在Ｅ點，將９,11,15三子與其他黑子分開，<br />使黑在下方與左方皆無法取勝
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='5!1HH!1HG!1JF!1IG!1IF!1JH!1GG!1GF!1IH!1HF!1GE!0FF' heading='F' comment='F'></div><br />
+此局為疏星開局定石之一<br />白４自然分斷黑的兩子，黑５正常下法之一<br />白６並不擋活二，而是佔住黑子的連接點<br />黑７擋白活二，並試圖從上方連接<br />白８再度分斷上下黑子，並做活二<br />黑９擋白子的活二<br />白10活三，黑只能上擋，若黑下擋，因無攻勢，<br />白在上方空間大，做棋可勝<br />白12繼續分斷黑子，至此黑方被分成上下各三子，<br />難以組織攻勢
+<div style="clear: left;"><br /></div>
+<hr />
+
+<h2>斜線優先</h2>
+  斜線且有較易拓展的特性，要防守時通常會優先選擇<br /><br />
+
+<div class="board587" move='1!1HH!1HG!1JF!1IG!1IE!1KG!1GG!1HF!5GE^FFA!3FE!1GF!1GD!1FF!1EE!1HD!3IC!1GI!1GH!1FI!1HI!1EG!1DH!1FH!1HJ!1FG!1FJ!1EH!1DI!0DG!1EG!1EH!1GH!1IC!1JB!1ID!1IB!1HE!1FG!1JC!1KB!0GC!3FF!1GF!1GH!1JE!1HE!1JG!1HC!1HD!0JD!3GF!1FF!1EE!1HD!1IC!1FE!3FD!1GC!1FB!0FH!1FG!1ID!1GD!1JE!1HE!1KF!1LG!1JG!3JH!1LE!1MD!1MF!1LF!0JC!1JD!1HI!1IH!1II!1JJ!0JI!3GD!1HE!1FE!1FF!1EE!1JG!1JE!0GH!3HE!1FF!1HD!1HC!1EE!1GD!1GF!1FE!1EF!1FG!1FD!0JG!3JE!1FF!1EE!1HD!1IC!0FH!1GH!1HE!1FE!1FF!1EE!1HD!3IC!0JG!1JG!1LG!1IC!0ID' heading='F' comment='F'></div>
+<br />疏星變化，至黑９<br />黑目前有三個活二，白沒攻勢必需防守<br />這時在Ａ點防住斜的活二，是白棋最有利的下法
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1HG!1JF!1IG!1KG!1IE!5JH^IIA!3II!1IF!1KF!1IH!1KH!1FG!0FH!3IH!1II!1HJ!1JI!1JG!1KI!1HI!1KF!1IF!1ID!1KH!1LI!1MI!1LG!1JE!0LF!3KH!0II!3JI!1II!1HJ!1GG!3JJ!0IF!1FF!1KH!1IH!1KJ!1KI!0LH!3JG!0II!3LF!1IH!1KH!0II!3JE!0II!3GH!0II!1IF!1IH!1GH!1JE!1JG!1KH!1LH!1KF!1KE!1LF!1II!1MF!1NF!0MH' heading='F' comment='F'></div>
+<br />疏星變化，至黑７<br />黑有三個活二，白棋雖有活二，但攻不動<br />這時防斜活二是白棋唯一的下法<br />若不防Ａ，則自然被黑子斜活三佔去，之後黑取勝不難<br />
+<div style="clear: left;"><br /></div>
+</body>
+
+</html>

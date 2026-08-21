@@ -1,0 +1,136 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+
+<link href="../renju.css" rel="stylesheet" type="text/css">
+<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+</head>
+
+<body>
+<div id="myDiv"></div>
+
+<h1>比賽需知</h1>
+<hr />
+<h2>賽制</h2>
+<p>  目前協會比賽會使用瑞士制和循環制兩種賽制，使用程式排賽程非常方便<br>
+  <a href="https://587.renju.org.tw/program.htm">EXCEL瑞士制程式下載</a><br>
+</p>
+<p>  <strong>瑞士制</strong>：目前正式比賽通常為五輪，因此會使用瑞士制，以便在有限輪數中，給每位選手一個合理的排名，且賽程中不會淘汰任何選手，可讓每位選手都下滿所有輪數。</p>
+<p>除第一輪依選手籤號分配對手外，之後每輪會先以目前得分由高到低排序，基本上每次將分數最高的兩位選手抓對，若之前已遇過，則跳過抓下一位，直到所有人都分配到對手為止。</p>
+<p>輪空：當參賽人數為奇數時，每輪會有一位選手沒有被分對到對手（通常為排名最後的選手），稱之為輪空，記分時該選手可直接獲得贏棋的分數，每人限輪空一次。</p>
+<p>  當比賽結束，同分的選手，會用輔分來做為排名依據，輔分通常會以所遇對手的得分及對戰勝負來記分。<strong><br>
+  <br>
+循環制</strong>：每位選手都會對上的賽制，所以通常會限制參賽人數 。</p>
+<p>&nbsp;</p>
+<hr />
+<h2>實際比賽時遵循，<span style="color: #F0F; font-weight: bold;">落子，敲鐘，記譜</span>的流程</h2>
+<p><strong>認輸</strong>：自認己方棋局無可挽回，可隨時提出。</p>
+<p><strong>提和時機</strong>：己方落子敲鐘後，可口頭向對手提和，對手若表示同意，則本局和局，對手若不同意，則繼續落子。</p>
+<p>若有規則，禁手或其他任何疑慮可隨時向裁判提出。</p>
+<p><br>
+</p>
+<hr />
+<h2>計時鐘</h2>
+<p>正式比賽為控制比賽時間，都配有計時鐘，其介面會顯示雙方可用時限，當按下己方按鈕時，己方時間暫停，對方時間開始倒數。若在棋局未分勝負前，有一方時間用盡，則判該方超時敗。</p>
+<p>敲鐘時，應與落子使用同一隻手（避免左手落子右手敲鐘，容易變成先敲鐘後落子）。</p>
+<p>目前手機ＡＰＰ有很多現成的棋鐘程式可用，蒐尋棋鐘即可。<br>
+</p>
+<table width="666" height="263" border="1">
+  <tr>
+    <td width="126"><strong>基本時限</strong></td>
+    <td width="524">可自由運用的思考時間，正式比賽至少２０分鐘以上</td>
+  </tr>
+  <tr>
+    <td><strong>每手加時</strong></td>
+    <td>每下一子，可獲得的時間，正式比賽至少１０秒以上</td>
+  </tr>
+  <tr>
+    <td><strong>超時</strong></td>
+    <td>時間用盡判負</td>
+  </tr>
+  <tr>
+    <td><strong>敲鐘時機</strong></td>
+    <td>已方動作結束時<br>
+      １.棋局開始時（由白方敲鐘確定棋局開始）<br>
+      ２.落子後<br>
+      ３.開局階段，選擇由對方落子時 <br>
+    ４.放棄落子（若雙方接連放棄判和棋）</td>
+  </tr>
+</table>
+<p><img src="../p/teach/clock.png" width="388" height="243"></p>
+<p>&nbsp;</p>
+<hr />
+<h2>記譜方式</h2>
+<p>對局中雙方棋手皆應以可理解之形式，詳細記錄自己及對方的每一步，記錄方式由比賽主辦單位訂定。通常是記錄對局者、規則、手順、用時、打數、打點、勝負。<br />
+<a href="../p/paper.doc">記譜紙下載</a></p>
+<table width="838" height="594" border="1">
+  <tr>
+    <td><B>時點</B></td>
+    <td><B>紀錄事項</B></td>
+    <td><B>紀錄方式</B></td>
+  </tr>
+  <tr>
+    <td width="57">開始前</td>
+    <td width="248">日期、規則、場次、雙方姓名</td>
+    <td width="511">棋盤上方的欄位</td>
+  </tr>
+  <tr>
+    <td rowspan="5">進行中</td>
+    <td>每一手的位置，順序</td>
+    <td>在棋盤上寫上手順，黑棋則以圓圈加注①、2、③、4、⑤</td>
+  </tr>
+  <tr>
+    <td height="97">前五手是誰下的<br>
+    （因有開局規則，前五手不一定輪流落子）</td>
+    <td>姓名右方的圈，用來劃記前五手是誰下的<br>
+    如圖，可知上方選手下了第１２３５ 手</td>
+  </tr>
+  <tr>
+    <td height="39">開局</td>
+    <td>前三子形成的26種開局，不記也沒關係</td>
+  </tr>
+  <tr>
+    <td height="70">黑方白方</td>
+    <td>在黑白方確定後，將拿黑的棋手姓名左方的圈塗滿<br>
+    如圖，可知上方選手為黑方</td>
+  </tr>
+  <tr>
+    <td height="122">打數、
+      5A<br>
+    （並非每種規則都需要）</td>
+    <td>如圖，打數為4，表示黑方第五手下4個打點讓白方選擇其一<br>
+    未被選擇打點有3個，紀錄在5A<br>
+    如圖，分別在棋盤上24,37,41這三子的位置，若該位置沒有棋子，則用座標表示</td>
+  </tr>
+  <tr>
+    <td rowspan="3">結束後</td>
+    <td height="38">使用子數、對局結果</td>
+    <td>寫黑勝，白勝或和棋（黑白可用BW表示）</td>
+  </tr>
+  <tr>
+    <td>用時</td>
+    <td>記錄棋鐘上的剩餘時間</td>
+  </tr>
+  <tr>
+    <td>雙方簽名為證</td>
+    <td>棋盤下方的簽名</td>
+  </tr>
+</table>
+<p><br />
+  
+<img border="1" src="../p/paper.jpg" width="314" height="478"></p>
+<p><br>
+</p>
+<p>&nbsp;</p>
+
+</body>
+
+</html>

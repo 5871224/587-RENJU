@@ -1,0 +1,83 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+<meta charset="UTF-8" />
+<link rel=stylesheet href="../bb/bb.css">
+  <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+  <script src="../bb/bb55.js"></script>
+<link href="../renju.css" rel="stylesheet" type="text/css">
+
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+</head>
+<body>
+<div id="myDiv"></div>
+
+<h1>衝四勝（VCF)</h1>
+<hr />
+
+衝四勝，指<b>連續下出四，直到獲勝</b>，英文為Victory of Continuous Four，簡稱<b>VCF或VC4</b>。<br />
+衝四勝（以下簡稱VCF）是進攻的基礎，也是最明確的取勝方式，因為衝四的防點唯一，計算較易，是比賽經常出現的取勝手法，但很少會出現十手以上的VCF，平常在練習時，可以找在二十手以內的衝四勝題目來練習。<br /><br />
+
+<hr align="center" size="2" width="100%" />
+
+VCF只有一招，就是<b>衝四</b>，直到五連為止<br />
+
+<div class="board587" move='1!1HE!1GE!1GD!1FD!1DB!1EC!1IB!1IC!1HD!1ID!1GC!1IF!1FB!1GM!100!1HM!100!1IM!500^!2IG!0JM' numminus='19' heading='F' comment='F'></div>
+<br />活四及四四，就是一步VCF，是衝四勝最最基本的形態
+
+<div style="clear: left;"><br /></div>
+<div class="board587" move='1!1HH!1IH!1HG!1JG!1HF!1HE!1II!1GG!1JI!5IF!1HI!1HJ!0GI' numminus='10' heading='F' comment='F'></div>
+<br />基本勝型四三，便是二步衝四勝
+<div style="clear: left;"><br /></div>
+從基本的四三及四四，計算力增強後可以看出更長手數及更複雜的VCF<br />
+
+<div class="board587" move='1!1HH!1GG!1HG!1HF!1IH!1IG!1JH!1GH!1GF!1FE!1HJ!5II!1KH!1LH!1JI!1KJ!1HK!1HI!1IJ!1LG!0GL' numminus='12' heading='F' comment='F'></div>
+<br />如左的四手VCF
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1HI!1IH!1GH!1IJ!1II!1JI!1HG!1KH!1HK!1KJ!5FI!1LG!1MF!1LH!1JH!1LK!1ML!1LJ!1LI!0JJ' numminus='12' heading='F' comment='F'></div>
+<br /><b>衝四是絕對先手</b><br />
+如左，黑不理會白子的活三，直接衝四取勝
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1HI!1II!1GG!1JJ!1JI!1IJ!1KJ!1IH!1IK!1JH!1GH!1HJ!5GK^IGA|FJB!3IG!1IF!1FJ!1GJ!0GI!1FJ!1GJ!1GI!0IG' heading='F' comment='F'></div>
+<br />VCF的手順，唯一要考慮的就是對手是否有<b>反四</b><br />
+之前的例子，衝四的次序不會影響最後的結果<br /><br />但左例有所不同<br />黑子先Ａ再Ｂ可以獲勝，但若先下Ｂ則會被白子反四
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1DL!1EK!1EJ!1FI!1GI!1HJ!1FL!1GL!1HK!1FF!1DJ!1DI!1CK!1BJ!1EI!1FH!1FG!1EF!1GF!1GH!1DH!1CG!1IH!1HG!1JF!1IF!1JE!1JG!1KH!1KG!1IG!1HH!1II!1HF!1HI!1HE!1HD!5JI!1BL!1AM!1EL!1CL!1FK!1GJ!1IK!1IJ!1GK!1JK!1FJ!1HL!1FN!1FM!1EM!1GO!1DN!1CO!1DM!1DK!1CN!1BO!0EN' numminus='38' heading='F' comment='F'></div>
+<br />來個複雜一點的，能看出越多手的VCF，對進攻越有幫助
+<div style="clear: left;"><br /></div>
+要熟悉VCF並不難，其唯一的手段就是衝四，但棋局中沒事亂衝只會消耗自己的資源，增加對手的子力而己，至於要如何形成VCF之勢呢？請看下一篇VCF的前身，<b>攻擊勝（VCT，VC3）<br /></b><hr align="center" size="2" width="100%" />
+
+<h2>VCF欣賞</h2>
+這裡的VCF手數非常之多，平常不用練那麼多手數的題目，但想挑戰自我記憶及計算極限的人，倒是可以試看看。有些出題的高手，還可將題目排成文字或圖案，甚至將四衝滿盤，更增添解棋的趣味性。<br />
+
+<div class="board587" move='1!1HH!1AO!1BN!1BO!1CN!1DN!1BM!1DM!1BK!1BL!1BJ!1AJ!1CI!1DH!1DF!1EG!1BD!1CE!1AB!1AC!1BA!1DE!1ED!1FD!1FC!1FA!1EB!1GA!1HD!1GD!1KD!1JD!1IB!1ID!1KA!1JC!1LD!1JA!1NB!1MC!1OA!1NA!1NF!1ME!1OI!1OH!1NJ!1NG!1NK!1MH!1NL!1LH!1ML!1KH!1MM!1JG!1JO!1MN!1IO!1IN!1HN!1GN!1GM!1FM!1GK!1IM!1IL!1IJ!1IK!1HI!1GH!1GG!1FG!1LN!1DK!1MD!1IG!5EM!1NH!1NI!1EK!1FL!1CK!1AK!1FJ!1GI!1CM!1DL!1CL!1CO!1EJ!1AN!1DJ!1CJ!1BH!1AG!1BG!1BI!1BE!1BF!1BB!1BC!1CB!1DB!1DC!1FE!1AF!1CD!1DI!1CH!1KN!1LM!1GJ!1HJ!1HK!1JM!1EH!1FI!1HE!1GF!1HF!1HG!1HB!1HC!1GB!1FB!1JB!1KB!1GE!1IC!1IH!1FH!1JK!1KK!1KI!1JH!1HL!1JJ!1HM!1HO!1GL!1FK!1KL!1JL!1LL!1OL!1MK!1KM!1LJ!1OM!1MI!1MJ!1LI!1KJ!1II!1JI!1JF!1KE!1IE!1IF!1GC!1KG!1EC!1CC!1EE!1EF!0EA' numminus='78' heading='F' comment='F'></div>
+<br />取自連珠世界<br />
+盤面７８子，黑白各３９子<br />
+黑先衝四勝
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1BO!1AO!1AN!1BL!1AL!1AJ!1AG!1AH!1AD!1AE!1AB!1AF!1AA!1GA!1BA!1GD!1CA!1FD!1GE!1IC!1HC!1KA!1JB!1IG!1JH!1JK!1JL!1GL!1GN!1EM!1FM!1EK!1DJ!1DH!1MB!1MA!1NB!1OC!1OG!1NG!1OH!1OI!1OJ!1LG!1OL!1NL!1OM!1ON!1MO!1IO!5CN!1GI!1FJ!1KE!1JF!1JD!1HB!1ID!1HD!1IE!1IF!1KC!1LB!1KB!1KD!1IA!1IB!1LA!1JA!1HE!1JC!1LF!1MG!1LE!1JE!1LC!1LD!1NC!1MC!1HF!1GG!1HG!1HI!1JG!1KG!1MD!1KF!1NE!1OF!1OE!1ME!1OA!1NA!1OD!1OB!1KH!1MF!1NF!1ND!1NI!1NH!1LI!1LH!1KJ!1MH!1MI!1KI!1NK!1MJ!1NM!1NJ!1LK!1ML!1KK!1MK!1IH!1JI!1IK!1HK!1II!1IJ!1LL!1JJ!1LM!1LJ!1LN!1LO!1NN!1NO!1MM!1OO!1KO!1OK!1KN!1MN!1JM!1KM!1IL!1HM!1IN!1IM!1HO!1KL!1HN!1JN!1GO!1JO!1FL!1GM!1HL!1EL!1GK!1HJ!1GJ!1GH!1EO!1FO!1DN!1CO!1CM!1AK!1DL!1BN!1CK!1FN!1DK!1FK!1DM!1DO!1BM!1AM!1BJ!1AI!1BK!1BI!1CL!1EN!1CI!1CJ!1EJ!1FI!1EG!1FF!1EH!1EI!1CH!1BH!1BG!1DI!1FG!1GF!1CG!1DG!1CE!1CF!1DF!1FH!1EE!1GC!1BE!1DE!1ED!1EF!1CD!1DD!1BD!1AC!1EB!1DC!1BC!1BF!1EA!1EC!1FC!1DA!1DB!1CC!1FA!1HA!1FB!1FE!1CB!1BB!0GB' numminus='52' heading='F' comment='F'></div>
+<br />詰棋名稱：尊武<br />
+盤面５２子，黑白各２６子<br />
+黑先衝四勝
+<div style="clear: left;"><br /></div>
+
+<div class="board587" move='1!1HH!1AO!1AN!1AL!1AK!1AJ!1CI!1CJ!1BG!1BI!1AE!1AI!1AC!1AH!1AA!1BA!1EO!1CH!1FA!1CA!1HB!1DA!1IA!1IF!1II!1FN!1KA!1JG!1LL!1JH!1MO!1MN!1OO!1JN!1ON!1HM!1OL!1NM!1MG!1MK!1ME!1MI!1OF!1OD!1OE!1OB!1ND!1DI!1NC!5DH!1MC!1LB!1MD!1MF!1MA!1MB!1LA!1JA!1NA!1OA!1NE!1NB!1KB!1LC!1KE!1LE!1KD!1KC!1JD!1LD!1LF!1NH!1KG!1OC!1NG!1NF!1KH!1KF!1KK!1JJ!1KJ!1KI!1LI!1MH!1LG!1OG!1MJ!1NK!1LJ!1LH!1LK!1LM!1OK!1OM!1OJ!1NJ!1OH!1OI!1KL!1NI!1NL!1ML!1MM!1NN!1KN!1KM!1KO!1LN!1JM!1IN!1LO!1NO!1HK!1IL!1JI!1IJ!1HG!1IH!1HI!1HJ!1GI!1FI!1HE!1HF!1ID!1JC!1HD!1GD!1HC!1HA!1GB!1JE!1JB!1IB!1GE!1IC!1JF!1IG!1GC!1IE!1EE!1FD!1GG!1FF!1GF!1GH!1FE!1DE!1DC!1ED!1EH!1FG!1EC!1FC!1CC!1BC!1DD!1BB!1AD!1AB!1AG!1AF!1CE!1BF!1FB!1GA!1DB!1EB!1BD!1EA!1EG!1DF!1DG!1CG!1CF!1BE!1EI!1EF!1CD!1CB!1EK!1EJ!1DJ!1BH!1CK!1FH!1FJ!1DL!1IK!1JK!1BL!1AM!1GM!1FL!1GK!1FK!1GL!1GJ!1DN!1CM!1IO!1JO!1IM!1HL!1HN!1JL!1GO!1GN!1FO!1HO!1DO!1CO!1EN!1FM!1BN!1CN!1EL!1EM!1BK!1DK!1CL!1DM!1BM!1BJ!0BO' numminus='50' heading='F' comment='F'></div>
+<br />
+出題者：坂田吾朗八段<br />
+目前最多連衝手數紀錄
+<div style="clear: left;"><br /></div>
+本以為這種題目不是人腦能夠心算出來的，實際去嘗試後發現，只要時間足夠絕對算得出來！
+
+</body>
+
+</html>

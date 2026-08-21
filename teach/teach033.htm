@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link href="../renju.css" rel="stylesheet" type="text/css">
+<link rel=stylesheet href="../bb/bb.css">
+    <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+  <script src="../bb/bb55.js"></script>
+    
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+  </head>
+  <body>
+  <div id="myDiv"></div>
+    <h1>連接的勢力</h1>
+    <hr>
+    
+    在進攻材料篇，學到死三及活二的勢力，勢力若與其他棋子連接，形成新的死三及活二，便有連續進攻的機會，在計算勢力範圍時，也須一併考量。
+    <h2>連接後延伸的勢力範圍</h2>
+    <p>以下介紹材料的勢力在三種連接情況之下，產生新的勢力點 ，在下棋時，若能看清敵我的勢力範圍，對攻守及佈局的選點都很有幫助。</p>
+  <p>●勢力與現有棋子的連接</p>
+  <div class="board587" move="1!1HH!1IH!1HG!1GG!1HF!1HE!1GH!4FI^HIA|HJa|EFB|FGb|IJb|JKb|FFc|GFc" heading="F" comment="F"></div>
+    盤面上的材料只有一個死三，其衝四點Ａａ是第一層勢力，有２點<br>
+  Ａ和７形成活二，其活三點Ｂｂ是第二層勢力，有４點<br>
+  Ｂ和５形成活二，其活三點ｃ是第三層勢力，有２點<br>
+  一共８個勢力點<br>
+  <br>
+  勢力點表示對方沒有反擊的情況下，己方發動進攻可佔到這些點<br>
+  換句話說，在這些勢力點補上棋子，之後便有機會可連回一開始的材料取勝，<br>
+  舉例來說，在Ｂｂ任一點補上一子，有Ａ位形成四三的手段<br>
+  又或者先在ｃ補上一子，有Ｂ位活三，再Ａ位四三的手段<br>
+  <br><div style="clear: left;"><br></div>
+ <p>●不同層勢力的連接 </p>
+  <div class="board587" move="1!1HH!1HI!1HJ!1GH!1IJ!4II^JJa|KJa|GJa|FJA|GIB|IGb|EKb|FHC|EGc|IKc|JLc|FKd|FId|FGd" heading="F" comment="F"></div>
+      <p>盤面上的材料有一個活二，其活三點Ａａ是第一層勢力，有４點<br>
+      Ａ和１形成活二，其活三點Ｂｂ是第二層勢力，有３點<br>
+Ｂ和３形成活二，其活三點Ｃｃ是第三層勢力，有４點<br>
+Ｃ和Ａ形成活二是第一層和第三層勢力產生的材料，其活三點ｄ是第四層勢力，有３點 <br>
+      一共１４個勢力點</p>
+      <p>不要小看任一個材料，若有子力接應，一個活二也可能直接發動進攻取勝，尤其當進攻可不斷產生新的材料時</p>
+  <div style="clear: left;"><br></div>
+ <p>●不同材料勢力的連接 </p>
+ <div class="board587" move="1!1HH!1HG!1HI!1II!1GI!1FJ!1FH!1EG!1HJ!1GH^!1IH!4GJ^IKA|JLB|HKC|HLD|FKa|GKa|JKa|KKa|FNb|GMb|JJb|KIb|GLc|ILc|KLc" heading="F" comment="F"></div>
+    
+    <p>盤面上的材料有兩個死三，其衝四點分別為ＡＢ和ＣＤ是第一層勢力，有４點<br>
+    有四種衝四組合，分別為ＡＣ，ＡＤ，ＢＣ，ＢＤ<br>
+    ＡＣ形成活二，其活三點ａ是，有４點<br>
+  ＡＤ形成活二，其活三點ｂ是，有４點<br>
+  ＢＣ沒有相連成新材料，沒有增加勢力  <br>
+  ＢＤ形成活二，其活三點ｃ是，有３點 <br>
+  一共１５個勢力點<br>
+  </p>
+  <p> 當盤面不只一個材料時，不同的進攻組合，會有不同的勢力產生，材料越多進攻變化幾乎是倍數增長，現在各位應該不難理解，為何有人覺得正式比賽每方基本時限應該要有九十分鐘以上才夠用</p>
+  <h2>後話</h2>
+  １實際下棋時，最好每一子都計算雙方勢力消長<br>
+  ２在沒有足夠材料可取勝前，就是儘量找增加已方勢力，減少對方勢力的點來下<br>
+  ３粗算時可先不考慮對方的防守，以便發現更多進攻可能 <br>
+  ４以上三例只考慮最直接進攻方式， 熟悉後應該就不至於漏算簡單勝
+  </body>
+</html>

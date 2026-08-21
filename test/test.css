@@ -1,0 +1,18 @@
+﻿body {
+	font-family: 新細明體;
+	font-size: 14pt;
+	line-height: 14pt;
+	text-align: left;
+}
+.b24 {
+	font-size: 24pt;
+	font-family: 標楷體;
+	font-weight: bold;
+	color: #000080;
+}
+.b18 {
+	font-family: 標楷體;
+	font-size: 18pt;
+	font-weight: normal;
+	color: #339933;
+}

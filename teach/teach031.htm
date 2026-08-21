@@ -1,0 +1,77 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link href="../renju.css" rel="stylesheet" type="text/css">
+<link rel=stylesheet href="../bb/bb.css">
+    <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+  <script src="../bb/bb55.js"></script>
+    
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+  </head>
+  <body>
+  <div id="myDiv"></div>
+    <h1>連接</h1>
+    <hr>
+    <h2>運用連接找勝</h2>
+    首先，觀察黑有什麼<b>進攻材料</b>（如死三、活二）可以用<br>
+    發現黑有二個死三後，開始觀察黑棋的<b>連接</b>是否可以獲勝<br>
+    <div class="board587" move="1!1HH!1HI!1GH!1FH!1FI!1HG!1IH!1IG!1II!1JJ!1IJ!5GK^FI%u25B3|JM%u25A1|GJ%u25A1|EH%u25A1|ILA|HKB|KHC|IJ%u2606!1IL!1IK!1HK!1GJ!0KH"
+
+      numminus="12" heading="F" comment="F"></div>
+    <br>
+    黑棋Ａ點可以連到△，Ａ和△可在Ｂ形成活三，<br>
+    再連到☆，最後在Ｃ點形成四三<br>
+    <br>
+    看到進攻路線後，再來想白子的防點，<br>
+    黑Ａ形成死四後白只有一點可以防守<br>
+    <br>
+    在Ｂ形成活三後，白有□三點可以防守活三，<br>
+    但三點都無法阻止黑在Ｃ點形成四三
+    <div style="clear: left;"><br>
+    </div>
+    又如下局面，比剛才多一黑一白<br>
+    <div class="board587" move="1!1HH!1HI!1GH!1FH!1FI!1HG!1IH!1IG!1II!1JJ!1IJ!1GK!1FG!5GI^ILA|HKB|KHC!3IL!1IK!0HJ!1KH!1JH!1HK!1JI!0IL"
+
+      numminus="14" heading="F" comment="F"></div>
+    <br>
+    計算方式同上，但這次發現黑下Ａ時，<br>
+    白防守後形成活三，這樣黑就不能下Ｂ了<br>
+    <br>
+    <b>換個手順試試</b>，ＡＢＣ不行換ＣＢＡ，變成Ｃ四、Ｂ活三、Ａ四三<br>
+    試著心算看看白棋是否有反擊？
+    <div style="clear: left;"><br>
+    </div>
+    如圖，再換一顆白子<br>
+    <div class="board587" move="1!1HH!1HI!1GH!1FH!1FI!1HG!1IH!1IG!1II!1JJ!1IJ!1GK!1FG!5KI^ILA|HKB|KHC!3KH!0JH!3IL!0IK!1HK!3IK!0KH!3IL!0KH!3KH!0IL!1JH!0IL"
+
+      numminus="14" heading="F" comment="F"></div>
+    <br>
+    還是一樣有ＡＢＣ的連線，但下Ａ時，<br>
+    白防守後形成活三，黑就不能再下Ｂ了<br>
+    <br>
+    那換成ＣＢＡ呢？黑下Ｃ時，白防守後也形成活三，<br>
+    所以這條路也不成<br>
+    <br>
+    那再換手順吧，這次先下Ｂ，下Ｂ後形成二個四三前一手<br>
+    ，下一手於Ａ或Ｃ都可以四三<br>
+    <br>
+    照例計算白的防點，考慮的防點可參考<a href="teach002.htm">防守選點１</a>，<br>
+    沒算出白有雙防，攻擊成立<br>
+    （其實以上所有局面黑都可以直接下Ｂ取勝）
+    <div style="clear: left;"><br>
+    </div>
+    <hr>
+    小結一下運用連接進攻的計算方法：<br>
+    １找可用的攻擊資源<br>
+    ２找連接<br>
+    ３計算白是否有反擊<br>
+    ４若有反，變換手順試試<br>
+    ５若最後還是沒算出勝，則先保留資源不發動攻擊<br>
+  </body>
+</html>

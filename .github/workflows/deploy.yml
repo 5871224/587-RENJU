@@ -1,0 +1,124 @@
+name: Validate and deploy website
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-website
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check PHP and repository safety
+        shell: pwsh
+        run: ./scripts/check-project.ps1
+
+  deploy:
+    if: true
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Upload changed GitHub-managed files with FTPS
+        shell: python
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          CURRENT_SHA: ${{ github.sha }}
+        run: |
+          import ftplib, os, posixpath, subprocess, sys
+          server=os.environ['FTP_SERVER']; username=os.environ['FTP_USERNAME']; password=os.environ['FTP_PASSWORD']; server_dir=os.environ.get('FTP_SERVER_DIR','').strip(); event_name=os.environ.get('EVENT_NAME',''); before_sha=os.environ.get('BEFORE_SHA',''); current_sha=os.environ.get('CURRENT_SHA','HEAD'); zero_sha='0'*40
+          command=['git','diff','--name-only','-z','--diff-filter=ACMRTUXB',before_sha,current_sha] if event_name=='push' and before_sha and before_sha!=zero_sha else ['git','diff-tree','--no-commit-id','--name-only','-r','-z',current_sha]
+          raw=subprocess.check_output(command); changed=[p.decode('utf-8') for p in raw.split(b'\0') if p]
+          def included(path): return not (path.startswith('.github/') or path.startswith('scripts/') or path.startswith('docs/') or path in ('README.md','config.local.php.example')) and os.path.isfile(path)
+          files=[p for p in changed if included(p)]
+          for forced in ('rank/index.php','rank/swiss.php'):
+              if os.path.isfile(forced) and forced not in files: files.append(forced)
+          if not files: print('No deployable changed files. Nothing to upload.'); sys.exit(0)
+          ftp=ftplib.FTP_TLS(); ftp.connect(server,21,timeout=60); ftp.login(username,password); ftp.prot_p()
+          def ensure_dir(path):
+            path=path.replace('\\','/').strip()
+            if not path or path=='.': return
+            if path.startswith('/'): ftp.cwd('/')
+            for part in path.strip('/').split('/'):
+              if not part: continue
+              try: ftp.cwd(part)
+              except ftplib.error_perm: ftp.mkd(part); ftp.cwd(part)
+          ensure_dir(server_dir); base_dir=ftp.pwd()
+          for local_path in files:
+            remote_path=local_path.replace('\\','/'); ftp.cwd(base_dir); ensure_dir(posixpath.dirname(remote_path))
+            with open(local_path,'rb') as fh: ftp.storbinary(f'STOR {posixpath.basename(remote_path)}',fh)
+          ftp.quit()
+
+      - name: Verify public security boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://587.renju.org.tw'
+          paths=(
+            '/riftw/tourtest.php'
+            '/riftw/officialweb-query.php'
+            '/bb/SQLRANK.php'
+            '/bb/SQLRANK1.php'
+            '/bb/PP.php'
+            '/bb/SQL.php'
+            '/bb/querysql.php'
+            '/bb/readsql.php'
+          )
+          failed=0
+          for path in "${paths[@]}"; do
+            code="$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 30 "$base$path" || true)"
+            echo "$path -> $code"
+            if [ "$code" != '404' ]; then
+              failed=1
+            fi
+          done
+
+          write_code="$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 30 -X POST --data 'action=update' "$base/bb/keyinsql.php" || true)"
+          echo "/bb/keyinsql.php write probe -> $write_code"
+          if [ "$write_code" != '403' ]; then
+            failed=1
+          fi
+
+          upload_code="$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 30 "$base/bb/upload.php" || true)"
+          echo "/bb/upload.php GET probe -> $upload_code"
+          if [ "$upload_code" != '405' ]; then
+            failed=1
+          fi
+
+          rank_body="$(mktemp)"
+          rank_code="$(curl -k -sS -o "$rank_body" -w '%{http_code}' --max-time 30 "$base/rank/" || true)"
+          echo "/rank/ unauthenticated -> $rank_code"
+          if [ "$rank_code" != '401' ] || ! grep -q '排名管理登入' "$rank_body"; then
+            failed=1
+          fi
+          rm -f "$rank_body"
+
+          puzzle_code="$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 30 -X POST --data 'type=NOT_A_TABLE&S=3&B=3' "$base/CH/puzzle.php" || true)"
+          echo "/CH/puzzle.php invalid table probe -> $puzzle_code"
+          if [ "$puzzle_code" != '400' ]; then
+            failed=1
+          fi
+
+          if [ "$failed" -ne 0 ]; then
+            echo 'One or more public security boundary checks failed.' >&2
+            exit 1
+          fi

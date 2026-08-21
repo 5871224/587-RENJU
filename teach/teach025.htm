@@ -1,0 +1,113 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+<title>學習定石</title>
+<link href="../renju.css" rel="stylesheet" type="text/css">  
+  <link rel=stylesheet href="../bb/bb.css">
+  <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+  <script src="../bb/bb55.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+</head>
+
+<body>
+<div id="myDiv"></div>
+
+<h1>學習定石</h1>
+<hr />
+
+定石與開局的關係最密切，五子棋開局的每一子都和往後發展息息相關，因可能的變化繁多，要臨場計算清楚並不容易，棋手們通常會記憶一些定石，使自己不至於開局就處於劣勢的一方。定石是前人研究過後得出雙方較佳應對手段，非常有參考價值，但定石的數量龐大，常讓想學習的人不知如何下手，本篇將介紹學習定石要注意的地方。<br />
+<hr />
+
+<h2>注意同型</h2>
+
+開局前幾手的變化，常會出現類似的棋型，如下面這個棋型，在好幾個開局都可能出現<br />
+當碰到陌生的局面時，若其他開局有類似變化可以借鏡，可以減少很多計算時間<br />
+
+
+<div class="board587" move='1!5HH!3HI!3IJ!1IH!0II!3II!1IH!0HG!3JI!1IH!0II!3IH!1GH!0GI!1HG!1IH!0II!1II!3JI!1JH!0IH!1IH!1JH!0JI
+' heading='F' comment='F'></div>
+<div style="clear: left;"><br /></div>
+
+我們從研究知道下方左圖是黑必勝的局面，即可推理出右圖的白６必敗，因為去除白２就和左圖同型<br />
+
+
+<div class="board587" move='1!1HH!1II!1IG!1JH!4HG
+' heading='F' comment='F'></div>
+
+</applet><div class="board587" move='1!1HH!1II!1GG!1FH!1HG!1GI!1EG!1FG!4FF
+' heading='F' comment='F'></div>
+<div style="clear: left;"><br /></div>
+
+有時會出現<b>局部同型</b>，如下例左邊是大家比較熟悉的恆星勝法，右邊殘月第10手後和恆星局部相同，衝四再做三個活二是常見手段，我們建議學定石從勝型較多的花浦月開局來入手也就是這個原因。而多出的子或多或少會造成差異，要通用前需先計算清楚<br />
+
+
+<div class="board587" move='1!1HH!1II!1JH!1IG!1IH!1GH!1KH!1LH!1JI!1JG!1KJ!1LK!1IJ!1HK!1JK!1JJ!1KL!1LM!1MH!1LI!1KI!1KK!1LG!1MF!4KF
+' heading='F' comment='F'></div>
+<div class="board587" move='1!1HH!1HI!1JI!1JH!1KJ!1IJ!1IH!1LK!1GH!1HG!1FH!1EH!1GG!1GI!1FF!1EE!1HF!1IE!1GE!1GF!1FD!1EC!1DH!1EG!1FG!1FE!1EI!1DJ!4FJ
+' heading='F' comment='F'></div>
+
+<div style="clear: left;"><br /></div>
+
+
+若知道左邊明星開局的取勝手法，那右邊瑞星開局就可直接套用<br />
+
+
+<div class="board587" move='1!1HH!1II!1HF!1HI!1GI!1IG!1IF!1GH!1FG!1GF!4FE
+' heading='F' comment='F'></div>
+<div class="board587" move='1!1HH!1HI!1HF!1IJ!1IF!1II!1GI!1IG!1IH!1GH!1FG!1GF!4FE
+' heading='F' comment='F'></div>
+<div style="clear: left;"><br /></div>
+<br />
+
+
+<h2>盤端差異</h2>
+
+通常同型的下法是可以互相通用的，但有時盤端的差異，也會造成不同的結果，這種差異也常被拿來騙騙死背定石的人<br />
+<br />
+
+
+<div class="board587" move='1!1HH!1HI!1HG!5HF!3IH!1GH!1FG!1GF!1GG!1IG!1FF!1EE!1JJ!1II!1KJ!1JI!1KI!1GE!1JH!1LH!1LJ!1MJ!1KK!1KL!1JL!1IM!1JK!3GI!1FI!1EC!1FD!1LK!1JM!1JN!1GK!1HK!1DG!1EG!1CF!1EH!1EF!1FE!1DF!1BF!1DE!3DD!1DH!1DI!0FJ!1DH!1CD!1BC!0DD!1IK!1MK!1NL!1LK!1NK!1LL!1LM!0JN!1IG!1GG!1FH!1GI!1GH!1IH!1FI!1EJ!1JE!1IF!1KE!1JF!1KF!1GJ!1JG!1LG!1LE!1ME!1KD!1KC!1JC!1IB!0JD
+' heading='F' comment='F'></div>
+松月一打的變化，常有不小心的人會下錯邊<br />
+這兩個５看似同型，但Ａ點的取勝變化<br />
+Ｂ點若照單全收的話，卻是沒辦法勝<br />
+
+（據說Ｂ點也有另一套勝法，但我不太清楚）
+<div style="clear: left;"><br /></div>
+
+
+<div class="board587" move='1!1HH!1II!1JJ!1HJ!5JH!3JI!1KI!1IG!1IJ!1LH!1KL!1KJ!1LK!1IH!1IN!1JM!1IL!1IK!1JL!1LL!1HM!1GL!1GN!1JK!1HN!0JN!1IH!1IG!1KI!1HI!1JF!1FG!1HG!1GF!1JI!1DI!1EH!1FI!1GI!1FH!1FF!1EJ!1FK!1DK!1CL!1DJ!1DH!1BJ!1CJ!1CK!1EI!0DL
+' heading='F' comment='F'></div>
+長星開局，通常白子往空間大的地方下較好<br />
+但這局白６下在離盤端較近的Ａ會比Ｂ好
+<div style="clear: left;"><br /></div>
+
+
+<div class="board587" move='1!5HH!3II!1JH!1JG!1HI!1GH!1HF!1HG!1IG!1GE!1GI!1FJ!1KI!1LJ!1LH!1KH!1MG!1JJ!1KE!1JF!1JD!1LF!1KC!1IE!1NF!1OE!1ME!1LD!1KD!1KF!1MF!1MD!1LE!1NG!1LC!3JE!0JC!1JC!0JE!1HI!1IJ!1JJ!1IH!1IG!1KH!1JH!1JI!1LG!1HG!1GF!1HK!1GL!1IL!1IK!1JM!1GJ!1LK!1KJ!1MJ!1KL!1NK!1LI!1KN!1LO!1LM!1ML!1MK!1KK!1KM!1MM!1LL!1JN!0NL
+' heading='F' comment='F'></div>
+這兩個開局前六手同型，但盤端有一路的差別<br />
+在恆星第６手後，黑棋可以直接進攻取勝<br />
+但在溪月開局想要照搬卻會失敗
+<div style="clear: left;"><br /></div>
+
+<hr />
+
+<b>１</b>建議<b>要有一定基礎</b>再來看定石，至少要先熟悉禁手，並能感覺黑子有優勢後再來看定石，因定石的每步棋都有用意，且可能只記錄重點變化而省略細節，沒有一定基礎並不容易體會，變成死背定石，對幫助棋力的效果不大。如果可以，盡量從空間、連接、先手方面去思考每步棋的含意，慢慢從棋型去推敲、歸納、整理，明瞭後自然不容易忘記，比較關鍵的走法，先背起來以後再慢慢消化也未嚐不是一種方法<b><br />
+２</b>可以先<b>從黑必勝的變化下手</b>，如浦月、花月等，這些必勝開局的勝法可以學習一些常見的進攻棋型，不需要硬背，只有看過有個印象就好，之後再看其他開局也比較容易上手<br />
+
+<b>３</b>要知道<b>定石的下法未必最好</b>，必勝的手法也可能不只一種，要多多嘗試未知的變化，創造力才不會被定石所束縛<br />
+
+<b>４</b>若玩國際規則或山口規則，在準備比賽時，要先瞭解一下每個開局前五手的優劣，以及較常見的變化，遇到陌生的局面，儘量<b>運用同型變化</b>來參考，來減少計算時間及出錯機會<br />
+
+
+</body>
+
+</html>

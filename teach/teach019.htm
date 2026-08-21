@@ -1,0 +1,35 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+<meta charset="UTF-8" />
+<link rel=stylesheet href="../bb/bb.css">
+	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+	<script src="../bb/bb55.js"></script>
+<link href="../renju.css" rel="stylesheet" type="text/css">
+
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+</head>
+<body>
+<div id="myDiv"></div>
+
+  <h1>增加計算深度</h1>
+  <hr />
+引用Ando的文章<br />
+有些人認為能提前預判很多的步之後的情況，需要特殊的才能，實際上，如果你學習幾個計算的技巧後，即使你沒有經過任何特殊的訓練或者擁有特殊才能，也能計算得相當深遠。我在計算時最常用的技術是<b>“忘掉無關的棋子”</b>。<br>
+<br />
+舉個例子，當你在計算一個約有10步以上的VCT進攻時，你能大概能看到攻擊的樣子，但是不能清晰預見結尾，因為很難看清你所有棋子的確切位置。看清對手的棋子似乎也是一個不可能的任務。不過，你可以這樣做：<br />
+１根據你的經驗和直覺，計算的第一步並不難，只是盡力<b>評估材料</b>及可能<b>攻擊手順</b>。<br />
+２在常規的計算中，雖然不能把結尾清楚地視覺化。但重要的是，你必須先大概知道<b>攻擊的手順及結尾</b>在什麼地方，這是攻擊的關鍵。<br>
+３再次計算相同的路線，但是這次，不要集中於無關的棋子，努力去忽略他們，<b>僅僅記住對攻擊結尾有影響的棋子</b>。就較長的攻擊而言，你可能不得不重複許多次。<br />
+４最終，在你眼中只有最後的攻擊區域的圖像。你可以忘了一開始攻擊的無關棋子，你看到的僅僅是最終攻擊區域附近的5～6個棋子。<br>
+<br />
+這樣就可以少記許多東西，並且運用你的記憶來準確計算最終攻擊的VCT。我在棋局中能用這技巧提前進行非常深遠的計算。<br>
+記得，你也許要重覆做視覺化很多遍，並且，每次都只專注結尾的棋子，直到它們在你眼裡成為非常清楚的圖像。<br />
+如果你感到疲勞，不能集中精神。攻擊結尾的視覺化就難以成功。
+</body></html>

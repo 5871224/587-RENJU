@@ -1,0 +1,207 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>網站</title>
+	<link href="renju.css" rel="stylesheet" type="text/css">
+
+	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function () {
+			htmlobj = $.ajax({ url: "https://587.renju.org.tw/menu.html", async: false });
+			$("#myDiv").html(htmlobj.responseText);
+		});
+	</script>
+</head>
+
+<body>
+	<div id="myDiv"></div>
+
+	<h1>線上資源</h1>
+	<hr>
+	<h2>學習網站</h2>
+	<table class="rank">
+		<tr>
+			<th>名稱</th>
+			<th>語言</th>
+			<th>介紹</th>
+		</tr>
+		<tr>
+			<td><a href="http://facebook.com/renjutw" target="new">台灣五子棋協會 (FB)</a></td>
+			<td align="center">繁中</td>
+			<td>台灣五子棋協會FB粉絲專頁</td>
+		</tr>
+		<tr>
+			<td><a href="http://renju.org.tw" target="new">台灣五子棋協會官網</a></td>
+			<td align="center">繁中</td>
+			<td>台灣五子棋協會官網</td>
+		</tr>
+		<tr>
+			<td><a href="https://renjufishball.com/" target="new">魚丸湯の五子棋知識宇宙</a></td>
+			<td align="center">繁中</td>
+			<td>楊裕雄三段的網站，內有不少教學資料</td>
+		</tr>
+		<tr>
+			<td><a href="http://www.renjucaffe.com/" target="new">連珠小站</a></td>
+			<td align="center">簡中</td>
+			<td>中國棋手郝天一的五子棋論壇，有開局定石庫</td>
+		</tr>
+		<tr>
+			<td><a href="https://docs.qq.com/sheet/DTU1OVHhiRmVIZUpo?tab=BB08J2" target="new">疏星閣開局指南</a></td>
+			<td align="center">簡中</td>
+			<td>中國的五子棋研究群組＂疏星閣＂，分享各開局的研究成果</td>
+		</tr>
+		<tr>
+			<td><a href="https://www.crazy-sensei.com/book/renju_15x15/" target="new">Crazy Stone連珠定石</a></td>
+			<td align="center">英文</td>
+			<td>圍棋知名程式Crazy Stone跨界提供的五子棋定石庫</td>
+		</tr>
+		<tr>
+			<td><a href="http://www.ljrenju.com/" target="new">勵精連珠</a></td>
+			<td align="center">簡中</td>
+			<td>開局教學、棋譜相當完整的網站</td>
+		</tr>
+		<tr>
+			<td><a href="http://www.rifchina.com/" target="new">中國連珠網</a></td>
+			<td align="center">簡中</td>
+			<td>中國五子棋比賽資訊</td>
+		</tr>
+		<tr>
+			<td><a href="http://5zer.com/" target="new">中華連珠網</a></td>
+			<td align="center">簡中</td>
+			<td>性質和中國連珠網類似，以上海五子棋訊為主</td>
+		</tr>
+		<tr>
+			<td><a href="http://tieba.baidu.com/f?kw=%CE%E5%D7%D3%C6%E5" target="new">百度五子棋吧</a></td>
+			<td align="center">簡中</td>
+			<td>百度五子棋論壇，其相關的還有連珠吧、一手交換吧</td>
+		</tr>
+		<tr>
+			<td><a href="http://www.renjusha.net/" target="new">日本連珠社</a></td>
+			<td align="center">日文</td>
+			<td>日本連珠社官方網站，有日本棋戰相關資訊</td>
+		</tr>
+		<tr>
+			<td><a href="http://tokyo.renju.jp/" target="new">東京連珠會</a></td>
+			<td align="center">日文</td>
+			<td>日本連珠比賽資訊</td>
+		</tr>
+		<tr>
+			<td><a href="http://tokai-renjukai.pya.jp/" target="new">東海支部連珠會</a></td>
+			<td align="center">日文</td>
+			<td>有許多詰棋可以練習，最特別的是使用六路棋盤的詰棋</td>
+		</tr>
+		<tr>
+			<td><a href="http://www.renju.net/index.php" target="new">RenjuNet</a></td>
+			<td align="center">英文</td>
+			<td>國際連珠聯盟官網，各國比賽資訊</td>
+		</tr>
+		<tr>
+			<td><a href="https://gomocup.org/" target="new">GOMOCUP</a></td>
+			<td align="center">英文</td>
+			<td>五子棋AI比賽官網</td>
+		</tr>
+		<tr>
+			<td><a href="http://ku10.com/" target="new">ku10.com</a></td>
+			<td align="center">簡中</td>
+			<td>ORC五子棋線上課程錄影</td>
+		</tr>
+		<tr>
+			<td><a href="https://renjuportal.com/" target="new">Renju Portal</a></td>
+			<td align="center">英日</td>
+			<td>日本棋手福井畅宏的打譜網站</td>
+		</tr>
+		<tr>
+			<td><a href="https://nachirenju.net/WebRapfi/" target="new">Rapfi GUI</a></td>
+			<td align="center">多國</td>
+			<td>日本棋手中山智晴用Rapfi引擎做的線上五子棋AI，可做個人練習和棋譜分析，<a href="https://nachirenju.notion.site/RapfiGUI-by-nachirenju-2e8e9ba10b548085adb1e63c585fdd18" target="new">Rapfi GUI單機版</a></td>
+		</tr>
+		<tr>
+			<td><a href="https://renju-note.com/" target="new">Renju Note</a></td>
+			<td align="center">英文</td>
+			<td>可以讀取renjunet下載的棋譜庫，打譜可提示材料，<a href="https://www.youtube.com/watch?v=coaNdB4haiI" target="new">讀譜說明</a></td>
+		</tr>
+		<tr>
+			<td><a href="https://lfz084.github.io/renju/index.html" target="new">五子棋小工具</a></td>
+			<td align="center">簡中</td>
+			<td>中國棋友的打譜網站，特色是可以標注棋型，也可以讓電腦解題</td>
+		</tr>
+		<tr>
+			<td><a href="https://gomocalc.com/" target="new">五子棋計算器</a></td>
+			<td align="center">簡中</td>
+			<td>目前遇到最強的網頁版五子棋程式</td>
+		</tr>
+		<tr>
+			<td><a href="http://renjuoffline.com/renju-rating/index.php" target="new">連珠世界排名</a></td>
+			<td align="center">英文</td>
+			<td>連珠世界排名</td>
+		</tr>
+		<tr>
+			<td><a href="https://renjurating.wind23.com/" target="new">連珠WHR世界排名</a></td>
+			<td align="center">英文</td>
+			<td>中國棋手郝天一以Whole History Rating計算的世界排名</td>
+		</tr>
+	</table>
+	<h2>下棋網站</h2>
+	<table class="rank">
+		<tr>
+			<th>名稱</th>
+			<th>語言</th>
+			<th>介紹</th>
+		</tr>
+		<tr>
+			<td><a href="https://play.google.com/store/apps/details?id=games.artisticode.gomokuclan&hl=zh_TW&gl=US"
+					target="new">五子棋宗族</a></td>
+			<td align="center">多國</td>
+			<td>畫面精緻的ＡＰＰ，也有ｉＯＳ版，規則為普規，日式、索索夫８，與朋友下棋可設定長時限對局</td>
+		</tr>
+		<tr>
+			<td><a href="https://play.google.com/store/apps/details?id=com.ansangha.drgomoku&hl=zh_TW&gl=US"
+					target="new">五子棋達人</a></td>
+			<td align="center">多國</td>
+			<td>下棋ＡＰＰ，也有ｉＯＳ版，規則為日式規則</td>
+		</tr>
+		<tr>
+			<td><a href="https://play.google.com/store/apps/details?id=fm.wars.gomoku&hl=zh_TW&gl=US"
+					target="new">Gomoku Quest</a></td>
+			<td align="center">英文</td>
+			<td>下棋ＡＰＰ，也有ｉＯＳ版，規則為日式規則，一定分數以上會再加入三手交換，也有詰棋可玩</td>
+		</tr>
+		<tr>
+			<td><a href="https://renjuworld.net/" target="new">五林五子棋</a></td>
+			<td align="center">簡中</td>
+			<td>新版的五林大會，有很完整的線上對奕功能，也有手機APP可下載</td>
+		</tr>
+		<!--
+		<tr>
+			<td><a href="http://renjuoffline.com/" target="new">Renju Offline</a></td>
+			<td align="center">英文</td>
+			<td>俄羅斯慢棋網站，國際高手也不在少數，免費註冊</td>
+		</tr>
+		-->
+		<tr>
+			<td><a href="http://games.renjucaffe.com/" target="new">連珠小站慢棋</a></td>
+			<td align="center">中英</td>
+			<td>中國棋手郝天一的慢棋網，有完整規則及排名</td>
+		</tr>
+		<tr>
+			<td><a href="http://www.playok.com/" target="new">PlayOK.com </a></td>
+			<td align="center">多國</td>
+			<td>可選簡體中文，五子棋以無禁規則為主，免費註冊</td>
+		</tr>
+		<tr>
+			<td><a href="http://game.ku10.com/" target="new">game.ku10.com</a></td>
+			<td align="center">中英</td>
+			<td>有常見有禁規則，也可下無禁</td>
+		</tr>
+		<tr>
+			<td><a href="https://gamelet.online/" target="new">嘎姆擂台-無差別五子棋</a><a href="http://tw.gamelet.com/"></a></td>
+			<td align="center">繁中</td>
+			<td>可下普規、日規、三手交換、山口規，不用註冊也可玩</td>
+		</tr>
+	</table>
+</body>
+
+</html>

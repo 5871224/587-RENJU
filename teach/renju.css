@@ -1,0 +1,49 @@
+﻿body {
+	font-family: DFKai-sb;
+	line-height: 25px;
+	background-color: #EDF9EC;
+	}
+
+h1 {
+	font-family: DFKai-sb;
+	font-weight: bold;
+	color: #53A0EE;
+	text-shadow: 0.2em 0.2em 0.1em #CCC;
+}
+h2 {
+	font-family: DFKai-sb;
+	font-weight: bold;
+	color: #339933;
+}
+
+table.tb ,table.tb th, table.tb td {
+    border: 1px solid #C0C0C0;
+    border-collapse: collapse;
+}
+
+.b24 {
+	font-size: 20pt;
+	font-family: DFKai-sb;
+	font-weight: bold;
+	color: #53A0EE;
+	text-shadow: 0.2em 0.2em 0.1em #CCC;
+}
+.b18 {
+	font-family: DFKai-sb;
+	font-size: 16pt;
+	font-weight: normal;
+	color: #339933;
+}
+.om {
+	text-align: center;
+}
+a:hover {
+	background-color: #FFE16A;
+}
+a {
+	text-decoration: none;
+}
+a:visited {
+	font-weight: bold;
+	color: #000080;
+}

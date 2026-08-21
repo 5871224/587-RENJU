@@ -1,0 +1,64 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+<meta charset="UTF-8" />
+<link href="../renju.css" rel="stylesheet" type="text/css">
+<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+</head>
+
+<body>
+<div id="myDiv"></div>
+  
+<h1>基本勝型</h1>
+<hr />
+
+<p>在單線棋型篇學到，連五是五子棋的獲勝條件，而活四有兩個點五可以連五，也是無法防守的。<br>
+  下幾局後大家就應該會發現，在死四和活三的時候，正常需要花一子來防守，因此除非對手眼花，否則想靠單線進攻獲勝是不切實際的。<br>
+  為了讓對方無法防守，我們將死四和活三交互組合，就形成最基本的取勝棋型<strong>雙死四、死四活三、雙活三</strong>又簡稱<strong>雙四、四三、雙三</strong>。 便可讓對方無法一次防住兩線而取勝。
+  <br>
+初學時，勿將心力用於連五，而是專想辦法做出基本勝型，就算是在棋道中邁進一大步了。</p>
+<table width="661" border="1">
+  <tr>
+    <td width="363">棋型</td>
+    <td width="282">圖例</td>
+  </tr>
+  <tr>
+    <td><p><b>雙四：<br>
+    </b>又稱四四，一子形成兩個四，<br>
+    四四有可能是在同一條線上。</p>
+    <p>扣除鏡像對稱及旋轉對稱後<br>
+    共有２０８種組合。</p></td>
+    <td><p><img src="../p/teach/44.png" width="198" height="198"></p>
+    <p><img src="../p/teach/RENJU-44-2.png" width="282" height="226"></p></td>
+  </tr>
+  <tr>
+    <td><p><b>四三：</b><br>
+    通常是死四配上活三。</p>
+    <p>扣除對稱後共有２２４種組合。</p></td>
+    <td><img src="../p/teach/43.png" width="198" height="198"></td>
+  </tr>
+  <tr>
+    <td><p><b>雙三：</b><br>
+    又稱<b>三</b>三、雙活三，即一子形成二個活三。</p>
+    <p>扣除對稱後共有７１種組合。</p></td>
+    <td><img src="../p/teach/33.png" width="198" height="198"></td>
+  </tr>
+</table>
+<p><br>
+  本站的資源＞<a href="https://587.renju.org.tw/CH/index.php" target="new">挑戰</a>，可練習雙四、四三、雙三的各種組合。<br>
+  <br>
+  五子棋是比的是連五的速度，速度快的一方我們稱之為先手。<br>
+  雙四和四三，因為棋型裡有個四，所以會比雙三更快取勝。<br>
+  試想一方下出雙三後，另一方接著下出四三，正常情況下，四三的一方將獲得勝利。<br />
+  <br />
+  <br>
+</p>
+<br>
+</body></html>

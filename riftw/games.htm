@@ -1,0 +1,183 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<HEAD>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="../renju.css" rel="stylesheet" type="text/css">
+	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function () {
+			htmlobj = $.ajax({ url: "https://587.renju.org.tw/menu.html", async: false });
+			$("#myDiv").html(htmlobj.responseText);
+		});
+	</script>
+
+</head>
+
+
+<body>
+	<div id="myDiv"></div>
+
+	<h1>比賽介紹</h1>
+	<hr />
+
+	<h2>國內比賽</h2>
+	<p><b> 《晉段賽》</b><br />
+		限無段位者參加，採五輪瑞士制，至少需八名參賽選手。<br />
+		<b><br />
+			《國手賽》</b><br />
+		約每年二至五月舉辦，為參加世界盃等國際比賽的選拔賽，限段位棋手參加。<br />
+	</p>
+	<p><b>《名人賽》</b><br />
+		目前台灣唯一的頭銜賽，也是國內等級最高的比賽，賽期約每年的九月至年底，南北區預賽先行，各區前三名可進入循環圈，由循環圈冠軍獲得挑戰權，與上屆名人進行五番棋挑戰賽，勝出者將獲得台灣名人頭銜，若最後比分相同，由上屆名人衛冕。<br>
+		<br />
+		<b>《其他協會比賽》<br />
+		</b>只要是協會認可的比賽，不論在國內外，皆計入台灣棋手績分排名
+
+
+		<br>賽制及資格限制依主辦單位規定，若有段位選手參加，達一定積分標準者亦可升段。<br>
+		<br />
+	</p>
+	<hr />
+
+	<h2>國外比賽</h2>
+	<b>《世界盃》</b><br />
+	自１９８９年起每兩年舉辦一次，主要分為資格賽（QT）、冠軍賽（AT）、公開賽（BT）及女子賽（WT），資格賽最先舉行，之後冠軍賽、公開賽、女子賽同時舉行，第１~４屆是交換規則，第５～１０屆採RIF國際規則，第１１～１４屆採山口規則，第１５～１７屆採索索夫８規則，自第１８屆起採用塔拉山口１０規則。<br>
+	<br>
+	<b>ＱＴ資格賽</b>：賽制採用瑞士制，QT有名額限制，無姓別限制，通常每個國家各自選拔選手參加。QT的前幾名可晉級AT。每個會員國QT加上AT的國家名額不能超過三個，非會員國不能超過一個。<br />
+	　　額外的QT名額：
+	１、上屆打入AT者及BT前三名，有個人名額。<br />
+	　　　　　　　　　
+	２、以當年５月１５日為準，世界排名前２０的棋手（一年內對局不滿１０局的棋手由後面棋手遞補），有個人名額。<br />
+	　　　　　　　　　
+	３、若QT參賽人數為奇數，主辦國可再增加一個名額，方便安排賽程。<br><br />
+	<b>ＡＴ冠軍賽</b>：AT冠軍即為當屆世界冠軍。賽制為循環賽，AT參賽名額固定為十二個：<br />
+	　１、上屆世界冠軍佔一個個人名額。<br />
+	　　２、上屆２～７名選手的國家可獲得一個國家名額，由各國自行決定參賽選手，但每個會員國不能超過三個名額，非會員國不能超過一個，當名額超過限制，多出的名額將分配給由QT晉級的選手。<br />
+	　　３、剩下的名額由當屆QT前幾名晉級，若主辦國沒有任何AT名額，可佔掉一個QT晉級名額，由主辦國QT名次最佳者獲得。<br />
+	<br />
+	<b>ＢＴ公開賽</b>：無名額、資格、姓別限制，無段位者也可參加，亦包含參與QT但未晉級AT之選手，賽制採用瑞士制。<br><br />
+
+	<b>ＷＴ女子賽</b>：自第５屆世界盃開始舉辦，無資格限制，但限女姓參加，亦包含參與QT但未晉級AT之女姓選手。<br />
+	比賽用時：AT、WT：每人基本時間120分鐘，每下一子加30秒<br>　　　　　QT：每人基本時間60分鐘，每下一子加30秒<br>
+	　　　　　BT：每人基本時間90分鐘，每下一子加30秒<br>本國選手可依協會規定升段，不受每次只能升一段之限制，例如林皇羽2007年BT亞軍直升六段。<br />
+	<br />
+	<b>《世界盃團體賽》</b><br />
+	１９９６年開始，每兩年舉辦一次，台灣也於２０１０年首次組隊參加。<br />
+	除上屆冠軍及主辦國家可組二隊參賽外，其他國家限組一隊，每隊包含四位正式選手，另外可有二位後補選手。<br>
+	賽制：依參賽國的多寡決定，通常為循環賽，每輪雙方各派四名選手出賽，最後統計各輪所有對戰成績決定名次。<br>
+	比賽用時：每人基本時間120分鐘，每下一子加30秒。<br>&nbsp;
+	<hr />
+
+	<h2>瑞士制戰績表簡介</h2>
+
+	<table>
+		<tr height="22">
+			<td height="22"
+				style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; WIDTH: 36pt; COLOR: windowtext; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; HEIGHT: 16.5pt; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				width="48">
+				編號</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; WIDTH: 48pt; COLOR: #339966; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				width="64">
+				選手</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; WIDTH: 33pt; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				width="44">
+				R01</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; WIDTH: 33pt; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				width="44">
+				R02</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; WIDTH: 33pt; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				width="44">
+				R03</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; WIDTH: 33pt; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				width="44">
+				R04</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; WIDTH: 33pt; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				width="44">
+				R05</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; WIDTH: 36pt; COLOR: blue; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				width="48">
+				總分</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; WIDTH: 36pt; COLOR: windowtext; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				width="48">
+				輔一</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; WIDTH: 36pt; COLOR: red; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				width="48">
+				名次</td>
+		</tr>
+		<tr height="22">
+			<td height="22"
+				style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: windowtext; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; HEIGHT: 16.5pt; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				x:num="">
+				1</td>
+			<td
+				style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: #339966; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none">
+				ＯＯＯ</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				x:num="">
+				0</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				x:num="">
+				4</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				x:num="">
+				2</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				x:num="">
+				0</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				x:num="">
+				4</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: blue; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				x:num="">
+				10</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: windowtext; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				x:num="">
+				54</td>
+			<td style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: red; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none"
+				x:num="">
+				10</td>
+		</tr>
+		<tr height="22">
+			<td height="22"
+				style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: windowtext; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; HEIGHT: 16.5pt; TEXT-ALIGN: center; TEXT-DECORATION: none">
+			</td>
+			<td
+				style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: #339966; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none">
+			</td>
+			<td
+				style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none">
+				2/o</td>
+			<td
+				style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none">
+				12/-</td>
+			<td
+				style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none">
+				11/o</td>
+			<td
+				style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none">
+				13/-</td>
+			<td
+				style="BORDER-RIGHT: medium none; PADDING-RIGHT: 1px; BORDER-TOP: medium none; PADDING-LEFT: 1px; FONT-WEIGHT: 400; FONT-SIZE: 12pt; VERTICAL-ALIGN: middle; BORDER-LEFT: medium none; COLOR: #ff9900; PADDING-TOP: 1px; BORDER-BOTTOM: medium none; FONT-STYLE: normal; FONT-FAMILY: 新細明體, serif; WHITE-SPACE: nowrap; TEXT-ALIGN: center; TEXT-DECORATION: none">
+				-/-</td>
+		</tr>
+	</table>
+	R01表示第一輪，中間那行表示每輪的得分，如上例獲勝是４分，和２分，負０分，最後比較總分決定名次，總分相同者再比輔分一，依此類推，輔分的計算方式可參考下方<br>
+	<b>2/o</b>數字表示對手編號，表示第一輪對上２號選手，若該數字為 <b>- </b>
+	表示此輪輪空（參賽人數為奇數，有一人沒有對手，該輪稱輪空，輪空得分與獲勝相同）<br>
+	後面的<b>o</b>表示此輪由己方開局，
+	<b>- </b>表示由對方開局<br>
+	<br>
+	輔分一：所遇對手之積分總和<br>
+	輔分二：(所勝對手之積分)＋(所和對手之積分的一半)<br>
+	輔分三：彼此對戰之勝負<br>
+	輔分四：所遇對手之輔分一<br>
+	輔分五：所遇對手之輔分二<br>
+	輔分六：(所勝對手之輔分一)＋(所和對手之輔分一的一半)<br>
+	輔分七：(所勝對手之輔分二)＋(所和對手之輔分二的一半)
+
+
+</body>
+
+</html>

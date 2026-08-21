@@ -1,0 +1,138 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+<meta charset="UTF-8" />
+<link href="../renju.css" rel="stylesheet" type="text/css">
+<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){  
+  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  $("#myDiv").html(htmlobj.responseText);  
+});
+</script>
+</head>
+
+<body>
+<div id="myDiv"></div>
+<h1>單線棋型</h1>
+<hr />
+<h2>單線棋型</h2>
+以下以橫向來舉例</p>
+<table width="551" border="1">
+  <tr>
+    <td width="301">棋型</td>
+    <td width="222">圖例</td>
+  </tr>
+  <tr>
+    <td><strong>長連：<br>
+    </strong>六子或六子以上的連線。</td>
+    <td><img src="../p/teach/GO-6.png" width="198" height="58"></td>
+  </tr>
+  <tr>
+    <td><strong>五：</strong><br>
+      連續五子的連線。<br>    
+    五子棋獲勝的條件。</td>
+    <td><img src="../p/teach/GO-5.png" width="198" height="58"></td>
+  </tr>
+  <tr>
+    <td><p><b>活四</b>：<br>
+    次一手兩端皆可形成五。<br>
+    只有一種棋型。</p></td>
+    <td><img src="../p/teach/GO-L4.png" width="198" height="58"></td>
+  </tr>
+  <tr>
+    <td><p><b>死四</b>：<br>
+      次一手有一點可形成五，<br>
+      又稱衝四。</p>
+    <p>&nbsp;</p></td>
+    <td><img src="../p/teach/GO-D4.png" width="198" height="170"></td>
+  </tr>
+  <tr>
+    <td><p><b>活三</b>：<br>
+    次一手可形成活四。<br>
+    有二種棋型。<br>
+    <br>
+        上面的活三，只要有任一點可以形成活四即可，不需兩端都可活四。<br>
+    </p></td>
+    <td><img src="../p/teach/GO-L3.png" width="198" height="114"></td>
+  </tr>
+  <tr>
+    <td><b>死三</b>：<br>
+    次一子想做四僅能形成死四，<br>
+    又稱眠三。</td>
+    <td><img src="../p/teach/GO-D3.png" width="226" height="338"></td>
+  </tr>
+  <tr>
+    <td><p><b>活二</b>：<br>
+    次一手可形成活三。<br>
+    有三種棋型。</p></td>
+    <td><img src="../p/teach/GO-L2.png" width="198" height="170"></td>
+  </tr>
+  <tr>
+    <td><b>死二</b>：<br>
+    次一子想做三僅能形成死三。</td>
+    <td><img src="../p/teach/GO-D2.png" width="226" height="281"></td>
+  </tr>
+    <tr>
+    <td><b>活一</b>：<br>
+      次一手可形成活二。<br></td>
+    <td><img src="../p/teach/GO-L1.png" width="226" height="58"></td>
+  </tr>
+  <tr>
+    <td height="174"><b>死一</b>：<br>
+    次一手想做二僅能形成死二。</td>
+    <td><img src="../p/teach/GO-D1.png" width="226" height="170"></td>
+  </tr>
+</table>
+<h2>結論</h2>
+<p>看過棋型後，可以推導出一些邏輯<br>
+  １活型或死型的定義，是以次一手可以形成的棋型來認定。<br>
+  ２活型至少要有６格的空間。<br>
+  ３死型是一端被對方擋住或遇到盤端，或者只有５格空間。</p>
+<p>以上是無禁手規則（GOMOKU），各種棋型的判定標準，若是有禁規則（RENJU），黑方因有長連的限制，標準略有不同，可參考禁手篇。<br>
+</p>
+<hr />
+<h2>單線棋型的進攻</h2>
+<p>進攻方式在上方棋型的圖例都已有標註，簡單分類如下</p>
+<table width="626" border="1">
+  <tr>
+    <td width="143">長連、五、活四</td>
+    <td width="467">先下出即可勝，長連的勝負判定依規則而定。</td>
+  </tr>
+  <tr>
+    <td>死四、活三</td>
+    <td>最基本的進攻，對方在沒有更快獲勝的下法時，必需花一子來防守，所以一子形成<strong>雙活三、四三或雙四</strong>，即為五子棋最基本的取勝棋型。</td>
+  </tr>
+  <tr>
+    <td>死三、活二</td>
+    <td>進攻材料，次一手可發動進攻，若有其他子力接應，則可形成連續進攻。</td>
+  </tr>
+  <tr>
+    <td>死二、活一</td>
+    <td>次一手可成為進攻材料，常做為連續進攻的接應。</td>
+  </tr>
+  <tr>
+    <td>死一</td>
+    <td>不太容易做為進攻材料，因還需花二手補強。</td>
+  </tr>
+
+</table>
+
+<h2>單線棋型的防守</h2>
+<p>死型的防守點和進攻點一樣，可參考上方棋型的圖例。</p>
+<p>活型的防守點，下方以白方防守活三及活二為例：</p>
+<table width="609" height="292" border="1">
+  <tr>
+    <td width="280" height="286"><p><strong>A從左或右擋住<br>
+      B從中斷開 <br>
+    C限制空間</strong><br>
+    最上方的活三，因左方有一個白子，Ｃ位的防守才成立</p>
+    <p>下方三個活二，Ｃ位或Ｃ位之外也可限縮黑方空間，但離得越遠越沒有防守效果</p></td>
+    <td width="310"><img src="../p/teach/defense.png" width="310" height="282"></td>
+  </tr>
+</table>
+<p><br>
+</p>
+<h2>&nbsp;</h2>
+</body></html>

@@ -1,0 +1,194 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<meta charset="utf-8" http-equiv="Content-Type" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>開局</title>
+	<link href="renju.css" rel="stylesheet" type="text/css">
+	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function () {
+			htmlobj = $.ajax({ url: "https://587.renju.org.tw/menu.html", async: false });
+			$("#myDiv").html(htmlobj.responseText);
+		});
+	</script>
+</head>
+
+<body>
+	<div id="myDiv"></div>
+
+
+	<h1>開局</h1>
+	<hr>
+
+	　　開局就像是播種，每顆棋都是種子，對棋局後續如何開枝散葉有深遠的影響。在開局階段，雙方會盡速的累續材料、搶占要點、包圍或控制對方棋型，以求掌握棋局的主動權，通常黑棋可以憑著一子之先來主導盤勢，而白棋則採取守勢，等待攻擊的機會。<br>
+	因開局變化對人腦來說，是很難通過臨場計算來看清後續，棋手們通常會去研究各種開局變化，並總結出一些比較好的下法，稱之為定石，防止在比賽一開局就落入不利的局面。<br />
+	<hr>
+
+	<h2>標準２６開局</h2>
+	<p><b>第一子在<span style="color: #FF00FF">天元</span>，第二子在天元為中心的<span
+				style="color: #00FF00">３X３區域</span>內，第三子在中天為中心的<span style="color: #0000FF">５X５區域</span>內</b>。<br />
+		<img src="p/1.jpg" style="width: 169px; height: 171px"><br />
+		扣除同型後，前三手共有26種不同的情況，所以也稱為２６開局。
+	</p>
+	<p>開局名稱，以第二子的下法分開直接及間接開局</p>
+	<p>日本將這２６開局各自命名，１和３在同一線或者對角線上，中間隔著一格為星，其餘為月，英文則以Ｄ和Ｉ加上數字來稱呼</p>
+	<table class="rank">
+
+		<tr>
+			<td colspan="6" align="center">直接開局</td>
+		</tr>
+		<tr>
+			<td align="center">寒星<br />D1</td>
+			<td align="center"><img alt="" height="90" src="p/open/image001.gif" width="90" /></td>
+			<td align="center">溪月<br />
+				D2</td>
+			<td align="center"><img alt="" height="90" src="p/open/image002.gif" width="90" /></td>
+			<td align="center">疏星<br />
+				D3</td>
+			<td align="center"><img alt="" height="90" src="p/open/image003.gif" width="90" /></td>
+		</tr>
+		<tr>
+			<td align="center">花月<br />
+				D4</td>
+			<td align="center"><img height="90" src="p/open/image004.gif" width="90" /></td>
+			<td align="center">殘月<br />
+				D5</td>
+			<td align="center"><img height="90" src="p/open/image005.gif" width="90" /></td>
+			<td align="center">雨月<br />
+				D6</td>
+			<td align="center"><img height="90" src="p/open/image006.gif" width="90" /></td>
+		</tr>
+		<tr>
+			<td align="center">金星<br />
+				D7</td>
+			<td align="center"><img height="90" src="p/open/image007.gif" width="90" /></td>
+			<td align="center">松月<br />
+				D8</td>
+			<td align="center"><img height="90" src="p/open/image008.gif" width="90" /></td>
+			<td align="center">丘月<br />
+				D9</td>
+			<td align="center"><img height="90" src="p/open/image009.gif" width="90" /></td>
+		</tr>
+		<tr>
+			<td align="center">新月<br />D10</td>
+			<td align="center"><img height="90" src="p/open/image010.gif" width="90" /></td>
+			<td align="center">瑞星<br />
+				D11</td>
+			<td align="center"><img height="90" src="p/open/image011.gif" width="90" /></td>
+			<td align="center">山月<br />
+				D12</td>
+			<td align="center"><img height="90" src="p/open/image012.gif" width="90" /></td>
+		</tr>
+		<tr>
+			<td align="center">游星<br />
+				D13</td>
+			<td align="center"><img height="90" src="p/open/image013.gif" width="90" /></td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&nbsp;</td>
+		</tr>
+		<tr>
+			<td colspan="6" align="center">間接開局</td>
+		</tr>
+		<tr>
+			<td align="center">長星<br />I1</td>
+			<td align="center"><img height="90" src="p/open/image014.gif" width="90" /></td>
+			<td align="center">峽月<br />
+				I2</td>
+			<td align="center"><img height="90" src="p/open/image015.gif" width="90" /></td>
+			<td align="center">恆星<br />
+				I3</td>
+			<td align="center"><img height="90" src="p/open/image016.gif" width="90" /></td>
+		</tr>
+		<tr>
+			<td align="center">水月<br />
+				I4</td>
+			<td align="center"><img height="90" src="p/open/image017.gif" width="90" /></td>
+			<td align="center">流星<br />
+				I5</td>
+			<td align="center"><img height="90" src="p/open/image018.gif" width="90" /></td>
+			<td align="center">雲月<br />
+				I6</td>
+			<td align="center"><img height="90" src="p/open/image019.gif" width="90" /></td>
+		</tr>
+		<tr>
+			<td align="center">浦月<br />I7</td>
+			<td align="center"><img height="90" src="p/open/image020.gif" width="90" /></td>
+			<td align="center">嵐月<br />
+				I8</td>
+			<td align="center"><img height="90" src="p/open/image021.gif" width="90" /></td>
+			<td align="center">銀月<br />
+				I9</td>
+			<td align="center"><img height="90" src="p/open/image022.gif" width="90" /></td>
+		</tr>
+		<tr>
+			<td align="center">明星<br />
+				I10</td>
+			<td align="center"><img height="90" src="p/open/image023.gif" width="90" /></td>
+			<td align="center">斜月<br />
+				I11</td>
+			<td align="center"><img height="90" src="p/open/image024.gif" width="90" /></td>
+			<td align="center">名月<br />
+				I12</td>
+			<td align="center"><img height="90" src="p/open/image025.gif" width="90" /></td>
+		</tr>
+		<tr>
+			<td align="center">彗星<br />
+				I13</td>
+			<td align="center"><img height="90" src="p/open/image026.gif" width="90" /></td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&nbsp;</td>
+			<td align="center">&nbsp;</td>
+		</tr>
+	</table>
+	<br />
+	<h2>26開局相對位置</h2>
+	直接　　　　　間接<br />
+	<br />
+	┼┼寒溪疏　　┼┼┼┼長<br />
+	┼┼○花殘　　┼┼┼○峽<br />
+	┼┼●雨金　　┼┼●雲恆<br />
+	┼┼松丘新　　┼斜銀浦水<br />
+	┼┼瑞山游　　彗名明嵐流<br />
+	<hr>
+	<br />
+
+
+	<h2>非標準開局</h2>
+	<p>┼┼１２３４　　┼┼┼┼┼┼一<br />
+		┼┼┼┼┼５　　┼┼┼┼┼┼二<br />
+		┼┼○┼┼６　　┼┼┼┼○┼三<br />
+		┼┼●┼┼７　　┼┼┼●┼┼四<br />
+		┼┼┼┼┼８　　┼┼┼┼┼┼五<br />
+		┼┼┼┼┼９　　┼┼┼┼┼┼六<br />
+		┼┼ａｂｃｄ　　七八九ＡＢＣＤ<br />
+		<br />
+		１：大寒星　　　　一：大長星<br />
+		２：大溪月　　　　二：外峽月<br />
+		３：外溪月　　　　三：大峽月<br />
+		４：大疏星　　　　四：大恒星<br />
+		５：外殘月　　　　五：大水月<br />
+		６：大殘月　　　　六：外水月<br />
+		７：大金星　　　　七：大彗星<br />
+		８：大新月　　　　八：外名月<br />
+		９：外新月　　　　九：大名月<br />
+		ａ：大瑞星　　　　Ａ：大明星<br />
+		ｂ：大山月　　　　Ｂ：大嵐月<br />
+		ｃ：外山月　　　　Ｃ：外嵐月<br />
+		ｄ：大游星　　　　Ｄ：大流星
+	</p>
+	<h2>開局評價</h2>
+	<p>中國的五子棋研究群組＂疏星閣＂，有在網路上大方分享研究成果<br>
+		<a href="https://docs.qq.com/sheet/DTU1OVHhiRmVIZUpo?tab=BB08J2" target="new">疏星閣開局指南</a><br>
+		圍棋知名程式Crazy Stone跨界提供的五子棋定石庫<br>
+		<a href="https://www.crazy-sensei.com/book/renju_15x15/" target="new">Crazy Stone連珠定石</a>
+	</p>
+	國外棋友提供<br>
+	<a href="https://renjudb.vercel.app/" target="new">Renju Database</a></p>
+
+</body>
+
+</html>
