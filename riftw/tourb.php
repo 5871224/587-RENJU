@@ -81,7 +81,6 @@
 
 		.game-list-section { margin: 14px 0 20px; }
 		.game-list-section h3 { margin: 0 0 8px; color: #334155; font-size: 18px; }
-		.game-list-meta { color: #64748B; font-size: 13px; margin: 0 0 9px; }
 		.game-list-wrap { width: 100%; overflow-x: auto; }
 		table.game-list {
 			border-collapse: separate;
@@ -202,7 +201,7 @@
 		$s = trim((string)$rank);
 		if ($s === '' || mb_strpos($s, '級') !== false) return 0;
 		if (is_numeric($s)) return max(0, (int)$s);
-		if (preg_match('/^(\\d+)\\s*段$/u', $s, $m)) return max(0, (int)$m[1]);
+		if (preg_match('/^(\d+)\s*段$/u', $s, $m)) return max(0, (int)$m[1]);
 		if ($s === '初段' || $s === '一段' || $s === '壹段') return 1;
 		$map = array(
 			'二'=>2, '兩'=>2, '貳'=>2, '三'=>3, '參'=>3, '四'=>4, '肆'=>4,
@@ -313,10 +312,9 @@
 		}
 	}
 
-	function tourbRenderGameList($games, $meta = '') {
+	function tourbRenderGameList($games) {
 		if (!$games) return '';
 		$html = '<div class="game-list-section"><h3>對局明細</h3>';
-		if ($meta !== '') $html .= '<div class="game-list-meta">' . tourbH($meta) . '</div>';
 		$html .= '<div class="game-list-wrap"><table class="game-list"><thead><tr><th>輪次</th><th>績分</th><th>棋手</th><th>結果</th><th>棋手</th><th>績分</th></tr></thead><tbody>';
 		foreach ($games as $g) {
 			$p1Score = (float)$g['勝負'];
@@ -374,9 +372,7 @@
 
 		if ($detailOnly) {
 			if (!$detailGames) return '';
-			$meta = '';
-			if ($format !== '挑戰賽') $meta = '賽制：' . ($format !== '' ? $format : '未設定') . '　｜　逐筆列出 GAME 對局';
-			return tourbRenderGameList($detailGames, $meta);
+			return tourbRenderGameList($detailGames);
 		}
 
 		$stmtProm = $MYSQL->prepare("SELECT 序號,代號,姓名,原因,段位,段數 FROM DEN WHERE 賽號=? ORDER BY 序號");
@@ -530,8 +526,7 @@
 			$html .= '</tbody></table></div>';
 		}
 		if ($showGameList && $detailGames) {
-			$meta = $format === '挑戰賽' ? '' : '賽制：' . ($format !== '' ? $format : '未設定') . '　｜　逐筆列出 GAME 對局';
-			$html .= tourbRenderGameList($detailGames, $meta);
+			$html .= tourbRenderGameList($detailGames);
 		}
 
 		$html .= '<div class="swiss-wrap"><table class="swiss-rank"><thead><tr>';
