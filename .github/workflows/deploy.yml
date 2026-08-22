@@ -23,7 +23,6 @@ jobs:
         run: ./scripts/check-project.ps1
 
   deploy:
-    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
     needs: validate
     runs-on: ubuntu-latest
     environment: production
@@ -50,7 +49,7 @@ jobs:
           raw=subprocess.check_output(command); changed=[p.decode('utf-8') for p in raw.split(b'\0') if p]
           def included(path): return not (path.startswith('.github/') or path.startswith('scripts/') or path.startswith('docs/') or path in ('README.md','config.local.php.example')) and os.path.isfile(path)
           files=[p for p in changed if included(p)]
-          for forced in ('rank/index.php','rank/swiss.php'):
+          for forced in ('rank/index.php','rank/swiss.php','riftw/tourb.php'):
               if os.path.isfile(forced) and forced not in files: files.append(forced)
           if not files: print('No deployable changed files. Nothing to upload.'); sys.exit(0)
           ftp=ftplib.FTP_TLS(); ftp.connect(server,21,timeout=60); ftp.login(username,password); ftp.prot_p()
