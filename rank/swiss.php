@@ -11,7 +11,7 @@ $tour = isset($_GET['TOUR']) ? max(0, (int)$_GET['TOUR']) : 0;
 <title>瑞士制戰績表</title>
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
-<link rel="stylesheet" href="swiss.css?v=20260823">
+<link rel="stylesheet" href="swiss.css?v=20260823b">
 </head>
 <body>
 <div class="app">
@@ -57,6 +57,6 @@ if ($tour <= 0) {
 ?>
 </main>
 </div>
-<script src="swiss-ui.js?v=20260823"></script>
+<script src="swiss-ui.js?v=20260823b"></script>
 </body>
 </html>
