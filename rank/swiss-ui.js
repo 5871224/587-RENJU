@@ -133,6 +133,74 @@
     }
   }
 
+  function ensureNavStyles(){
+    if(document.getElementById('swiss-nav-style'))return;
+    var link=document.createElement('link');
+    link.id='swiss-nav-style';
+    link.rel='stylesheet';
+    link.href='swiss-nav.css?v=20260824a';
+    document.head.appendChild(link);
+  }
+
+  function navButton(label,target,tooltip){
+    var el=document.createElement(target?'a':'span');
+    el.className='swiss-nav-btn'+(target?'':' is-disabled');
+    el.textContent=label;
+    if(target)el.href='swiss.php?TOUR='+encodeURIComponent(target);
+    if(tooltip)el.title=tooltip;
+    return el;
+  }
+
+  function setupTournamentNav(){
+    var form=document.querySelector('form.swiss-form');
+    if(!form||form.dataset.navReady==='1')return;
+    var input=form.querySelector('input[name="TOUR"]');
+    var tour=input?parseInt(input.value,10):0;
+    if(!tour)return;
+
+    ensureNavStyles();
+    fetch('swiss-nav.php?TOUR='+encodeURIComponent(tour),{credentials:'same-origin'})
+      .then(function(res){if(!res.ok)throw new Error('navigation');return res.json();})
+      .then(function(data){
+        if(!data||!data.ok)return;
+        form.dataset.navReady='1';
+        form.classList.add('swiss-nav-ready');
+
+        var previous=data.previous||null;
+        var next=data.next||null;
+        var prevButton=navButton('上一場',previous&&previous['賽號'],previous&&previous['賽標']?'上一個賽標：'+previous['賽標']:'');
+        form.insertBefore(prevButton,form.firstChild);
+        form.appendChild(navButton('下一場',next&&next['賽號'],next&&next['賽標']?'下一個賽標：'+next['賽標']:''));
+
+        var group=document.createElement('div');
+        group.className='swiss-same-label';
+        var title=document.createElement('div');
+        title.className='swiss-same-label-title';
+        title.textContent=data.label?'同賽標：'+data.label:'同組比賽：';
+        group.appendChild(title);
+
+        var list=document.createElement('div');
+        list.className='swiss-same-label-list';
+        (data.same||[]).forEach(function(item){
+          var link=document.createElement('a');
+          link.href='swiss.php?TOUR='+encodeURIComponent(item['賽號']);
+          link.className='swiss-same-tour'+(parseInt(item['賽號'],10)===tour?' is-current':'');
+          var no=document.createElement('span');
+          no.className='swiss-same-tour-no';
+          no.textContent=String(item['賽號']);
+          var name=document.createElement('span');
+          name.className='swiss-same-tour-name';
+          name.textContent=item['賽名']||'';
+          link.appendChild(no);
+          if(name.textContent)link.appendChild(name);
+          list.appendChild(link);
+        });
+        group.appendChild(list);
+        form.insertAdjacentElement('afterend',group);
+      })
+      .catch(function(){});
+  }
+
   document.addEventListener('mouseover',function(e){
     var cross=e.target.closest&&e.target.closest('.cross-result[data-pair]');
     if(cross){focusPair(cross);return;}
@@ -197,4 +265,5 @@
 
   setupCrossTables();
   setupDenModal();
+  setupTournamentNav();
 })();
