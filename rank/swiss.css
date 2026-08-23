@@ -24,3 +24,17 @@
 .swiss-rank td.opponent{font-size:14px}
 .swiss-game-cell,.swiss-summary-cell{cursor:pointer}
 .swiss-rank td.swiss-focus{outline:2px solid #f59e0b!important;outline-offset:-2px;position:relative;z-index:2}
+
+/* Compact add-promotion modal. */
+#swiss-den-modal .swiss-modal-panel.swiss-modal-wide{width:min(760px,96vw)!important}
+#swiss-den-modal .swiss-modal-table table{min-width:560px!important;width:auto!important;margin:0 auto}
+#swiss-den-modal .swiss-modal-table th,#swiss-den-modal .swiss-modal-table td{padding:6px!important;white-space:nowrap}
+#swiss-den-modal .swiss-modal-table th:nth-child(1),#swiss-den-modal .swiss-modal-table td:nth-child(1){width:135px!important;min-width:135px!important;max-width:135px!important}
+#swiss-den-modal .swiss-modal-table th:nth-child(2),#swiss-den-modal .swiss-modal-table td:nth-child(2){width:64px!important;min-width:64px!important;max-width:64px!important;text-align:center}
+#swiss-den-modal .swiss-modal-table th:nth-child(3),#swiss-den-modal .swiss-modal-table td:nth-child(3){width:88px!important;min-width:88px!important;max-width:88px!important}
+#swiss-den-modal .swiss-modal-table th:nth-child(4),#swiss-den-modal .swiss-modal-table td:nth-child(4){width:210px!important;min-width:210px!important;max-width:210px!important}
+#swiss-den-modal .swiss-modal-table th:nth-child(5),#swiss-den-modal .swiss-modal-table td:nth-child(5){width:54px!important;min-width:54px!important;max-width:54px!important;text-align:center}
+#swiss-den-modal .swiss-modal-table select[data-den-player]{width:125px!important;max-width:125px!important}
+#swiss-den-modal .swiss-modal-table select[data-den-rank]{width:78px!important;max-width:78px!important}
+#swiss-den-modal .swiss-modal-table input[data-den-reason]{width:200px!important;max-width:200px!important}
+#swiss-den-modal .swiss-modal-table [data-den-score]{min-width:0!important}
