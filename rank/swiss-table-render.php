@@ -3,14 +3,14 @@ require_once __DIR__ . '/swiss-lib.php';
 
 function swissTooltip(string $key): string {
     $tips = [
-        't1' => '輔一：所有實際對手的最終總分合計。',
-        't2' => '輔二：依本局得分比例加權的對手總分；勝=1、和=0.5、負=0。',
-        't3' => '輔三：總分、輔一、輔二都相同時，以同組棋手直接對戰結果加減。',
-        't4' => '輔四：所有實際對手的輔一合計。',
-        't5' => '輔五：所有實際對手的輔二合計。',
-        't6' => '輔六：依本局得分比例加權的對手輔一。',
-        't7' => '輔七：依本局得分比例加權的對手輔二。',
-        'promotion' => '升段分：每局為 max(0, 1 + (對手段數 − 自己段數) × 0.2) × 本局得分 ÷ 2；輪空、棄權等特殊紀錄不計。',
+        't1' => '輔一：所遇對手之總分',
+        't2' => '輔二：所勝對手之總分+所和對手之總分×0.5',
+        't3' => '輔三：同分者彼此對戰成績',
+        't4' => '輔四：所遇對手之輔分一',
+        't5' => '輔五：所遇對手之輔分二',
+        't6' => '輔六：所勝對手之輔分一+所和對手之輔分一×0.5',
+        't7' => '輔七：所勝對手之輔分二+所和對手之輔分二×0.5',
+        'promotion' => "升段分：加權：勝1、和0.5、負0\n每輪得分：(1+(對手段位–本身段位)*0.2)*加權、輪空得分為0.7\n達標：升段分 ≥ 輪數×0.7",
     ];
     return $tips[$key] ?? '';
 }
@@ -93,23 +93,39 @@ function swissRenderStandard(array $data, array $opt): string {
     $players=$data['players']; $prefix=(string)($opt['player_prefix']??'');
     $labels=['輔一','輔二','輔三','輔四','輔五','輔六','輔七'];
     $html='<div class="swiss-scroll"><table class="swiss-rank"><thead><tr><th>名次</th><th>等級分</th><th>姓名</th><th>段位</th>';
-    foreach ($data['roundNos'] as $r) $html.='<th class="round-head">R'.swissH($r).'</th><th>對手</th>';
+    foreach ($data['roundNos'] as $r) $html.='<th class="round-head">R'.swissH($r).'</th><th class="opponent-head">對手</th>';
     $html.='<th class="total-head">總分</th>';
-    for($i=0;$i<$data['tieDepth'];$i++) $html.='<th class="help-head" tabindex="0" data-tooltip="'.swissH(swissTooltip('t'.($i+1))).'">'.swissH($labels[$i]).'<span class="help-mark">?</span></th>';
-    $html.='<th class="help-head" tabindex="0" data-tooltip="'.swissH(swissTooltip('promotion')).'">升段分<span class="help-mark">?</span></th></tr></thead><tbody>';
+    for($i=0;$i<$data['tieDepth'];$i++) $html.='<th class="help-head" tabindex="0" data-tooltip="'.swissH(swissTooltip('t'.($i+1))).'">'.swissH($labels[$i]).'</th>';
+    $html.='<th class="help-head" tabindex="0" data-tooltip="'.swissH(swissTooltip('promotion')).'">升段分</th></tr></thead><tbody>';
     foreach($data['display'] as $p){
+        $playerId=(int)$p['id'];
+        $opponentIds=[];
+        foreach($p['games'] as $roundGame){
+            if(isset($roundGame['opp']) && $roundGame['opp']!==null && isset($players[$roundGame['opp']])) $opponentIds[(int)$roundGame['opp']]=true;
+        }
+        $opponentList=implode(',',array_keys($opponentIds));
+
         $html.='<tr><td class="place">'.swissH($p['virtual_draw']).'</td>';
         if($p['rating']===null||$p['rating']==='') $html.='<td class="rating"></td>'; else $html.='<td class="rating" style="color:'.swissH(swissRatingColor($p['rating'])).'">'.swissH((int)round((float)$p['rating'])).'</td>';
-        $html.='<td class="name">'.swissPlayerLink($p,$prefix).'</td><td>'.swissH($p['rank']).'</td>';
+        $html.='<td class="name" data-player-id="'.$playerId.'">'.swissPlayerLink($p,$prefix).'</td><td>'.swissH($p['rank']).'</td>';
         foreach($data['roundNos'] as $r){
-            if(!isset($p['games'][$r])){$html.='<td class="score-loss">0</td><td class="opponent">棄賽</td>';continue;}
+            if(!isset($p['games'][$r])){
+                $key='missing-'.$playerId.'-'.(int)$r;
+                $attrs=' data-game-key="'.swissH($key).'" data-player="'.$playerId.'" data-opponent=""';
+                $html.='<td class="round-score score-loss swiss-game-cell"'.$attrs.'>0</td><td class="opponent swiss-game-cell"'.$attrs.'>棄賽</td>';
+                continue;
+            }
             $g=$p['games'][$r];$score=(float)$g['score'];$cls=$score>1?'score-win':($score<1?'score-loss':'score-draw');
-            $html.='<td class="'.$cls.'">'.swissH(swissFmt($score)).'</td>';
-            if(!empty($g['status']))$html.='<td class="opponent">'.swissH($g['status']).'</td>';else{$oppCls=!empty($g['opening'])?'opponent opening':'opponent';$html.='<td class="'.$oppCls.'">'.swissH($players[$g['opp']]['virtual_draw']).'</td>';}
+            $oppId=($g['opp']===null)?0:(int)$g['opp'];
+            $key=$oppId>0 ? ('game-'.min($playerId,$oppId).'-'.max($playerId,$oppId).'-'.(int)$r) : ('special-'.$playerId.'-'.(int)$r);
+            $attrs=' data-game-key="'.swissH($key).'" data-player="'.$playerId.'" data-opponent="'.($oppId>0?$oppId:'').'"';
+            $html.='<td class="round-score '.$cls.' swiss-game-cell"'.$attrs.'>'.swissH(swissFmt($score)).'</td>';
+            if(!empty($g['status']))$html.='<td class="opponent swiss-game-cell"'.$attrs.'>'.swissH($g['status']).'</td>';else{$oppCls=!empty($g['opening'])?'opponent opening swiss-game-cell':'opponent swiss-game-cell';$html.='<td class="'.$oppCls.'"'.$attrs.'>'.swissH($players[$g['opp']]['virtual_draw']).'</td>';}
         }
-        $html.='<td class="total">'.swissH(swissFmt($p['total'])).'</td>';
-        for($i=1;$i<=$data['tieDepth'];$i++)$html.='<td>'.swissH(swissFmt($p['t'.$i])).'</td>';
-        $html.='<td>'.swissH(swissFmt($p['promotion'])).'</td></tr>';
+        $summaryAttrs=' data-opponents="'.swissH($opponentList).'"';
+        $html.='<td class="total swiss-summary-cell"'.$summaryAttrs.'>'.swissH(swissFmt($p['total'])).'</td>';
+        for($i=1;$i<=$data['tieDepth'];$i++)$html.='<td class="swiss-summary-cell"'.$summaryAttrs.'>'.swissH(swissFmt($p['t'.$i])).'</td>';
+        $html.='<td class="swiss-summary-cell"'.$summaryAttrs.'>'.swissH(swissFmt($p['promotion'])).'</td></tr>';
     }
     return $html.'</tbody></table></div>';
 }
