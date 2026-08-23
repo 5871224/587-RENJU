@@ -85,6 +85,54 @@
     });
   }
 
+  function denExistingPlayerIds(){
+    var ids={};
+    document.querySelectorAll('.promotion-card .swiss-mini tbody tr td:first-child a[href*="PLAYER="]').forEach(function(link){
+      var match=(link.getAttribute('href')||'').match(/[?&]PLAYER=(\d+)/);
+      if(match)ids[match[1]]=true;
+    });
+    return ids;
+  }
+
+  function filterDenRow(row,existing){
+    if(!row)return;
+    var select=row.querySelector('[data-den-player]');
+    if(!select)return;
+    var selected=select.value;
+    if(selected&&existing[selected]){
+      row.remove();
+      return;
+    }
+    Array.prototype.slice.call(select.options).forEach(function(opt){
+      if(opt.value&&existing[opt.value])opt.remove();
+    });
+  }
+
+  function setupDenModal(){
+    var modal=document.getElementById('swiss-den-modal');
+    if(!modal)return;
+    var existing=denExistingPlayerIds();
+    modal.querySelectorAll('[data-den-row]').forEach(function(row){filterDenRow(row,existing);});
+
+    var template=document.getElementById('den-row-template');
+    if(template&&template.content){
+      template.content.querySelectorAll('[data-den-row]').forEach(function(row){filterDenRow(row,existing);});
+    }
+
+    var tbody=document.getElementById('den-modal-rows');
+    if(tbody&&window.MutationObserver){
+      new MutationObserver(function(mutations){
+        mutations.forEach(function(mutation){
+          mutation.addedNodes.forEach(function(node){
+            if(node.nodeType!==1)return;
+            if(node.matches&&node.matches('[data-den-row]'))filterDenRow(node,existing);
+            else if(node.querySelectorAll)node.querySelectorAll('[data-den-row]').forEach(function(row){filterDenRow(row,existing);});
+          });
+        });
+      }).observe(tbody,{childList:true});
+    }
+  }
+
   document.addEventListener('mouseover',function(e){
     var cross=e.target.closest&&e.target.closest('.cross-result[data-pair]');
     if(cross){focusPair(cross);return;}
@@ -148,4 +196,5 @@
   }
 
   setupCrossTables();
+  setupDenModal();
 })();
