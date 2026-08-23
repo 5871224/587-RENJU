@@ -33,52 +33,82 @@ function swissAdminPromotionBlock(array $data): string {
     return $html . '</tbody></table></div></div>';
 }
 
+function swissHistoryEligiblePlayers(array $data): array {
+    $existing = [];
+    foreach ($data['history'] as $row) {
+        $id = (int)($row['代號'] ?? 0);
+        if ($id > 0) $existing[$id] = true;
+    }
+
+    $eligible = [];
+    foreach ($data['display'] as $p) {
+        if (!isset($existing[(int)$p['id']])) $eligible[] = $p;
+    }
+    return $eligible;
+}
+
 function swissHistoryDefaults(array $data): array {
     $existing = [];
     foreach ($data['history'] as $row) {
-        $existing[(int)($row['代號'] ?? 0) . '|' . (int)(swissSummaryRank($row) ?? 0)] = true;
+        $id = (int)($row['代號'] ?? 0);
+        if ($id > 0) $existing[$id] = true;
     }
 
+    $labels = [1 => '冠軍', 2 => '亞軍', 3 => '季軍'];
     $defaults = [];
-    foreach (array_slice($data['display'], 0, 3) as $p) {
-        $key = (int)$p['id'] . '|' . (int)$p['place'];
-        if (!isset($existing[$key])) {
-            $defaults[] = [
-                'player' => (int)$p['id'],
-                'rank' => (int)$p['place'],
-                'summary' => '第' . (int)$p['place'] . '名',
-                'title' => '',
-            ];
-        }
-    }
-    if (!$defaults) {
-        $defaults[] = ['player' => 0, 'rank' => 0, 'summary' => '', 'title' => ''];
+    foreach ($data['display'] as $p) {
+        $place = (int)($p['place'] ?? 0);
+        if (!isset($labels[$place])) continue;
+        if (isset($existing[(int)$p['id']])) continue;
+        $defaults[] = [
+            'player' => (int)$p['id'],
+            'summary' => (string)$data['tournament']['賽名'] . $labels[$place],
+            'title' => '',
+        ];
     }
     return $defaults;
 }
 
+function swissHistoryPlayerOptions(array $eligible, int $selected = 0): string {
+    $html = '<option value="">請選擇</option>';
+    foreach ($eligible as $p) {
+        $sel = $selected === (int)$p['id'] ? ' selected' : '';
+        $html .= '<option value="' . (int)$p['id'] . '"' . $sel . '>' . swissH($p['name']) . '</option>';
+    }
+    return $html;
+}
+
+function swissHistoryRow(array $eligible, int $index, array $row): string {
+    $html = '<tr data-history-row>';
+    $html .= '<td><select name="rows[' . $index . '][player]">' . swissHistoryPlayerOptions($eligible, (int)($row['player'] ?? 0)) . '</select></td>';
+    $html .= '<td><input type="text" name="rows[' . $index . '][summary]" value="' . swissH($row['summary'] ?? '') . '"></td>';
+    $html .= '<td><input type="text" name="rows[' . $index . '][title]" value="' . swissH($row['title'] ?? '') . '"></td>';
+    $html .= '<td><button type="button" class="history-row-delete">刪除</button></td></tr>';
+    return $html;
+}
+
 function swissRenderHistoryModal(array $data): string {
     $tour = (int)$data['tournament']['賽號'];
+    $eligible = swissHistoryEligiblePlayers($data);
     $defaults = swissHistoryDefaults($data);
     $html = '<div class="swiss-modal" id="swiss-history-modal" aria-hidden="true">';
     $html .= '<div class="swiss-modal-backdrop" data-modal-close></div><div class="swiss-modal-panel" role="dialog" aria-modal="true" aria-labelledby="history-modal-title">';
     $html .= '<div class="swiss-modal-head"><div><h2 id="history-modal-title">新增歷程</h2><div class="swiss-modal-subtitle">' . swissH($data['tournament']['賽名']) . '</div></div><button type="button" class="swiss-modal-x" data-modal-close aria-label="關閉">×</button></div>';
     $html .= '<div class="swiss-modal-error" hidden></div>';
-    $html .= '<form class="swiss-edit swiss-modal-form" method="post" action="swiss-history-add.php"><input type="hidden" name="TOUR" value="' . $tour . '">';
-    $html .= '<div class="swiss-modal-table"><table><thead><tr><th>加入</th><th>名次</th><th>棋手</th><th>摘要</th><th>頭銜</th></tr></thead><tbody>';
-    foreach ($defaults as $i => $row) {
-        $html .= '<tr><td><input type="checkbox" name="rows[' . $i . '][use]" value="1" checked></td>';
-        $html .= '<td><input type="number" min="0" name="rows[' . $i . '][rank]" value="' . (int)$row['rank'] . '"></td>';
-        $html .= '<td><select name="rows[' . $i . '][player]"><option value="">請選擇</option>';
-        foreach ($data['display'] as $p) {
-            $selected = ((int)$row['player'] === (int)$p['id']) ? ' selected' : '';
-            $html .= '<option value="' . (int)$p['id'] . '"' . $selected . '>' . swissH($p['name']) . '</option>';
-        }
-        $html .= '</select></td>';
-        $html .= '<td><input type="text" name="rows[' . $i . '][summary]" value="' . swissH($row['summary']) . '"></td>';
-        $html .= '<td><input type="text" name="rows[' . $i . '][title]" value="' . swissH($row['title']) . '"></td></tr>';
+
+    if (!$eligible) {
+        $html .= '<div class="swiss-modal-note">本場比賽的棋手都已經存在歷程紀錄，沒有可新增的棋手。</div>';
     }
-    $html .= '</tbody></table></div><div class="swiss-modal-actions"><button type="button" class="swiss-btn" data-modal-close>取消</button><button class="swiss-modal-primary" type="submit">新增歷程</button></div></form></div></div>';
+
+    $html .= '<form class="swiss-edit swiss-modal-form" method="post" action="swiss-history-add.php"><input type="hidden" name="TOUR" value="' . $tour . '">';
+    $html .= '<div class="swiss-modal-table"><table><thead><tr><th>棋手</th><th>摘要</th><th>頭銜</th><th>操作</th></tr></thead><tbody id="history-modal-rows">';
+    foreach ($defaults as $i => $row) $html .= swissHistoryRow($eligible, $i, $row);
+    $html .= '</tbody></table></div>';
+
+    $templateIndex = max(3, count($defaults));
+    $html .= '<template id="history-row-template">' . swissHistoryRow($eligible, $templateIndex, ['player' => 0, 'summary' => '', 'title' => '']) . '</template>';
+    $html .= '<div class="swiss-modal-actions swiss-history-actions"><button type="button" class="swiss-btn" data-history-add' . (!$eligible ? ' disabled' : '') . '>新增列</button><div class="swiss-modal-action-right"><button type="button" class="swiss-btn" data-modal-close>取消</button><button class="swiss-modal-primary" type="submit"' . (!$eligible ? ' disabled' : '') . '>新增歷程</button></div></div>';
+    $html .= '</form></div></div>';
     return $html;
 }
 
@@ -123,9 +153,9 @@ if ($tour > 0) {
 <title>瑞士制戰績表</title>
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
-<link rel="stylesheet" href="swiss.css?v=20260823c">
+<link rel="stylesheet" href="swiss.css?v=20260824a">
 <style>
-.swiss-modal{display:none;position:fixed;inset:0;z-index:100000;align-items:center;justify-content:center;padding:24px}.swiss-modal.is-open{display:flex}.swiss-modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.56)}.swiss-modal-panel{position:relative;z-index:1;width:min(920px,96vw);max-height:88vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.28);padding:20px}.swiss-modal-wide{width:min(1120px,96vw)}.swiss-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}.swiss-modal-head h2{margin:0;font-size:22px;color:#1f3342}.swiss-modal-subtitle{margin-top:4px;color:#64748b;font-size:13px}.swiss-modal-x{border:0;background:transparent;font-size:30px;line-height:1;color:#64748b;cursor:pointer;padding:0 4px}.swiss-modal-note{margin:0 0 12px;padding:10px 12px;border-radius:8px;background:#f3f7fa;color:#526575;font-size:13px}.swiss-modal-error{margin:0 0 12px;padding:9px 11px;border-radius:8px;background:#fdecec;color:#a12622;font-size:13px}.swiss-modal-table{overflow:auto;max-height:58vh}.swiss-modal-table table{min-width:720px}.swiss-modal-table input[type=text],.swiss-modal-table input[type=number],.swiss-modal-table select{max-width:220px;width:100%;box-sizing:border-box}.swiss-modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;position:sticky;bottom:-20px;background:#fff;padding:12px 0 2px}.swiss-modal-primary{padding:7px 14px;border:1px solid #245c78;border-radius:7px;background:#245c78;color:#fff;cursor:pointer;font-weight:700}.swiss-subhead .swiss-btn[type=button]{font:inherit;cursor:pointer}body.swiss-modal-lock{overflow:hidden}@media(max-width:700px){.swiss-modal{padding:10px}.swiss-modal-panel{padding:14px;max-height:92vh}.swiss-modal-table{max-height:64vh}}
+.swiss-modal{display:none;position:fixed;inset:0;z-index:100000;align-items:center;justify-content:center;padding:24px}.swiss-modal.is-open{display:flex}.swiss-modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.56)}.swiss-modal-panel{position:relative;z-index:1;width:min(920px,96vw);max-height:88vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.28);padding:20px}.swiss-modal-wide{width:min(1120px,96vw)}.swiss-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}.swiss-modal-head h2{margin:0;font-size:22px;color:#1f3342}.swiss-modal-subtitle{margin-top:4px;color:#64748b;font-size:13px}.swiss-modal-x{border:0!important;background:transparent!important;font-size:30px;line-height:1;color:#64748b!important;cursor:pointer;padding:0 4px}.swiss-modal-note{margin:0 0 12px;padding:10px 12px;border-radius:8px;background:#f3f7fa;color:#526575;font-size:13px}.swiss-modal-error{margin:0 0 12px;padding:9px 11px;border-radius:8px;background:#fdecec;color:#a12622;font-size:13px}.swiss-modal-table{overflow:auto;max-height:58vh}.swiss-modal-table table{min-width:650px}.swiss-modal-table input[type=text],.swiss-modal-table input[type=number],.swiss-modal-table select{max-width:280px;width:100%;box-sizing:border-box}.swiss-modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;position:sticky;bottom:-20px;background:#fff;padding:12px 0 2px}.swiss-history-actions{justify-content:space-between}.swiss-modal-action-right{display:flex;gap:10px}.swiss-modal-primary{padding:7px 14px!important;border:1px solid #245c78!important;border-radius:7px!important;background:#245c78!important;color:#fff!important;cursor:pointer;font-weight:700}.swiss-modal-primary:disabled{opacity:.5;cursor:not-allowed}.swiss-subhead .swiss-btn[type=button],.swiss-modal-actions .swiss-btn{font:inherit;cursor:pointer;background:#fff!important;color:#245c78!important;border:1px solid #9fb8c8!important}.history-row-delete{border:0!important;background:transparent!important;color:#b42318!important;text-decoration:underline;cursor:pointer;padding:4px 6px}.swiss-btn:disabled{opacity:.45;cursor:not-allowed!important}body.swiss-modal-lock{overflow:hidden}@media(max-width:700px){.swiss-modal{padding:10px}.swiss-modal-panel{padding:14px;max-height:92vh}.swiss-modal-table{max-height:64vh}}
 </style>
 </head>
 <body>
@@ -189,9 +219,10 @@ if ($tour <= 0) {
 ?>
 </main>
 </div>
-<script src="swiss-ui.js?v=20260823b"></script>
+<script src="swiss-ui.js?v=20260824a"></script>
 <script>
 (function(){
+    var historyRowIndex = 1000;
     function modalByKind(kind){ return document.getElementById(kind === 'history' ? 'swiss-history-modal' : 'swiss-den-modal'); }
     function openModal(kind){ var m=modalByKind(kind); if(!m)return; m.classList.add('is-open'); m.setAttribute('aria-hidden','false'); document.body.classList.add('swiss-modal-lock'); var first=m.querySelector('input,select,button'); if(first)setTimeout(function(){first.focus();},20); }
     function closeModal(m){ if(!m)return; m.classList.remove('is-open'); m.setAttribute('aria-hidden','true'); document.body.classList.remove('swiss-modal-lock'); var err=m.querySelector('.swiss-modal-error'); if(err){err.hidden=true;err.textContent='';} }
@@ -204,7 +235,18 @@ if ($tour <= 0) {
         var denLink=e.target.closest('a[href*="swiss-den-add.php"]');
         if(denLink){e.preventDefault();openModal('den');return;}
         var closer=e.target.closest('[data-modal-close]');
-        if(closer){e.preventDefault();closeModal(closer.closest('.swiss-modal'));}
+        if(closer){e.preventDefault();closeModal(closer.closest('.swiss-modal'));return;}
+        var del=e.target.closest('.history-row-delete');
+        if(del){e.preventDefault();var row=del.closest('[data-history-row]');if(row)row.remove();return;}
+        var add=e.target.closest('[data-history-add]');
+        if(add && !add.disabled){
+            e.preventDefault();
+            var template=document.getElementById('history-row-template'),tbody=document.getElementById('history-modal-rows');
+            if(!template||!tbody)return;
+            var html=template.innerHTML.replace(/rows\[\d+\]/g,'rows['+(historyRowIndex++)+']');
+            var holder=document.createElement('tbody');holder.innerHTML=html;
+            var row=holder.firstElementChild;if(row){tbody.appendChild(row);var select=row.querySelector('select');if(select)select.focus();}
+        }
     });
 
     document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ var m=document.querySelector('.swiss-modal.is-open'); if(m)closeModal(m); } });
@@ -214,8 +256,15 @@ if ($tour <= 0) {
             e.preventDefault();
             var modal=form.closest('.swiss-modal');
             var err=modal.querySelector('.swiss-modal-error');
-            var checked=form.querySelectorAll('input[type="checkbox"][name*="[use]"]:checked');
-            if(!checked.length){err.textContent='請至少勾選一筆要新增的資料。';err.hidden=false;return;}
+            var isHistory=form.action.indexOf('swiss-history-add.php')!==-1;
+            if(isHistory){
+                var rows=form.querySelectorAll('[data-history-row]');
+                var selected=Array.prototype.some.call(rows,function(row){var s=row.querySelector('select[name*="[player]"]');return s&&s.value;});
+                if(!selected){err.textContent='請至少新增一列並選擇棋手。';err.hidden=false;return;}
+            }else{
+                var checked=form.querySelectorAll('input[type="checkbox"][name*="[use]"]:checked');
+                if(!checked.length){err.textContent='請至少勾選一筆要新增的資料。';err.hidden=false;return;}
+            }
             err.hidden=true;err.textContent='';
             var submit=form.querySelector('button[type="submit"]');
             if(submit){submit.disabled=true;submit.dataset.oldText=submit.textContent;submit.textContent='儲存中…';}
