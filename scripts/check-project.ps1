@@ -37,7 +37,7 @@ foreach ($file in $phpFiles) {
     }
 }
 
-$disabledEndpoints = @(
+$removedEndpoints = @(
     'riftw/tourtest.php',
     'riftw/officialweb-query.php',
     'bb/SQLRANK.php',
@@ -47,16 +47,9 @@ $disabledEndpoints = @(
     'bb/querysql.php',
     'bb/readsql.php'
 )
-foreach ($file in $disabledEndpoints) {
-    if (-not (Test-Path $file)) {
-        throw "Disabled maintenance endpoint stub is missing: $file"
-    }
-    $source = Get-Content -Raw $file
-    if ($source -notmatch 'http_response_code\s*\(\s*404\s*\)') {
-        throw "Disabled maintenance endpoint must return 404: $file"
-    }
-    if ($source -match '(?i)connectDatabase|->query\s*\(|->prepare\s*\(|\$_(?:GET|POST|REQUEST)\s*\[') {
-        throw "Disabled maintenance endpoint contains executable database/request logic: $file"
+foreach ($file in $removedEndpoints) {
+    if (Test-Path $file) {
+        throw "Removed maintenance endpoint must not exist in public repository: $file"
     }
 }
 
