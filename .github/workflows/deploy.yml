@@ -49,8 +49,20 @@ jobs:
           raw=subprocess.check_output(command); changed=[p.decode('utf-8') for p in raw.split(b'\0') if p]
           def included(path): return not (path.startswith('.github/') or path.startswith('scripts/') or path.startswith('docs/') or path in ('README.md','config.local.php.example')) and os.path.isfile(path)
           files=[p for p in changed if included(p)]
-          # Critical ranking pages are force-uploaded on every deployment so stale FTP copies cannot survive.
-          for forced in ('rank/index.php','rank/swiss.php','riftw/tourb.php'):
+          # Ranking pages and all Swiss dependencies are force-uploaded together so a successful later run repairs any earlier partial deployment.
+          forced_files=(
+              'rank/index.php',
+              'rank/swiss.php',
+              'rank/swiss-lib.php',
+              'rank/swiss-table-render.php',
+              'rank/swiss-history-add.php',
+              'rank/swiss-den-add.php',
+              'rank/swiss-record-delete.php',
+              'rank/swiss.css',
+              'rank/swiss-ui.js',
+              'riftw/tourb.php',
+          )
+          for forced in forced_files:
               if os.path.isfile(forced) and forced not in files: files.append(forced)
           if not files: print('No deployable changed files. Nothing to upload.'); sys.exit(0)
           ftp=ftplib.FTP_TLS(); ftp.connect(server,21,timeout=60); ftp.login(username,password); ftp.prot_p()
