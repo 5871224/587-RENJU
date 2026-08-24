@@ -37,11 +37,8 @@ function swissRenderHistory(array $data, array $opt): string {
     $hasDate = array_key_exists('日期', $rows[0]);
     $hasSummary = array_key_exists('摘要', $rows[0]);
     $hasTitle = array_key_exists('頭銜', $rows[0]);
-    $hasRank = false;
-    foreach ($rows as $row) if (swissSummaryRank($row) !== null) { $hasRank = true; break; }
     $html .= '<div class="swiss-scroll"><table class="swiss-mini"><thead><tr>';
     if ($hasDate) $html .= '<th>日期</th>';
-    if ($hasRank) $html .= '<th>名次</th>';
     $html .= '<th>姓名</th>';
     if ($hasSummary) $html .= '<th>摘要</th>';
     if ($hasTitle) $html .= '<th>頭銜</th>';
@@ -52,7 +49,6 @@ function swissRenderHistory(array $data, array $opt): string {
         $name = (string)($row['棋手姓名'] ?? $row['姓名'] ?? $id);
         $html .= '<tr>';
         if ($hasDate) $html .= '<td>' . swissH($row['日期'] ?? '') . '</td>';
-        if ($hasRank) $html .= '<td>' . swissH(swissSummaryRank($row) ?? '') . '</td>';
         $html .= '<td>' . ($id > 0 ? '<a href="' . swissH(($opt['player_prefix'] ?? '') . 'player.php?PLAYER=' . $id) . '">' . swissH($name) . '</a>' : swissH($name)) . '</td>';
         if ($hasSummary) $html .= '<td class="text-left">' . swissH($row['摘要'] ?? '') . '</td>';
         if ($hasTitle) $html .= '<td>' . swissH($row['頭銜'] ?? '') . '</td>';
