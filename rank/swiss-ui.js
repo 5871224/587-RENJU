@@ -1,4 +1,6 @@
 (function(){
+  var scoreClasses=['score-win','score-draw','score-loss'];
+
   function setupCrossTables(){
     document.querySelectorAll('table.swiss-cross').forEach(function(table){
       var rows=table.querySelectorAll('tbody tr');
@@ -52,7 +54,17 @@
 
   function clearSwissFocus(){
     document.querySelectorAll('.swiss-rank .swiss-focus').forEach(function(el){el.classList.remove('swiss-focus');});
+    document.querySelectorAll('.swiss-rank .swiss-hover-source').forEach(function(el){el.classList.remove('swiss-hover-source');});
+    document.querySelectorAll('.swiss-rank .swiss-hover-result').forEach(function(el){
+      el.classList.remove('swiss-hover-result');
+      scoreClasses.forEach(function(cls){el.classList.remove(cls);});
+    });
+    document.querySelectorAll('.swiss-rank [data-swiss-original-text]').forEach(function(el){
+      el.textContent=el.getAttribute('data-swiss-original-text');
+      el.removeAttribute('data-swiss-original-text');
+    });
   }
+
   function focusSwissGame(cell){
     clearSwissFocus();
     var table=cell.closest('table.swiss-rank');
@@ -72,17 +84,152 @@
       if(other)other.classList.add('swiss-focus');
     }
   }
+
+  function headerLabel(table,index){
+    var head=table&&table.querySelector('thead tr');
+    return head&&head.cells[index]?head.cells[index].textContent.trim():'';
+  }
+
+  function cellByLabel(row,label){
+    var table=row&&row.closest('table.swiss-rank');
+    if(!table)return null;
+    var head=table.querySelector('thead tr');
+    if(!head)return null;
+    for(var i=0;i<head.cells.length;i++){
+      if(head.cells[i].textContent.trim()===label)return row.cells[i]||null;
+    }
+    return null;
+  }
+
+  function playerRow(table,id){
+    var name=table.querySelector('.name[data-player-id="'+id+'"]');
+    return name?name.closest('tr'):null;
+  }
+
+  function playerIdFromRow(row){
+    var name=row&&row.querySelector('.name[data-player-id]');
+    return name?name.getAttribute('data-player-id'):'';
+  }
+
+  function opponentIds(cell){
+    var raw=cell.getAttribute('data-opponents')||'';
+    var out=[];
+    raw.split(',').forEach(function(id){
+      id=id.trim();
+      if(id&&out.indexOf(id)<0)out.push(id);
+    });
+    return out;
+  }
+
+  function resultAgainst(row,opponentId){
+    if(!row||!opponentId)return '';
+    var cells=row.querySelectorAll('.round-score[data-opponent="'+opponentId+'"]');
+    var total=0,count=0;
+    cells.forEach(function(cell){
+      var score=parseFloat(cell.textContent.trim());
+      if(!isNaN(score)){total+=score;count++;}
+    });
+    if(!count)return '';
+    var average=total/count;
+    if(average>1.000001)return 'score-win';
+    if(average<0.999999)return 'score-loss';
+    return 'score-draw';
+  }
+
+  function markResult(cell,resultClass){
+    if(!cell||!resultClass)return;
+    cell.classList.add('swiss-hover-result',resultClass);
+  }
+
+  function formatHoverNumber(value){
+    if(!isFinite(value))return '';
+    var rounded=Math.round(value*1000000)/1000000;
+    if(Math.abs(rounded-Math.round(rounded))<0.000001)return String(Math.round(rounded));
+    return String(rounded).replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');
+  }
+
+  function showWeightedValue(cell,resultClass){
+    if(!cell)return;
+    if(!cell.hasAttribute('data-swiss-original-text'))cell.setAttribute('data-swiss-original-text',cell.textContent.trim());
+    var base=parseFloat(cell.getAttribute('data-swiss-original-text'));
+    if(isNaN(base))return;
+    if(resultClass==='score-loss')cell.textContent='0';
+    else if(resultClass==='score-draw')cell.textContent=formatHoverNumber(base/2);
+    else cell.textContent=formatHoverNumber(base);
+  }
+
+  function focusOpponentNames(table,sourceRow,ids){
+    ids.forEach(function(id){
+      var row=playerRow(table,id);
+      var name=row&&row.querySelector('.name[data-player-id]');
+      if(!name)return;
+      name.classList.add('swiss-focus');
+      markResult(name,resultAgainst(sourceRow,id));
+    });
+  }
+
+  function focusOpponentColumn(table,sourceRow,ids,label,weighted){
+    ids.forEach(function(id){
+      var row=playerRow(table,id);
+      var target=cellByLabel(row,label);
+      if(!target)return;
+      target.classList.add('swiss-focus');
+      if(weighted){
+        var resultClass=resultAgainst(sourceRow,id);
+        markResult(target,resultClass);
+        showWeightedValue(target,resultClass);
+      }
+    });
+  }
+
+  function sameValue(a,b,label){
+    var ca=cellByLabel(a,label),cb=cellByLabel(b,label);
+    if(!ca||!cb)return false;
+    var va=parseFloat(ca.textContent.trim()),vb=parseFloat(cb.textContent.trim());
+    if(isNaN(va)||isNaN(vb))return ca.textContent.trim()===cb.textContent.trim();
+    return Math.abs(va-vb)<0.000001;
+  }
+
+  function focusHeadToHead(table,sourceRow){
+    var tied=[];
+    table.querySelectorAll('tbody tr').forEach(function(row){
+      if(row===sourceRow)return;
+      if(!sameValue(sourceRow,row,'總分'))return;
+      if(!sameValue(sourceRow,row,'輔一'))return;
+      if(!sameValue(sourceRow,row,'輔二'))return;
+      var id=playerIdFromRow(row);
+      if(id)tied.push(id);
+    });
+
+    tied.forEach(function(id){
+      sourceRow.querySelectorAll('.round-score[data-opponent="'+id+'"]').forEach(function(scoreCell){
+        var key=scoreCell.getAttribute('data-game-key');
+        if(key){
+          table.querySelectorAll('.round-score[data-game-key="'+key+'"]').forEach(function(cell){cell.classList.add('swiss-focus');});
+        }else scoreCell.classList.add('swiss-focus');
+      });
+    });
+  }
+
   function focusSwissOpponents(cell){
     clearSwissFocus();
     var table=cell.closest('table.swiss-rank');
-    if(!table)return;
-    var raw=cell.getAttribute('data-opponents')||'';
-    raw.split(',').forEach(function(id){
-      id=id.trim();
-      if(!id)return;
-      var name=table.querySelector('.name[data-player-id="'+id+'"]');
-      if(name)name.classList.add('swiss-focus');
-    });
+    var sourceRow=cell.closest('tr');
+    if(!table||!sourceRow)return;
+    var ids=opponentIds(cell);
+    focusOpponentNames(table,sourceRow,ids);
+
+    var label=headerLabel(table,cell.cellIndex);
+    if(!/^輔[一二三四五六七]$/.test(label))return;
+    cell.classList.add('swiss-hover-source');
+
+    if(label==='輔一')focusOpponentColumn(table,sourceRow,ids,'總分',false);
+    else if(label==='輔二')focusOpponentColumn(table,sourceRow,ids,'總分',true);
+    else if(label==='輔三')focusHeadToHead(table,sourceRow);
+    else if(label==='輔四')focusOpponentColumn(table,sourceRow,ids,'輔一',false);
+    else if(label==='輔五')focusOpponentColumn(table,sourceRow,ids,'輔二',false);
+    else if(label==='輔六')focusOpponentColumn(table,sourceRow,ids,'輔一',true);
+    else if(label==='輔七')focusOpponentColumn(table,sourceRow,ids,'輔二',true);
   }
 
   function denExistingPlayerIds(){
