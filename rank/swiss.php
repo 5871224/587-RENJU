@@ -151,6 +151,6 @@ if ($tour <= 0) {
 }());
 </script>
 <script src="swiss-ui.js?v=20260824d"></script>
-<script src="swiss-admin-ui.js?v=20260824a"></script>
+<script src="swiss-admin-ui.js?v=20260824b"></script>
 </body>
 </html>
