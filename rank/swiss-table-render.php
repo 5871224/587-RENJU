@@ -152,11 +152,11 @@ function swissRenderCross(array $data, array $opt): string {
 function swissRenderGameList(array $games, array $opt): string {
     if(!$games)return '<div class="swiss-empty">沒有可顯示的對局明細。</div>';
     $prefix=(string)($opt['player_prefix']??'');
-    $html='<div class="swiss-scroll"><table class="game-list"><thead><tr><th>輪次</th><th>績分</th><th>棋手</th><th>結果</th><th>棋手</th><th>績分</th></tr></thead><tbody>';
+    $html='<div class="swiss-scroll"><table class="game-list"><thead><tr><th>輪次</th><th>等級分</th><th>棋手</th><th>結果</th><th>棋手</th><th>等級分</th></tr></thead><tbody>';
     foreach($games as $g){$s1=(float)$g['勝負'];$s2=2-$s1;$html.='<tr><td>'.swissH($g['輪次']).'</td>';
         $html.=($g['P1分']===null||$g['P1分']==='')?'<td></td>':'<td class="rating" style="color:'.swissH(swissRatingColor($g['P1分'])).'">'.swissH((int)round((float)$g['P1分'])).'</td>';
         $name1=$g['選手1']?:$g['P1'];$name2=$g['選手2']?:$g['P2'];
-        $html.='<td class="player '.($s1>1?'score-win':($s1<1?'score-loss':'score-draw')).'"><a href="'.swissH($prefix.'player.php?PLAYER='.(int)$g['P1']).'">'.swissH($name1).'</a></td><td class="game-result">'.swissH(swissFmt($s1).'–'.swissFmt($s2)).'</td><td class="player '.($s2>1?'score-win':($s2<1?'score-loss':'score-draw')).'"><a href="'.swissH($prefix.'player.php?PLAYER='.(int)$g['P2']).'">'.swissH($name2).'</a></td>';
+        $html.='<td class="player '.($s1>1?'score-win':($s1<1?'score-loss':'score-draw')).'"><a href="'.swissH($prefix.'player.php?PLAYER='.(int)$g['P1']).'">'.swissH($name1).'</a></td><td class="game-result">'.swissH(swissFmt($s1).'：'.swissFmt($s2)).'</td><td class="player '.($s2>1?'score-win':($s2<1?'score-loss':'score-draw')).'"><a href="'.swissH($prefix.'player.php?PLAYER='.(int)$g['P2']).'">'.swissH($name2).'</a></td>';
         $html.=($g['P2分']===null||$g['P2分']==='')?'<td></td>':'<td class="rating" style="color:'.swissH(swissRatingColor($g['P2分'])).'">'.swissH((int)round((float)$g['P2分'])).'</td>';
         $html.='</tr>';}
     return $html.'</tbody></table></div>';
