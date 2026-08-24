@@ -329,7 +329,7 @@ function swissBuildTournamentData(PDO $db, int $tour): array {
     $games=swissLoadGames($db,$tour);
     [$players,$roundNos]=swissBuildPlayers($db,$tournament,$games);
     $format=trim((string)$tournament['賽制']);
-    $cross=in_array($format,['自由對局','團體賽'],true);
+    $cross=$format === '自由對局';
     $standard=in_array($format,['單循環','雙循環','瑞士制'],true);
     if ($standard) swissCalculateStandard($players,$games);
     $display=swissAssignPlaces($players,$standard);
