@@ -44,8 +44,9 @@ $t = $data['tournament'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $rows = is_array($_POST['rows'] ?? null) ? $_POST['rows'] : [];
+        $recordId = max(0, (int)($_POST['record_id'] ?? 0));
         $date = (string)($t['結束'] ?: $t['開始']);
-        $added = 0;
+        $saved = 0;
         $MYSQL->beginTransaction();
 
         foreach ($rows as $row) {
@@ -70,6 +71,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $reason = (string)$t['賽名'] . denPlaceLabel((int)($p['place'] ?? 0));
             }
 
+            if ($recordId > 0) {
+                $duplicate = $MYSQL->prepare('SELECT COUNT(*) FROM `DEN` WHERE `賽號`=? AND `代號`=? AND `段位`=? AND `序號`<>?');
+                $duplicate->execute([$tour, $id, $rank, $recordId]);
+                if ((int)$duplicate->fetchColumn() > 0) {
+                    throw new RuntimeException($p['name'] . ' 已有相同段位紀錄。');
+                }
+
+                $stmt = $MYSQL->prepare('UPDATE `DEN` SET `代號`=?,`姓名`=?,`原因`=?,`段位`=?,`段數`=?,`日期`=? WHERE `序號`=? AND `賽號`=? LIMIT 1');
+                $stmt->execute([$id, $p['name'], $reason, $rank, $rankNumber, $date, $recordId, $tour]);
+                if ($stmt->rowCount() === 0) {
+                    $check = $MYSQL->prepare('SELECT COUNT(*) FROM `DEN` WHERE `序號`=? AND `賽號`=?');
+                    $check->execute([$recordId, $tour]);
+                    if ((int)$check->fetchColumn() === 0) throw new RuntimeException('找不到要修改的段級紀錄。');
+                }
+                $saved++;
+                break;
+            }
+
             $duplicate = $MYSQL->prepare('SELECT COUNT(*) FROM `DEN` WHERE `賽號`=? AND `代號`=? AND `段位`=?');
             $duplicate->execute([$tour, $id, $rank]);
             if ((int)$duplicate->fetchColumn() > 0) continue;
@@ -83,11 +102,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 '賽號' => $tour,
                 '日期' => $date,
             ]);
-            $added++;
+            $saved++;
         }
 
         $MYSQL->commit();
-        denRespond(true, $added > 0 ? '段級紀錄已新增。' : '沒有新增新的段級紀錄。', $tour, $ajax);
+        if ($recordId > 0) {
+            denRespond(true, $saved > 0 ? '段級紀錄已修改。' : '沒有可修改的段級紀錄。', $tour, $ajax);
+        }
+        denRespond(true, $saved > 0 ? '段級紀錄已新增。' : '沒有新增新的段級紀錄。', $tour, $ajax);
     } catch (Throwable $e) {
         if ($MYSQL->inTransaction()) $MYSQL->rollBack();
         $error = $e->getMessage();
