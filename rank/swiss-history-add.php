@@ -55,8 +55,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($name === '') throw new RuntimeException('找不到指定棋手。');
 
             if ($recordId > 0) {
-                $stmt = $MYSQL->prepare('UPDATE `SUMMARY` SET `日期`=?,`代號`=?,`姓名`=?,`摘要`=?,`頭銜`=? WHERE `序號`=? AND `賽號`=? LIMIT 1');
-                $stmt->execute([$date, $player, $name, $summary, $title, $recordId, $tour]);
+                $values = [
+                    '日期' => $date,
+                    '代號' => $player,
+                    '姓名' => $name,
+                    '摘要' => $summary,
+                    '頭銜' => $title,
+                ];
+                $columns = swissTableColumns($MYSQL, 'SUMMARY');
+                $sets = [];
+                $params = [];
+                foreach ($values as $column => $value) {
+                    if (!isset($columns[$column])) continue;
+                    $sets[] = '`' . str_replace('`', '``', $column) . '`=?';
+                    $params[] = $value;
+                }
+                if (!$sets) throw new RuntimeException('沒有可修改的歷程欄位。');
+                $params[] = $recordId;
+                $params[] = $tour;
+                $stmt = $MYSQL->prepare('UPDATE `SUMMARY` SET ' . implode(',', $sets) . ' WHERE `序號`=? AND `賽號`=? LIMIT 1');
+                $stmt->execute($params);
                 if ($stmt->rowCount() === 0) {
                     $check = $MYSQL->prepare('SELECT COUNT(*) FROM `SUMMARY` WHERE `序號`=? AND `賽號`=?');
                     $check->execute([$recordId, $tour]);
