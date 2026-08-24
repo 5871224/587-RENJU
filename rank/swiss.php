@@ -2,9 +2,30 @@
 require_once __DIR__ . '/login.php';
 require_once __DIR__ . '/swiss-admin-ui.php';
 
+function swissRenjuGameLinks(PDO $db, int $tour): array {
+    $columns = swissTableColumns($db, 'GAME');
+    if (!isset($columns['棋譜'])) return [];
+
+    $stmt = $db->prepare("SELECT `輪次`,`P1`,`P2`,`棋譜` FROM `GAME` WHERE `比賽`=? AND TRIM(COALESCE(`棋譜`,''))<>'' ORDER BY `輪次`,`P1`,`P2`");
+    $stmt->execute([$tour]);
+
+    $links = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $round = (int)($row['輪次'] ?? 0);
+        $p1 = (int)($row['P1'] ?? 0);
+        $p2 = (int)($row['P2'] ?? 0);
+        $gameId = trim((string)($row['棋譜'] ?? ''));
+        if ($round <= 0 || $p1 <= 0 || $p2 <= 0 || !preg_match('/^\d+$/', $gameId)) continue;
+        $key = 'game-' . min($p1, $p2) . '-' . max($p1, $p2) . '-' . $round;
+        $links[$key] = $gameId;
+    }
+    return $links;
+}
+
 $tour = isset($_GET['TOUR']) ? max(0, (int)$_GET['TOUR']) : 0;
 $group = ['current'=>null,'same'=>[],'previous'=>null,'next'=>null,'label'=>''];
 $groupData = [];
+$renjuGameLinks = [];
 $pageError = '';
 
 if ($tour > 0) {
@@ -17,6 +38,7 @@ if ($tour > 0) {
                 $groupTour = (int)$row['賽號'];
                 try {
                     $groupData[] = swissBuildTournamentData($MYSQL, $groupTour);
+                    $renjuGameLinks[$groupTour] = swissRenjuGameLinks($MYSQL, $groupTour);
                 } catch (Throwable $e) {
                     $groupData[] = ['error'=>$e->getMessage(),'tour'=>$groupTour,'tournament'=>$row];
                 }
@@ -37,6 +59,10 @@ if ($tour > 0) {
 <link rel="stylesheet" href="admin.css?v=20260820">
 <link rel="stylesheet" href="swiss.css?v=20260824d">
 <link rel="stylesheet" href="swiss-admin-ui.css?v=20260824a">
+<style>
+.swiss-rank td.round-score a.renju-game-link{display:block;color:inherit!important;text-decoration:none;font:inherit}
+.swiss-rank td.round-score a.renju-game-link:hover{text-decoration:underline}
+</style>
 </head>
 <body>
 <div class="app">
@@ -103,6 +129,27 @@ if ($tour <= 0) {
 ?>
 </main>
 </div>
+<script>
+(function () {
+    const linkMap = <?= json_encode($renjuGameLinks, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    document.querySelectorAll('.swiss-component[data-tour]').forEach(function (section) {
+        const links = linkMap[section.dataset.tour] || {};
+        section.querySelectorAll('td.round-score[data-game-key]').forEach(function (cell) {
+            const gameId = links[cell.dataset.gameKey];
+            if (!gameId || !/^\d+$/.test(String(gameId))) return;
+            const link = document.createElement('a');
+            link.className = 'renju-game-link';
+            link.href = 'https://www.renju.net/game/' + encodeURIComponent(gameId) + '/';
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.title = '在 RenjuNet 查看棋譜';
+            link.textContent = cell.textContent.trim();
+            cell.textContent = '';
+            cell.appendChild(link);
+        });
+    });
+}());
+</script>
 <script src="swiss-ui.js?v=20260824d"></script>
 <script src="swiss-admin-ui.js?v=20260824a"></script>
 </body>
