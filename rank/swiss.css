@@ -25,6 +25,16 @@
 .swiss-game-cell,.swiss-summary-cell{cursor:pointer}
 .swiss-rank td.swiss-focus{outline:2px solid #f59e0b!important;outline-offset:-2px;position:relative;z-index:2}
 
+/* Swiss summary/tie-break hover visualization. */
+.swiss-rank td.swiss-hover-source{background:#e7f7d5!important}
+.swiss-rank td.swiss-hover-result.score-win{background:#e7f7d5!important}
+.swiss-rank td.swiss-hover-result.score-draw{background:#fff4c7!important}
+.swiss-rank td.swiss-hover-result.score-loss{background:#fbe4e4!important}
+.swiss-rank tbody tr:hover>td.swiss-hover-source{background:#e7f7d5!important}
+.swiss-rank tbody tr:hover>td.swiss-hover-result.score-win{background:#e7f7d5!important}
+.swiss-rank tbody tr:hover>td.swiss-hover-result.score-draw{background:#fff4c7!important}
+.swiss-rank tbody tr:hover>td.swiss-hover-result.score-loss{background:#fbe4e4!important}
+
 /* Compact add-promotion modal. */
 #swiss-den-modal .swiss-modal-panel.swiss-modal-wide{width:min(760px,96vw)!important}
 #swiss-den-modal .swiss-modal-table table{min-width:560px!important;width:auto!important;margin:0 auto}
