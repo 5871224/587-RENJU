@@ -44,7 +44,8 @@ jobs:
           CURRENT_SHA: ${{ github.sha }}
         run: |
           import ftplib, os, posixpath, subprocess, sys
-          server=os.environ['FTP_SERVER']; username=os.environ['FTP_USERNAME']; password=os.environ['FTP_PASSWORD']; server_dir=os.environ.get('FTP_SERVER_DIR','').strip(); event_name=os.environ.get('EVENT_NAME',''); before_sha=os.environ.get('BEFORE_SHA',''); current_sha=os.environ.get('CURRENT_SHA','HEAD'); zero_sha='0'*40
+          def trim_linebreaks(value): return value.strip('\r\n')
+          server=trim_linebreaks(os.environ['FTP_SERVER']); username=trim_linebreaks(os.environ['FTP_USERNAME']); password=trim_linebreaks(os.environ['FTP_PASSWORD']); server_dir=trim_linebreaks(os.environ.get('FTP_SERVER_DIR','')).strip(); event_name=os.environ.get('EVENT_NAME',''); before_sha=os.environ.get('BEFORE_SHA',''); current_sha=os.environ.get('CURRENT_SHA','HEAD'); zero_sha='0'*40
           command=['git','diff','--name-only','-z','--diff-filter=ACMRTUXB',before_sha,current_sha] if event_name=='push' and before_sha and before_sha!=zero_sha else ['git','diff-tree','--no-commit-id','--name-only','-r','-z',current_sha]
           raw=subprocess.check_output(command); changed=[p.decode('utf-8') for p in raw.split(b'\0') if p]
           def included(path): return not (path.startswith('.github/') or path.startswith('scripts/') or path.startswith('docs/') or path in ('README.md','config.local.php.example')) and os.path.isfile(path)
@@ -88,8 +89,8 @@ jobs:
         run: |
           set -euo pipefail
           base='https://587.renju.org.tw'
+          # /riftw/tourtest.php is managed and verified by the private 587renju-admin repository.
           paths=(
-            '/riftw/tourtest.php'
             '/riftw/officialweb-query.php'
             '/bb/SQLRANK.php'
             '/bb/SQLRANK1.php'
