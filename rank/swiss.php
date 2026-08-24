@@ -57,7 +57,7 @@ if ($tour > 0) {
 <title>瑞士制戰績表</title>
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
-<link rel="stylesheet" href="swiss.css?v=20260824d">
+<link rel="stylesheet" href="swiss.css?v=20260824e">
 <link rel="stylesheet" href="swiss-admin-ui.css?v=20260824a">
 <style>
 .swiss-rank td.round-score a.renju-game-link{display:block;color:inherit!important;text-decoration:none;font:inherit}
@@ -154,7 +154,7 @@ if ($tour <= 0) {
     });
 }());
 </script>
-<script src="swiss-ui.js?v=20260824d"></script>
+<script src="swiss-ui.js?v=20260824e"></script>
 <script src="swiss-admin-ui.js?v=20260824b"></script>
 </body>
 </html>
