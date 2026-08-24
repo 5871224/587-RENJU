@@ -37,8 +37,9 @@ $t = $data['tournament'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $rows = is_array($_POST['rows'] ?? null) ? $_POST['rows'] : [];
+        $recordId = max(0, (int)($_POST['record_id'] ?? 0));
         $date = (string)($t['結束'] ?: $t['開始']);
-        $added = 0;
+        $saved = 0;
         $MYSQL->beginTransaction();
 
         foreach ($rows as $row) {
@@ -51,6 +52,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $MYSQL->prepare('SELECT `姓名` FROM `PLAYER` WHERE `代號`=? LIMIT 1');
             $stmt->execute([$player]);
             $name = (string)($stmt->fetchColumn() ?: '');
+            if ($name === '') throw new RuntimeException('找不到指定棋手。');
+
+            if ($recordId > 0) {
+                $stmt = $MYSQL->prepare('UPDATE `SUMMARY` SET `日期`=?,`代號`=?,`姓名`=?,`摘要`=?,`頭銜`=? WHERE `序號`=? AND `賽號`=? LIMIT 1');
+                $stmt->execute([$date, $player, $name, $summary, $title, $recordId, $tour]);
+                if ($stmt->rowCount() === 0) {
+                    $check = $MYSQL->prepare('SELECT COUNT(*) FROM `SUMMARY` WHERE `序號`=? AND `賽號`=?');
+                    $check->execute([$recordId, $tour]);
+                    if ((int)$check->fetchColumn() === 0) throw new RuntimeException('找不到要修改的歷程紀錄。');
+                }
+                $saved++;
+                break;
+            }
 
             // 不限制同一賽號＋同一棋手只能有一筆歷程；需要時仍可重複登錄。
             swissInsertAdaptive($MYSQL, 'SUMMARY', [
@@ -61,11 +75,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 '摘要' => $summary,
                 '頭銜' => $title,
             ]);
-            $added++;
+            $saved++;
         }
 
         $MYSQL->commit();
-        historyRespond(true, $added > 0 ? '歷程已新增。' : '沒有可新增的歷程。', $tour, $ajax);
+        if ($recordId > 0) {
+            historyRespond(true, $saved > 0 ? '歷程已修改。' : '沒有可修改的歷程。', $tour, $ajax);
+        }
+        historyRespond(true, $saved > 0 ? '歷程已新增。' : '沒有可新增的歷程。', $tour, $ajax);
     } catch (Throwable $e) {
         if ($MYSQL->inTransaction()) $MYSQL->rollBack();
         $error = $e->getMessage();
