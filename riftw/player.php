@@ -187,8 +187,28 @@ if($R[0]['顯示']==1 && count($chartData) > 0){
 	ECHO "<script>
 	var chartNames = ".json_encode($chartNames).";
 	var ctx = document.getElementById('rankChart').getContext('2d');
+	var rankHoverLine = {
+		id: 'rankHoverLine',
+		afterDraw: function(chart) {
+			if (!chart.tooltip) return;
+			var active = chart.tooltip.getActiveElements();
+			if (!active || active.length === 0) return;
+			var x = active[0].element.x;
+			var chartArea = chart.chartArea;
+			var drawCtx = chart.ctx;
+			drawCtx.save();
+			drawCtx.beginPath();
+			drawCtx.moveTo(x, chartArea.top);
+			drawCtx.lineTo(x, chartArea.bottom);
+			drawCtx.lineWidth = 1;
+			drawCtx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+			drawCtx.stroke();
+			drawCtx.restore();
+		}
+	};
 	new Chart(ctx, {
 		type: 'line',
+		plugins: [rankHoverLine],
 		data: {
 			datasets: [{
 				label: '績分',
@@ -205,10 +225,23 @@ if($R[0]['顯示']==1 && count($chartData) > 0){
 		options: {
 			responsive: true,
 			maintainAspectRatio: false,
+			interaction: {
+				mode: 'nearest',
+				intersect: false,
+				axis: 'x'
+			},
+			hover: {
+				mode: 'nearest',
+				intersect: false,
+				axis: 'x'
+			},
 			plugins: {
 				title: { display: true, text: '績分變化', font: { size: 16 } },
 				legend: { display: false },
 				tooltip: {
+					mode: 'nearest',
+					intersect: false,
+					axis: 'x',
 					callbacks: {
 						title: function(context) { return chartNames[context[0].dataIndex]; },
 						label: function(context) { return ['日期: ' + context.raw.x,'績分: ' + context.raw.y]; }
