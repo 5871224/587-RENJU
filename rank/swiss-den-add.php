@@ -78,8 +78,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new RuntimeException($p['name'] . ' 已有相同段位紀錄。');
                 }
 
-                $stmt = $MYSQL->prepare('UPDATE `DEN` SET `代號`=?,`姓名`=?,`原因`=?,`段位`=?,`段數`=?,`日期`=? WHERE `序號`=? AND `賽號`=? LIMIT 1');
-                $stmt->execute([$id, $p['name'], $reason, $rank, $rankNumber, $date, $recordId, $tour]);
+                $values = [
+                    '代號' => $id,
+                    '姓名' => $p['name'],
+                    '原因' => $reason,
+                    '段位' => $rank,
+                    '段數' => $rankNumber,
+                    '日期' => $date,
+                ];
+                $columns = swissTableColumns($MYSQL, 'DEN');
+                $sets = [];
+                $params = [];
+                foreach ($values as $column => $value) {
+                    if (!isset($columns[$column])) continue;
+                    $sets[] = '`' . str_replace('`', '``', $column) . '`=?';
+                    $params[] = $value;
+                }
+                if (!$sets) throw new RuntimeException('沒有可修改的段級欄位。');
+                $params[] = $recordId;
+                $params[] = $tour;
+                $stmt = $MYSQL->prepare('UPDATE `DEN` SET ' . implode(',', $sets) . ' WHERE `序號`=? AND `賽號`=? LIMIT 1');
+                $stmt->execute($params);
                 if ($stmt->rowCount() === 0) {
                     $check = $MYSQL->prepare('SELECT COUNT(*) FROM `DEN` WHERE `序號`=? AND `賽號`=?');
                     $check->execute([$recordId, $tour]);
