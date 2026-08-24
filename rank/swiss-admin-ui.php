@@ -5,9 +5,9 @@ function swissAdminPromotionBlock(array $data): string {
     $tour = (int)$data['tournament']['賽號'];
     $rows = $data['promotions'] ?? [];
     $html = '<div class="swiss-subsection promotion-card">';
-    $html .= '<div class="swiss-subhead"><h3>升段／升級</h3>';
-    $html .= '<button type="button" class="swiss-btn" data-swiss-modal="den" data-tour="' . $tour . '">新增段級</button></div>';
-    if (!$rows) return $html . '<div class="swiss-empty">目前沒有升段／升級紀錄。</div></div>';
+    $html .= '<div class="swiss-subhead"><h3>段級</h3>';
+    $html .= '<a class="swiss-btn" href="swiss-den-add.php?TOUR=' . $tour . '" data-swiss-modal="den" data-tour="' . $tour . '">新增段級</a></div>';
+    if (!$rows) return $html . '</div>';
 
     $html .= '<div class="swiss-scroll"><table class="swiss-mini"><thead><tr><th>姓名</th><th>升段／升級</th><th>原因</th><th>操作</th></tr></thead><tbody>';
     foreach ($rows as $row) {
@@ -184,7 +184,9 @@ function swissRenderAdminTournamentSection(PDO $db, array $data): string {
     $tour = (int)$data['tournament']['賽號'];
     $opt = ['admin'=>true,'show_title'=>true,'show_meta'=>true,'show_section_headings'=>true,'player_prefix'=>'','action_prefix'=>'','include_history'=>false,'include_promotions'=>false];
     $body = swissRenderTournament($db, $tour, $opt);
-    $extra = swissRenderHistory($data, $opt) . swissAdminPromotionBlock($data);
+    $history = swissRenderHistory($data, $opt);
+    $history = str_replace('<div class="swiss-empty">目前沒有歷程。</div>', '', $history);
+    $extra = $history . swissAdminPromotionBlock($data);
     $metaStart = strpos($body, '<div class="swiss-meta">');
     if ($metaStart !== false) {
         $metaEnd = strpos($body, '</div>', $metaStart);
