@@ -171,10 +171,7 @@ function swissRenderTournament(PDO $db, int $tour, array $options=[]): string {
     if($opt['show_title'])$html.='<h2 class="swiss-title">'.swissH($t['賽名']).'</h2>';
     if($opt['show_meta']){
         $date=trim((string)$t['開始']);if(!empty($t['結束'])&&$t['結束']!==$t['開始'])$date.=' ~ '.$t['結束'];
-        $ranks=[];foreach($data['history'] as $row){$r=swissSummaryRank($row);if($r!==null)$ranks[]=$r;}
-        $html.='<div class="swiss-meta">賽號 '.(int)$tour.($date!==''?'　'.swissH($date):'').($data['format']!==''?'　｜　'.swissH($data['format']):'');
-        if($ranks)$html.='　｜　名次紀錄：'.swissH(implode('、',$ranks));
-        $html.='</div>';
+        $html.='<div class="swiss-meta">賽號 '.(int)$tour.($date!==''?'　'.swissH($date):'').($data['format']!==''?'　｜　'.swissH($data['format']):'').'</div>';
     }
     if($opt['include_history'])$html.=swissRenderHistory($data,$opt);
     if($opt['include_promotions'])$html.=swissRenderPromotions($data,$opt);
