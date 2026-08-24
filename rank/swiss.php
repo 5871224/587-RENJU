@@ -184,6 +184,7 @@ if ($tour <= 0) {
 (function () {
     const linkMap = <?= json_encode($renjuGameLinks, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     const detailQueues = <?= json_encode($detailGameQueues, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    const challengeLabel = <?= json_encode(trim((string)($group['label'] ?? '')), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
     function isChallengeSection(section) {
         const meta = section.querySelector('.swiss-meta');
@@ -218,22 +219,22 @@ if ($tour <= 0) {
         });
     }
 
-    function removeDetailBlock(section) {
-        Array.prototype.slice.call(section.querySelectorAll('h3.table-heading')).forEach(function (heading) {
-            if (heading.textContent.trim() !== '對局明細') return;
-            const next = heading.nextElementSibling;
-            if (next && (next.classList.contains('swiss-scroll') || next.classList.contains('swiss-empty'))) next.remove();
-            heading.remove();
-        });
-    }
-
     const challengeSections = Array.prototype.slice.call(document.querySelectorAll('.swiss-tournament-section')).filter(isChallengeSection);
     if (challengeSections.length > 1) {
         const primary = challengeSections[0];
         const later = challengeSections.slice(1);
         mergeCard(primary, later, '.history-card');
         mergeCard(primary, later, '.promotion-card');
-        later.forEach(removeDetailBlock);
+
+        const title = primary.querySelector('.swiss-title');
+        if (title) {
+            let mergedTitle = challengeLabel;
+            if (!mergedTitle) mergedTitle = title.textContent.trim().replace(/挑戰賽.*$/u, '');
+            if (mergedTitle && !/挑戰賽$/u.test(mergedTitle)) mergedTitle += '挑戰賽';
+            if (mergedTitle) title.textContent = mergedTitle;
+        }
+
+        later.forEach(function (section) { section.remove(); });
     }
 
     document.querySelectorAll('.swiss-component[data-tour]').forEach(function (section) {
