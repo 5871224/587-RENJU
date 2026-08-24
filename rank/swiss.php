@@ -62,6 +62,10 @@ if ($tour > 0) {
 <style>
 .swiss-rank td.round-score a.renju-game-link{display:block;color:inherit!important;text-decoration:none;font:inherit}
 .swiss-rank td.round-score a.renju-game-link:hover{text-decoration:underline}
+/* 段級區塊標題固定由本頁輸出樣式補上，避免不同渲染路徑只剩新增按鈕。 */
+.promotion-card .swiss-subhead{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.promotion-card .swiss-subhead::before{content:"段級";margin:0;color:#334155;font-size:18px;font-weight:700;line-height:1.55}
+.promotion-card .swiss-subhead>h3{display:none!important}
 </style>
 </head>
 <body>
