@@ -287,8 +287,10 @@ function rnEloRecalculate(PDO $db): array
             "SELECT T.`id` AS tournament_id, {$dateExpr} AS tournament_date, " .
             "G.`id` AS game_id, G.`black_player_id`, G.`white_player_id`, G.`black_result`\n" .
             "FROM `RENJUNET_TOURNAMENT` T\n" .
+            "JOIN `RENJUNET_RULE` R ON R.`id`=T.`rule_id`\n" .
             "JOIN `RENJUNET_GAME` G ON G.`tournament_id`=T.`id`\n" .
             "WHERE T.`rated`=1\n" .
+            "  AND R.`category`=1\n" .
             "  AND {$dateExpr} IS NOT NULL\n" .
             "ORDER BY tournament_date, T.`id`, G.`id`";
 
@@ -349,9 +351,18 @@ function rnEloRecalculate(PDO $db): array
         $stmt->closeCursor();
 
         $undatedStmt = $db->query(
-            "SELECT COUNT(*) FROM `RENJUNET_TOURNAMENT` T WHERE T.`rated`=1 AND " . $dateExpr . " IS NULL"
+            "SELECT COUNT(*) FROM `RENJUNET_TOURNAMENT` T " .
+            "JOIN `RENJUNET_RULE` R ON R.`id`=T.`rule_id` " .
+            "WHERE T.`rated`=1 AND R.`category`=1 AND " . $dateExpr . " IS NULL"
         );
         $undatedTournaments = (int)$undatedStmt->fetchColumn();
+
+        $excludedStmt = $db->query(
+            "SELECT COUNT(*) FROM `RENJUNET_TOURNAMENT` T " .
+            "LEFT JOIN `RENJUNET_RULE` R ON R.`id`=T.`rule_id` " .
+            "WHERE T.`rated`=1 AND COALESCE(R.`category`,0)<>1"
+        );
+        $excludedNonRenjuTournaments = (int)$excludedStmt->fetchColumn();
 
         $db->beginTransaction();
         try {
@@ -362,12 +373,15 @@ function rnEloRecalculate(PDO $db): array
             );
             $db->exec('DELETE FROM `RENJUNET_ELO_BUILD`');
 
-            $messageParts = ['完整重算成功'];
+            $messageParts = ['完整重算成功（rated=1 且 RENJUNET_RULE.category=1）'];
+            if ($excludedNonRenjuTournaments > 0) {
+                $messageParts[] = "排除 {$excludedNonRenjuTournaments} 場非 Renju 的 rated 比賽";
+            }
             if ($skippedGames > 0) {
                 $messageParts[] = "略過 {$skippedGames} 局無效棋手資料";
             }
             if ($undatedTournaments > 0) {
-                $messageParts[] = "另有 {$undatedTournaments} 場 rated 比賽缺少可用日期，未納入";
+                $messageParts[] = "另有 {$undatedTournaments} 場符合條件的比賽缺少可用日期，未納入";
             }
             $message = implode('；', $messageParts) . '。';
 
@@ -391,6 +405,7 @@ function rnEloRecalculate(PDO $db): array
             'player_count' => count($states),
             'skipped_games' => $skippedGames,
             'undated_tournaments' => $undatedTournaments,
+            'excluded_non_renju_tournaments' => $excludedNonRenjuTournaments,
         ];
     } catch (Throwable $e) {
         if ($runId > 0) {
