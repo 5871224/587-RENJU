@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/patch-tour66-shi.yml'
+      - 'scripts/patch_tour66_shi.py'
 
 permissions:
   contents: read
