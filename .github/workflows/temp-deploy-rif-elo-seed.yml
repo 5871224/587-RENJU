@@ -1,0 +1,52 @@
+name: Temp deploy RIF Elo seed
+on:
+  push:
+    paths: ['.github/workflows/temp-deploy-rif-elo-seed.yml']
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Validate target PHP
+        run: |
+          php -l rank/data/rif_rating_19990715.php
+          php -l rank/lib/renjunet_rating.php
+          php -l rank/lib/rating.php
+          php -l rank/renjunet-elo.php
+      - name: Upload historical RIF Elo files
+        shell: python
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
+        run: |
+          import ftplib,os,posixpath
+          files=['rank/data/rif_rating_19990715.php','rank/lib/renjunet_rating.php','rank/lib/rating.php','rank/renjunet-elo.php','rank/renjunet-elo-compare.php']
+          server=os.environ['FTP_SERVER'].strip('\r\n'); user=os.environ['FTP_USERNAME'].strip('\r\n'); pw=os.environ['FTP_PASSWORD'].strip('\r\n'); root=os.environ.get('FTP_SERVER_DIR','').strip('\r\n ').strip()
+          ftp=ftplib.FTP_TLS(); ftp.connect(server,21,timeout=60); ftp.login(user,pw); ftp.prot_p()
+          def ensure(path):
+            path=path.replace('\\','/').strip()
+            if not path:return
+            if path.startswith('/'):ftp.cwd('/')
+            for part in path.strip('/').split('/'):
+              if not part:continue
+              try:ftp.cwd(part)
+              except ftplib.error_perm:ftp.mkd(part);ftp.cwd(part)
+          ensure(root); base=ftp.pwd()
+          for f in files:
+            if not os.path.isfile(f):continue
+            ftp.cwd(base); ensure(posixpath.dirname(f))
+            with open(f,'rb') as h:ftp.storbinary('STOR '+posixpath.basename(f),h)
+            print('uploaded',f)
+          ftp.quit()
+      - name: Remove one-time workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/temp-deploy-rif-elo-seed.yml
+          git commit -m 'Remove one-time RIF Elo deployment helper' || true
+          git push
