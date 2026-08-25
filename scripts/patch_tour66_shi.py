@@ -73,6 +73,25 @@ def main():
             f"WHERE `player_id`={SHI_PLAYER_ID}"
         )
 
+        tournament = db.query(
+            f"SELECT `賽號`,`賽名`,`開始`,`結束`,`等級` FROM `TOURNAMENT` WHERE `賽號`={TOUR_ID}"
+        )
+        tour_games = db.query(
+            f"SELECT G.`輪次`,G.`P1`,P1.`姓名` AS p1_name,G.`勝負`,G.`P2`,P2.`姓名` AS p2_name "
+            f"FROM `GAME` G LEFT JOIN `PLAYER` P1 ON P1.`代號`=G.`P1` LEFT JOIN `PLAYER` P2 ON P2.`代號`=G.`P2` "
+            f"WHERE G.`比賽`={TOUR_ID} ORDER BY G.`輪次`,G.`P1`,G.`P2`"
+        )
+        li_game_refs = db.query(
+            f"SELECT G.`比賽`,T.`賽名`,T.`開始`,T.`結束`,COUNT(*) AS game_rows "
+            f"FROM `GAME` G LEFT JOIN `TOURNAMENT` T ON T.`賽號`=G.`比賽` "
+            f"WHERE G.`P1`={li_id} OR G.`P2`={li_id} GROUP BY G.`比賽`,T.`賽名`,T.`開始`,T.`結束` ORDER BY G.`比賽`"
+        )
+        li_rank_refs = db.query(
+            f"SELECT R.`比賽`,T.`賽名`,T.`開始`,T.`結束`,R.`績分`,R.`勝`,R.`和`,R.`負` "
+            f"FROM `RANK` R LEFT JOIN `TOURNAMENT` T ON T.`賽號`=R.`比賽` "
+            f"WHERE R.`代號`={li_id} ORDER BY R.`比賽`"
+        )
+
         if int(after.get('p1_li') or 0) != 0 or int(after.get('p2_li') or 0) != 0:
             raise RuntimeError(f"賽號 {TOUR_ID} 仍有李士文對局: {after}")
         if not mapping or int(mapping[0]['renjunet_player_id']) != shi_renjunet_id:
@@ -90,6 +109,10 @@ def main():
             'rank_before': rank_before,
             'rank_after': rank_after,
             'mapping': mapping,
+            'tournament': tournament,
+            'tour_66_games': tour_games,
+            'li_game_refs': li_game_refs,
+            'li_rank_refs': li_rank_refs,
         }, ensure_ascii=False, indent=2))
 
 
