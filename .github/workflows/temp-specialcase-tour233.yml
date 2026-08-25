@@ -1,0 +1,96 @@
+name: Temp special-case tournament 233
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-specialcase-tour233.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-deploy:
+    runs-on: ubuntu-latest
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Patch fallback rule
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('rank/lib/rating.php')
+          s = p.read_text(encoding='utf-8')
+          start = s.index('                } elseif ($renjuNetPlayerId === null || $renjuNetPlayerId <= 0) {')
+          end_marker = "                } else {\n                    $startRating = rrRenjuNetRatingAt("
+          end = s.index(end_marker, start)
+          lines = [
+              '                } elseif ($renjuNetPlayerId === null || $renjuNetPlayerId <= 0) {',
+              '                    if ($tourId === 233) {',
+              '                        // RenjuNet 沒有安吉 C 組資料，未建立世界歷史分數的外國新人統一從 1900 起算。',
+              '                        $startRating = (float)RN_ELO_INITIAL_RATING;',
+              "                        $ratingSource = 'renjunet_initial';",
+              '                    } else {',
+              '                        $warnings[] = "賽號 {$tourId} 外部棋士 {$playerId} 找不到 PLAYER_RENJUNET／RIF 對應，無法取得 RenjuNet Elo；暫用 GAME 保存分數";',
+              '                        $startRating = ($savedStart !== null && $savedStart >= 1000) ? $savedStart : (float)RN_ELO_INITIAL_RATING;',
+              "                        $ratingSource = ($savedStart !== null && $savedStart >= 1000) ? 'game_saved_fallback' : 'renjunet_initial_fallback';",
+              '                    }',
+          ]
+          s = s[:start] + '\n'.join(lines) + '\n' + s[end:]
+          p.write_text(s, encoding='utf-8')
+
+          page = Path('rank/recalculate.php')
+          t = page.read_text(encoding='utf-8')
+          t = t.replace(
+              '若 RenjuNet 尚無可用歷史資料則以 1900 作為新人初始分。',
+              '若 RenjuNet 已對應但尚無歷史資料則以 1900 作為新人初始分；賽號 233 因 RenjuNet 無該賽事資料，未對應的外國新人也固定以 1900 起算。'
+          )
+          page.write_text(t, encoding='utf-8')
+      - name: Validate PHP
+        shell: bash
+        run: php -l rank/lib/rating.php && php -l rank/recalculate.php
+      - name: Upload files
+        shell: python
+        run: |
+          import ftplib, os, posixpath
+          ftp=ftplib.FTP_TLS()
+          ftp.connect(os.environ['FTP_SERVER'].strip(),21,timeout=60)
+          ftp.login(os.environ['FTP_USERNAME'].strip(),os.environ['FTP_PASSWORD'].strip())
+          ftp.prot_p()
+          base=os.environ.get('FTP_SERVER_DIR','').strip()
+          def ensure(path):
+              if path.startswith('/'):
+                  ftp.cwd('/')
+              for part in path.strip('/').split('/'):
+                  if not part:
+                      continue
+                  try:
+                      ftp.cwd(part)
+                  except ftplib.error_perm:
+                      ftp.mkd(part)
+                      ftp.cwd(part)
+          ensure(base)
+          root=ftp.pwd()
+          for local in ('rank/lib/rating.php','rank/recalculate.php'):
+              ftp.cwd(root)
+              ensure(posixpath.dirname(local))
+              with open(local,'rb') as f:
+                  ftp.storbinary('STOR '+posixpath.basename(local),f)
+          ftp.quit()
+      - name: Commit and remove helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/temp-specialcase-tour233.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add rank/lib/rating.php rank/recalculate.php .github/workflows/temp-specialcase-tour233.yml
+          git commit -m 'Use 1900 for tournament 233 newcomers'
+          git push origin HEAD:main
