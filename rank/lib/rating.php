@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/renjunet_rating.php';
+
 /**
  * 台灣連珠舊 VBA「績分」邏輯的 PHP 移植版。
  *
@@ -59,10 +61,121 @@ function rrPlayerState(array $states, int $playerId): array
     ];
 }
 
+function rrIsTaiwanCountry(?string $country): bool
+{
+    $value = mb_strtolower(trim((string)$country), 'UTF-8');
+    if ($value === '') {
+        return false;
+    }
+    foreach (['台灣', '臺灣', '台湾', 'taiwan', 'tpe', 'chinese taipei', '中國台灣', '中国台湾'] as $needle) {
+        if (mb_strpos($value, mb_strtolower($needle, 'UTF-8')) !== false) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function rrNormalizeDate($value): ?string
+{
+    $value = trim((string)$value);
+    if ($value === '') {
+        return null;
+    }
+    $date = substr($value, 0, 10);
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+        return null;
+    }
+    return $date;
+}
+
+function rrTournamentRatingDate(array $tour): ?string
+{
+    return rrNormalizeDate($tour['開始'] ?? null) ?? rrNormalizeDate($tour['結束'] ?? null);
+}
+
+function rrLoadRenjuNetPlayerIds(PDO $db, array $players): array
+{
+    $result = [];
+
+    try {
+        $stmt = $db->query('SELECT `player_id`,`renjunet_player_id` FROM `PLAYER_RENJUNET`');
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $result[(int)$row['player_id']] = (int)$row['renjunet_player_id'];
+        }
+    } catch (Throwable $ignored) {
+    }
+
+    $needFallback = [];
+    foreach ($players as $playerId => $player) {
+        if (isset($result[$playerId])) {
+            continue;
+        }
+        $rif = trim((string)($player['RIF'] ?? ''));
+        if ($rif !== '') {
+            $needFallback[$playerId] = $rif;
+        }
+    }
+    if (!$needFallback) {
+        return $result;
+    }
+
+    try {
+        $byId = [];
+        $byDisp = [];
+        $stmt = $db->query('SELECT `id`,`disp_id` FROM `RENJUNET_PLAYER`');
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $id = (int)$row['id'];
+            $byId[$id] = $id;
+            $disp = trim((string)$row['disp_id']);
+            if ($disp !== '') {
+                $byDisp[$disp] = $id;
+            }
+        }
+        foreach ($needFallback as $playerId => $rif) {
+            if (ctype_digit($rif) && isset($byId[(int)$rif])) {
+                $result[$playerId] = (int)$rif;
+            } elseif (isset($byDisp[$rif])) {
+                $result[$playerId] = (int)$byDisp[$rif];
+            }
+        }
+    } catch (Throwable $ignored) {
+    }
+
+    return $result;
+}
+
+function rrRenjuNetRatingAt(
+    PDO $db,
+    PDOStatement $stmt,
+    int $renjuNetPlayerId,
+    string $ratingDate,
+    array &$cache
+): float {
+    $cacheKey = $renjuNetPlayerId . '|' . $ratingDate;
+    if (array_key_exists($cacheKey, $cache)) {
+        return (float)$cache[$cacheKey];
+    }
+
+    $stmt->execute([$renjuNetPlayerId, $ratingDate]);
+    $value = $stmt->fetchColumn();
+    $stmt->closeCursor();
+
+    // 該日期以前沒有已完成的 rated Renju 比賽時，等同尚未建立歷史分數，
+    // 使用 RenjuNet Elo 統一初始分 1900。
+    $rating = ($value === false || $value === null || $value === '')
+        ? (float)RN_ELO_INITIAL_RATING
+        : (float)$value;
+    $cache[$cacheKey] = $rating;
+    return $rating;
+}
+
 /**
  * 從正式資料表讀取所有可計算比賽，依「賽號」由小到大重算。
  * 舊 VBA 每次完成後 H2 = H2 + 1，且排名表依比賽欄倒序後 VLOOKUP 最近一筆，
  * 因此歷史重算以賽號順序為準，不改用日期排序。
+ *
+ * PLAYER.顯示=0 且國家不是台灣的棋手，不再使用 GAME.P1分/P2分；
+ * 改用該台灣比賽開始日前，RENJUNET_ELO 最後一筆 rating_after。
  */
 function rrRecalculateHistory(PDO $db): array
 {
@@ -71,6 +184,13 @@ function rrRecalculateHistory(PDO $db): array
     foreach ($stmtPlayers->fetchAll(PDO::FETCH_ASSOC) as $row) {
         $players[(int)$row['代號']] = $row;
     }
+    $renjuNetPlayerIds = rrLoadRenjuNetPlayerIds($db, $players);
+    $renjuNetRatingCache = [];
+    $stmtRenjuNetRating = $db->prepare(
+        'SELECT `rating_after` FROM `RENJUNET_ELO` ' .
+        'WHERE `player_id`=? AND `tournament_date`<? ' .
+        'ORDER BY `tournament_date` DESC,`tournament_id` DESC LIMIT 1'
+    );
 
     $tournaments = [];
     $stmtTours = $db->query(
@@ -122,6 +242,7 @@ function rrRecalculateHistory(PDO $db): array
         }
 
         $baseRating = rrBaseRating((int)$tour['等級']);
+        $ratingDate = rrTournamentRatingDate($tour);
         $participantIds = [];
         $savedRatings = [];
 
@@ -145,9 +266,13 @@ function rrRecalculateHistory(PDO $db): array
                 continue;
             }
 
+            $player = $players[$playerId];
             $state = rrPlayerState($states, $playerId);
             $historyGames = (int)$state['wins'] + (int)$state['draws'] + (int)$state['losses'];
-            $isLocalRating = ((int)$players[$playerId]['顯示'] === 1);
+            $display = (int)$player['顯示'];
+            $country = (string)($player['國家'] ?? '');
+            $isLocalRating = ($display === 1);
+            $useRenjuNetRating = ($display === 0 && !rrIsTaiwanCountry($country));
 
             $saved = $savedRatings[$playerId] ?? [];
             $savedStart = $saved ? (float)$saved[0] : null;
@@ -159,11 +284,33 @@ function rrRecalculateHistory(PDO $db): array
                 }
             }
 
+            $ratingSource = 'game_saved';
+            $renjuNetPlayerId = $renjuNetPlayerIds[$playerId] ?? null;
             if ($isLocalRating) {
                 $startRating = ($state['rating'] === null) ? (float)$baseRating : (float)$state['rating'];
+                $ratingSource = ($state['rating'] === null) ? 'tournament_base' : 'taiwan_previous';
+            } elseif ($useRenjuNetRating) {
+                if ($ratingDate === null) {
+                    $warnings[] = "賽號 {$tourId} 外部棋士 {$playerId} 無比賽日期，無法取得 RenjuNet Elo；暫用 GAME 保存分數";
+                    $startRating = ($savedStart !== null && $savedStart >= 1000) ? $savedStart : (float)RN_ELO_INITIAL_RATING;
+                    $ratingSource = ($savedStart !== null && $savedStart >= 1000) ? 'game_saved_fallback' : 'renjunet_initial_fallback';
+                } elseif ($renjuNetPlayerId === null || $renjuNetPlayerId <= 0) {
+                    $warnings[] = "賽號 {$tourId} 外部棋士 {$playerId} 找不到 PLAYER_RENJUNET／RIF 對應，無法取得 RenjuNet Elo；暫用 GAME 保存分數";
+                    $startRating = ($savedStart !== null && $savedStart >= 1000) ? $savedStart : (float)RN_ELO_INITIAL_RATING;
+                    $ratingSource = ($savedStart !== null && $savedStart >= 1000) ? 'game_saved_fallback' : 'renjunet_initial_fallback';
+                } else {
+                    $startRating = rrRenjuNetRatingAt(
+                        $db,
+                        $stmtRenjuNetRating,
+                        (int)$renjuNetPlayerId,
+                        $ratingDate,
+                        $renjuNetRatingCache
+                    );
+                    $ratingSource = 'renjunet_elo';
+                }
             } else {
                 if ($savedStart === null || $savedStart < 1000) {
-                    $warnings[] = "賽號 {$tourId} 外部棋士 {$playerId} 缺少有效歷史 Elo";
+                    $warnings[] = "賽號 {$tourId} 棋士 {$playerId} 缺少有效 GAME 保存分數";
                     $startRating = $savedStart ?? 0.0;
                 } else {
                     $startRating = $savedStart;
@@ -172,10 +319,12 @@ function rrRecalculateHistory(PDO $db): array
 
             $work[$playerId] = [
                 'player_id' => $playerId,
-                'name' => (string)$players[$playerId]['姓名'],
-                'display' => (int)$players[$playerId]['顯示'],
-                'country' => (string)($players[$playerId]['國家'] ?? ''),
-                'rif' => (string)($players[$playerId]['RIF'] ?? ''),
+                'name' => (string)$player['姓名'],
+                'display' => $display,
+                'country' => $country,
+                'rif' => (string)($player['RIF'] ?? ''),
+                'renjunet_player_id' => $renjuNetPlayerId,
+                'rating_source' => $ratingSource,
                 'start_rating' => $startRating,
                 'saved_start_rating' => $savedStart,
                 'history_wins' => (int)$state['wins'],
@@ -265,6 +414,8 @@ function rrRecalculateHistory(PDO $db): array
                 'display' => (int)$p['display'],
                 'country' => (string)$p['country'],
                 'rif' => (string)$p['rif'],
+                'renjunet_player_id' => $p['renjunet_player_id'],
+                'rating_source' => (string)$p['rating_source'],
                 'start_rating' => $startRating,
                 'saved_start_rating' => $p['saved_start_rating'],
                 'history_games' => $historyGames,
