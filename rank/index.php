@@ -55,6 +55,7 @@ $views = [
 ];
 $ratingTools = [
     'recalculate' => ['title' => '歷史重算比較', 'file' => 'recalculate.php', 'desc' => '依目前 TOURNAMENT、GAME、PLAYER 重新計算並與舊 RANK 比較'],
+    'renjunet' => ['title' => 'RenjuNet Elo 重算', 'file' => 'renjunet-elo.php', 'desc' => '只計 rated=1 的 RenjuNet 比賽，所有棋手以 1850 為初始分完整重算歷史 Elo'],
     'latest' => ['title' => '重算後最新排名', 'file' => 'recalculated-ranking.php', 'desc' => '查看由歷史資料重新計算後的最新棋士排名'],
     'check' => ['title' => '重算完整性檢查', 'file' => 'recalculate-check.php', 'desc' => '檢查重算鏈條、局數守恆與外部 Elo 來源'],
     'final-diff' => ['title' => '最終差異比較', 'file' => 'final-diff.php', 'desc' => '比較每位顯示棋士重算後最後績分與舊 RANK 最後績分'],
@@ -349,15 +350,14 @@ $totalRecords = array_sum($counts);
 
 <?php elseif ($view === 'rating-tools'): ?>
     <section class="hero">
-        <div><h1>等級分工具</h1><p>原本分散在 recalculate.php 等頁面的功能，統一從排名管理介面切換。</p></div>
-        <div class="badge">重算／檢查／盤點</div>
+        <div><h1>等級分工具</h1><p>集中管理台灣排名與 RenjuNet Elo 的重算、驗證與歷史資料盤點。</p></div>
+        <div class="badge">重算／檢查／RenjuNet</div>
     </section>
     <section class="panel tools-panel">
         <div class="tool-tabs">
             <?php foreach ($ratingTools as $key => $meta): ?>
                 <a class="tool-tab <?= $tool === $key ? 'active' : '' ?>" href="<?= h(listUrl('rating-tools', '', '', ['tool' => $key])) ?>"><?= h($meta['title']) ?></a>
             <?php endforeach; ?>
-            <a class="tool-tab export" href="recalculate-export.php" target="_blank" rel="noopener">重算 JSON 匯出 ↗</a>
         </div>
         <div class="tool-description"><strong><?= h($ratingTools[$tool]['title']) ?></strong><span><?= h($ratingTools[$tool]['desc']) ?></span></div>
         <iframe class="tool-frame" src="<?= h($ratingTools[$tool]['file']) ?>" title="<?= h($ratingTools[$tool]['title']) ?>" onload="integrateToolFrame(this)"></iframe>
@@ -460,12 +460,11 @@ function integrateToolFrame(frame) {
     try {
         const doc = frame.contentDocument;
         if (!doc) return;
-        const topbar = doc.querySelector('.topbar');
-        if (topbar) topbar.remove();
+        doc.querySelectorAll('.topbar, .topbar-simple').forEach(bar => bar.remove());
         doc.documentElement.style.background = '#fff';
         doc.body.style.background = '#fff';
         doc.body.style.margin = '0';
-        const main = doc.querySelector('.main');
+        const main = doc.querySelector('.main, .rn-main');
         if (main) main.style.padding = '18px';
         const homeLinks = doc.querySelectorAll('a[href="./"]');
         homeLinks.forEach(link => link.style.display = 'none');
