@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
     try {
         @set_time_limit(0);
         rnEloRecalculate($MYSQL);
-        $message = 'RenjuNet Elo 已用初始分 1900 完整重算完成。';
+        $message = 'RenjuNet Elo 已依歷史 RIF 規則完整重算完成。';
     } catch (Throwable $e) {
         $error = $e->getMessage();
     }
@@ -89,17 +89,17 @@ body{background:#eef3f8}.rn-main{padding:26px clamp(16px,3vw,42px) 48px}.rn-hero
 </style>
 </head>
 <body>
-<header class="topbar-simple"><strong>RenjuNet Elo</strong><a href="./">← 排名管理首頁</a><a href="?">重新整理</a></header>
+<header class="topbar-simple"><strong>RenjuNet Elo</strong><a href="./">← 排名管理首頁</a><a href="renjunet-elo-compare.php">舊保存分數比對</a><a href="?">重新整理</a></header>
 <main class="rn-main">
 <section class="rn-hero">
-    <div><h1>RenjuNet 歷史 Elo 重算</h1><p>只計算 rated=1 且 RENJUNET_RULE.category=1 的 Renju 比賽；沿用目前台灣排名演算法，每位棋手第一次進入計算時初始分固定為 1900。</p></div>
-    <div class="rn-badge">Renju only · 初始分 1900</div>
+    <div><h1>RenjuNet 歷史 Elo 重算</h1><p>重建 2021 年改用 WHR 以前的 RIF Elo：1995/96 舊制建立歷史基礎，1997 年新制後依 provisional／established 規則逐賽事計算。</p></div>
+    <div class="rn-badge">Historical RIF Elo · 非 WHR</div>
 </section>
 
 <?php if ($message !== ''): ?><div class="rn-success"><?= rnH($message) ?></div><?php endif; ?>
 <?php if ($error !== ''): ?><div class="rn-error">重算失敗：<?= rnH($error) ?></div><?php endif; ?>
 
-<div class="rn-notice"><strong>重算範圍：</strong>只納入 rated=1 且 RENJUNET_RULE.category=1 的 Renju 比賽，目前排除 <?= number_format($excludedNonRenjuTournaments) ?> 場 rated 但非 Renju 的比賽。賽事依結束日期排序，若無結束日期則使用開始日期，再無則使用 year/month；同日以 tournament id 排序。</div>
+<div class="rn-notice"><strong>歷史規則：</strong>沒有固定 1900 初始分。1997-08-06 起，新棋手只計算對 established 棋手的對局；累積至少 10 局且至少 3 分後才轉 established。Provisional 採 Rp=Ra+400(W-L)/N（上限 Ra+300）；established 採 K=32、We=1/(1+2^(dR/120))，賽事結束後才更新。只納入 rated=1 且 RENJUNET_RULE.category=1 的 Renju 比賽。</div>
 
 <section class="rn-grid">
     <div class="rn-card"><div class="label">Renju Rated 比賽</div><div class="value"><?= number_format($eligibleTournaments) ?></div></div>
@@ -110,17 +110,17 @@ body{background:#eef3f8}.rn-main{padding:26px clamp(16px,3vw,42px) 48px}.rn-hero
 
 <section class="rn-panel">
     <div class="rn-head">
-        <div><h2>完整重算</h2><div class="rn-sub">初始分已改為 1900；歷史成績或規則分類修正後可重新建立全部 Renju Elo。</div></div>
-        <form method="post" onsubmit="return confirm('確定要用初始分 1900 完整重算 rated=1 且 category=1 的 Renju 比賽嗎？')">
+        <div><h2>完整重算</h2><div class="rn-sub">歷史成績、rated 標記或棋手身份修正後，可重新建立全部歷史 RIF Elo。</div></div>
+        <form method="post" onsubmit="return confirm('確定要依歷史 RIF Elo 規則完整重算嗎？')">
             <input type="hidden" name="action" value="recalculate">
             <button class="btn danger" type="submit">完整重算 RENJUNET Elo</button>
-            <div class="danger-note">只替換計算結果，不修改 RenjuNet 原始比賽與對局。</div>
+            <div class="danger-note">只替換 RENJUNET_ELO 計算結果，不修改 RenjuNet 原始比賽與對局。</div>
         </form>
     </div>
     <?php if ($latestRun): ?>
     <div class="rn-table-wrap"><table class="rn-table"><tbody>
         <tr><th>最近批次</th><td>#<?= rnH($latestRun['id']) ?></td><th>狀態</th><td class="status-<?= rnH($latestRun['status']) ?>"><?= rnH($latestRun['status']) ?></td></tr>
-        <tr><th>初始分</th><td><?= number_format((float)$latestRun['initial_rating'], 0) ?></td><th>完成</th><td><?= rnH($latestRun['finished_at'] ?? '') ?></td></tr>
+        <tr><th>固定初始分</th><td><?= (float)$latestRun['initial_rating'] > 0 ? number_format((float)$latestRun['initial_rating'],0) : '無' ?></td><th>完成</th><td><?= rnH($latestRun['finished_at'] ?? '') ?></td></tr>
         <tr><th>比賽</th><td><?= number_format((int)$latestRun['tournament_count']) ?></td><th>對局</th><td><?= number_format((int)$latestRun['game_count']) ?></td></tr>
         <tr><th>棋手</th><td><?= number_format((int)$latestRun['player_count']) ?></td><th>歷史資料列</th><td><?= number_format((int)$latestRun['row_count']) ?></td></tr>
         <tr><th>訊息</th><td colspan="3"><?= rnH($latestRun['message'] ?? '') ?></td></tr>
@@ -141,7 +141,7 @@ body{background:#eef3f8}.rn-main{padding:26px clamp(16px,3vw,42px) 48px}.rn-hero
         </form>
     </div>
     <?php if ($ranking): ?>
-    <div class="rn-table-wrap"><table class="rn-table"><thead><tr><th>#</th><th>棋手 ID</th><th>棋手</th><th>國家</th><th>績分</th><th>局數</th><th>勝</th><th>和</th><th>負</th><th>當時最後比賽日</th><th>當時最後比賽</th></tr></thead><tbody>
+    <div class="rn-table-wrap"><table class="rn-table"><thead><tr><th>#</th><th>棋手 ID</th><th>棋手</th><th>國家</th><th>績分</th><th>有效局數</th><th>勝</th><th>和</th><th>負</th><th>當時最後比賽日</th><th>當時最後比賽</th></tr></thead><tbody>
     <?php foreach ($ranking as $i => $row): $name=trim((string)$row['surname'].' '.(string)$row['name']); if (trim((string)($row['native_name'] ?? '')) !== '') $name .= ' / '.trim((string)$row['native_name']); ?>
         <tr><td class="rank-no"><?= number_format($i+1) ?></td><td><?= rnH($row['player_id']) ?></td><td><?= rnH($name) ?></td><td><?= rnH($row['country'] ?? '') ?></td><td class="num rating"><?= number_format((float)$row['rating_after'],4,'.','') ?></td><td class="num"><?= number_format((int)$row['games_after']) ?></td><td class="num"><?= number_format((int)$row['total_wins']) ?></td><td class="num"><?= number_format((int)$row['total_draws']) ?></td><td class="num"><?= number_format((int)$row['total_losses']) ?></td><td><?= rnH($row['tournament_date']) ?></td><td><?= rnH($row['tournament_name'] ?? ('#'.$row['tournament_id'])) ?></td></tr>
     <?php endforeach; ?>
@@ -151,8 +151,8 @@ body{background:#eef3f8}.rn-main{padding:26px clamp(16px,3vw,42px) 48px}.rn-hero
 
 <section class="rn-panel">
     <div class="rn-head"><div><h2>最近重算紀錄</h2><div class="rn-sub">保留最近 10 次執行結果。</div></div></div>
-    <?php if ($runHistory): ?><div class="rn-table-wrap"><table class="rn-table"><thead><tr><th>批次</th><th>開始</th><th>完成</th><th>狀態</th><th>初始分</th><th>比賽</th><th>對局</th><th>棋手</th><th>資料列</th><th>訊息</th></tr></thead><tbody>
-    <?php foreach ($runHistory as $run): ?><tr><td>#<?= rnH($run['id']) ?></td><td><?= rnH($run['started_at']) ?></td><td><?= rnH($run['finished_at'] ?? '') ?></td><td class="status-<?= rnH($run['status']) ?>"><?= rnH($run['status']) ?></td><td class="num"><?= number_format((float)$run['initial_rating'],0) ?></td><td class="num"><?= number_format((int)$run['tournament_count']) ?></td><td class="num"><?= number_format((int)$run['game_count']) ?></td><td class="num"><?= number_format((int)$run['player_count']) ?></td><td class="num"><?= number_format((int)$run['row_count']) ?></td><td><?= rnH($run['message'] ?? '') ?></td></tr><?php endforeach; ?>
+    <?php if ($runHistory): ?><div class="rn-table-wrap"><table class="rn-table"><thead><tr><th>批次</th><th>開始</th><th>完成</th><th>狀態</th><th>固定初始分</th><th>比賽</th><th>對局</th><th>棋手</th><th>資料列</th><th>訊息</th></tr></thead><tbody>
+    <?php foreach ($runHistory as $run): ?><tr><td>#<?= rnH($run['id']) ?></td><td><?= rnH($run['started_at']) ?></td><td><?= rnH($run['finished_at'] ?? '') ?></td><td class="status-<?= rnH($run['status']) ?>"><?= rnH($run['status']) ?></td><td class="num"><?= (float)$run['initial_rating'] > 0 ? number_format((float)$run['initial_rating'],0) : '無' ?></td><td class="num"><?= number_format((int)$run['tournament_count']) ?></td><td class="num"><?= number_format((int)$run['game_count']) ?></td><td class="num"><?= number_format((int)$run['player_count']) ?></td><td class="num"><?= number_format((int)$run['row_count']) ?></td><td><?= rnH($run['message'] ?? '') ?></td></tr><?php endforeach; ?>
     </tbody></table></div><?php endif; ?>
 </section>
 </main>
