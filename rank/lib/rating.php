@@ -160,11 +160,14 @@ function rrRenjuNetRatingAt(
     $value = $stmt->fetchColumn();
     $stmt->closeCursor();
 
-    // 該日期以前沒有已完成的 rated Renju 比賽時，等同尚未建立歷史分數，
-    // 使用 RenjuNet Elo 統一初始分 1900。
-    $rating = ($value === false || $value === null || $value === '')
-        ? (float)RN_ELO_INITIAL_RATING
-        : (float)$value;
+    if ($value === false || $value === null || $value === '') {
+        // 1999-07-15 官方 RIF rating list 是歷史重建基準。
+        // 棋手在 seed 後、尚未再參賽時，直接使用當日官方分數。
+        $seedRating = rnEloSeedRatingForPlayer($renjuNetPlayerId, $ratingDate);
+        $rating = $seedRating !== null ? $seedRating : (float)RN_ELO_INITIAL_RATING;
+    } else {
+        $rating = (float)$value;
+    }
     $cache[$cacheKey] = $rating;
     return $rating;
 }

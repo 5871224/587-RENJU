@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 const RN_ELO_1997_EFFECTIVE_DATE = '1997-08-06';
+const RN_ELO_SEED_DATE = '1999-07-15';
+const RN_ELO_INITIAL_RATING = 1900.0; // Taiwan project fallback only; not the historical RIF seed.
 const RN_ELO_K = 32.0;
 
 function rnEloRound4(float $value): float
@@ -319,7 +321,7 @@ function rnEloProcess1997Tournament(PDO $db, array &$states, array $tournament, 
             $rows[]=[
                 'tournament_id'=>$tourId,'tournament_date'=>$tourDate,'player_id'=>$playerId,
                 'rating_before'=>rnEloRound4($start),'rating_after'=>rnEloRound4($end),
-                'games_before'=>(int)$prior['qual_games'],'games_after'=>(int)$prior['qual_games']+(int)$p['relevant_games'],
+                'games_before'=>(int)$prior['wins']+(int)$prior['draws']+(int)$prior['losses'],'games_after'=>$tw+$td+$tl,
                 'wins'=>(int)$p['wins'],'draws'=>(int)$p['draws'],'losses'=>(int)$p['losses'],
                 'total_wins'=>$tw,'total_draws'=>$td,'total_losses'=>$tl,
                 'run_id'=>$runId,'calculated_at'=>$calculatedAt,
@@ -358,6 +360,44 @@ function rnEloProcess1997Tournament(PDO $db, array &$states, array $tournament, 
     return ['players'=>count($rows),'games'=>count($validGames),'skipped_games'=>$skipped];
 }
 
+function rnEloOfficialSeed(): array
+{
+    static $seed = null;
+    if ($seed === null) {
+        $path = dirname(__DIR__) . '/data/rif_rating_19990715.php';
+        $loaded = require $path;
+        if (!is_array($loaded)) throw new RuntimeException('RIF 1999-07-15 官方 seed 格式錯誤。');
+        $seed = $loaded;
+    }
+    return $seed;
+}
+
+function rnEloSeedRatingForPlayer(int $playerId, string $asOf): ?float
+{
+    if ($playerId <= 0 || $asOf < RN_ELO_SEED_DATE) return null;
+    $seed = rnEloOfficialSeed();
+    return array_key_exists($playerId, $seed) ? (float)$seed[$playerId] : null;
+}
+
+function rnEloSeedStates(): array
+{
+    $states = [];
+    foreach (rnEloOfficialSeed() as $playerId => $rating) {
+        $states[(int)$playerId] = [
+            'rating'=>(float)$rating,
+            'established'=>true,
+            'qual_games'=>0,
+            'qual_points'=>0.0,
+            'opp_sum'=>0.0,
+            'wins'=>0,
+            'draws'=>0,
+            'losses'=>0,
+            'old_official'=>true,
+        ];
+    }
+    return $states;
+}
+
 function rnEloRecalculate(PDO $db): array
 {
     rnEloEnsureSchema($db);
@@ -367,47 +407,51 @@ function rnEloRecalculate(PDO $db): array
     try {
         $startedAt=date('Y-m-d H:i:s');
         $stmtRun=$db->prepare("INSERT INTO `RENJUNET_ELO_RUN` (`started_at`,`status`,`initial_rating`,`rated_only`) VALUES (?,'running',0,1)");
-        $stmtRun->execute([$startedAt]); $runId=(int)$db->lastInsertId();
+        $stmtRun->execute([$startedAt]);
+        $runId=(int)$db->lastInsertId();
         $db->exec('DELETE FROM `RENJUNET_ELO_BUILD`');
+
         $dateExpr=rnEloTournamentDateExpression('T');
         $sql="SELECT T.`id` AS tournament_id,{$dateExpr} AS tournament_date,G.`id` AS game_id,G.`black_player_id`,G.`white_player_id`,G.`black_result`\n".
             "FROM `RENJUNET_TOURNAMENT` T JOIN `RENJUNET_RULE` R ON R.`id`=T.`rule_id` JOIN `RENJUNET_GAME` G ON G.`tournament_id`=T.`id`\n".
-            "WHERE T.`rated`=1 AND R.`category`=1 AND {$dateExpr} IS NOT NULL AND {$dateExpr}>='1988-08-01'\n".
+            "WHERE T.`rated`=1 AND R.`category`=1 AND {$dateExpr} IS NOT NULL AND {$dateExpr}>'".RN_ELO_SEED_DATE."'\n".
             "ORDER BY tournament_date,T.`id`,G.`id`";
         $stmt=$db->query($sql);
-        $states=[]; $currentTourId=null; $currentTournament=null; $currentGames=[];
-        $tournamentCount=0; $gameCount=0; $rowCount=0; $skippedGames=0; $calculatedAt=date('Y-m-d H:i:s'); $promoted=false;
-        $flush=function() use ($db,&$states,&$currentTourId,&$currentTournament,&$currentGames,&$tournamentCount,&$gameCount,&$rowCount,&$skippedGames,$runId,$calculatedAt,&$promoted): void {
+        $states=rnEloSeedStates();
+        $currentTourId=null; $currentTournament=null; $currentGames=[];
+        $tournamentCount=0; $gameCount=0; $rowCount=0; $skippedGames=0; $calculatedAt=date('Y-m-d H:i:s');
+        $flush=function() use ($db,&$states,&$currentTourId,&$currentTournament,&$currentGames,&$tournamentCount,&$gameCount,&$rowCount,&$skippedGames,$runId,$calculatedAt): void {
             if ($currentTourId===null || $currentTournament===null || !$currentGames) return;
-            $date=(string)$currentTournament['tournament_date'];
-            if ($date>=RN_ELO_1997_EFFECTIVE_DATE) {
-                if (!$promoted) { rnEloPromoteOldBaseTo1997($states); $promoted=true; }
-                $stats=rnEloProcess1997Tournament($db,$states,$currentTournament,$currentGames,$runId,$calculatedAt);
-            } else {
-                $stats=rnEloProcessOldTournament($db,$states,$currentTournament,$currentGames,$runId,$calculatedAt);
-            }
-            $tournamentCount++; $gameCount+=(int)$stats['games']; $rowCount+=(int)$stats['players']; $skippedGames+=(int)$stats['skipped_games']; $currentGames=[];
+            $stats=rnEloProcess1997Tournament($db,$states,$currentTournament,$currentGames,$runId,$calculatedAt);
+            $tournamentCount++;
+            $gameCount+=(int)$stats['games'];
+            $rowCount+=(int)$stats['players'];
+            $skippedGames+=(int)$stats['skipped_games'];
+            $currentGames=[];
         };
         while ($row=$stmt->fetch(PDO::FETCH_ASSOC)) {
             $tourId=(int)$row['tournament_id'];
             if ($currentTourId!==null && $tourId!==$currentTourId) $flush();
             if ($currentTourId===null || $tourId!==$currentTourId) {
-                $currentTourId=$tourId; $currentTournament=['tournament_id'=>$tourId,'tournament_date'=>(string)$row['tournament_date']];
+                $currentTourId=$tourId;
+                $currentTournament=['tournament_id'=>$tourId,'tournament_date'=>(string)$row['tournament_date']];
             }
             $currentGames[]=['black_player_id'=>(int)$row['black_player_id'],'white_player_id'=>(int)$row['white_player_id'],'black_result'=>(float)$row['black_result']];
         }
-        $flush(); $stmt->closeCursor();
+        $flush();
+        $stmt->closeCursor();
 
         $undated=(int)$db->query("SELECT COUNT(*) FROM `RENJUNET_TOURNAMENT` T JOIN `RENJUNET_RULE` R ON R.`id`=T.`rule_id` WHERE T.`rated`=1 AND R.`category`=1 AND {$dateExpr} IS NULL")->fetchColumn();
         $excluded=(int)$db->query("SELECT COUNT(*) FROM `RENJUNET_TOURNAMENT` T LEFT JOIN `RENJUNET_RULE` R ON R.`id`=T.`rule_id` WHERE T.`rated`=1 AND COALESCE(R.`category`,0)<>1")->fetchColumn();
         $establishedCount=count(array_filter($states,fn($s)=>(bool)$s['established']));
+        $seedCount=count(rnEloOfficialSeed());
 
         $db->beginTransaction();
         try {
             $db->exec('DELETE FROM `RENJUNET_ELO`');
             $db->exec('INSERT INTO `RENJUNET_ELO` (`tournament_id`,`tournament_date`,`player_id`,`rating_before`,`rating_after`,`games_before`,`games_after`,`wins`,`draws`,`losses`,`total_wins`,`total_draws`,`total_losses`,`run_id`,`calculated_at`) SELECT `tournament_id`,`tournament_date`,`player_id`,`rating_before`,`rating_after`,`games_before`,`games_after`,`wins`,`draws`,`losses`,`total_wins`,`total_draws`,`total_losses`,`run_id`,`calculated_at` FROM `RENJUNET_ELO_BUILD`');
             $db->exec('DELETE FROM `RENJUNET_ELO_BUILD`');
-            $message="歷史 RIF Elo 重算成功（1988-08 起按 1995/96 舊制建立基礎；1997-08-06 起按 GA1997 provisional/established 規則；無固定 1900 初始分）";
+            $message="歷史 RIF Elo 重算成功（以 1999-07-15 官方 RIF rating list 的 {$seedCount} 位已核對棋手為 seed；其後依 GA1997 provisional/established 規則逐賽事計算；歷史 Elo 無固定 1900 初始分）";
             if ($excluded>0) $message.="；排除 {$excluded} 場非 Renju 的 rated 比賽";
             if ($skippedGames>0) $message.="；略過 {$skippedGames} 局無效棋手資料";
             if ($undated>0) $message.="；另有 {$undated} 場缺少日期未納入";
@@ -415,10 +459,30 @@ function rnEloRecalculate(PDO $db): array
             $finish=$db->prepare("UPDATE `RENJUNET_ELO_RUN` SET `finished_at`=NOW(),`status`='success',`tournament_count`=?,`game_count`=?,`row_count`=?,`player_count`=?,`message`=? WHERE `id`=?");
             $finish->execute([$tournamentCount,$gameCount,$rowCount,count($states),$message,$runId]);
             $db->commit();
-        } catch (Throwable $e) { if ($db->inTransaction()) $db->rollBack(); throw $e; }
-        return ['run_id'=>$runId,'tournament_count'=>$tournamentCount,'game_count'=>$gameCount,'row_count'=>$rowCount,'player_count'=>count($states),'established_count'=>$establishedCount,'skipped_games'=>$skippedGames,'undated_tournaments'=>$undated,'excluded_non_renju_tournaments'=>$excluded];
+        } catch (Throwable $e) {
+            if ($db->inTransaction()) $db->rollBack();
+            throw $e;
+        }
+        return [
+            'run_id'=>$runId,
+            'seed_date'=>RN_ELO_SEED_DATE,
+            'seed_count'=>$seedCount,
+            'tournament_count'=>$tournamentCount,
+            'game_count'=>$gameCount,
+            'row_count'=>$rowCount,
+            'player_count'=>count($states),
+            'established_count'=>$establishedCount,
+            'skipped_games'=>$skippedGames,
+            'undated_tournaments'=>$undated,
+            'excluded_non_renju_tournaments'=>$excluded,
+        ];
     } catch (Throwable $e) {
-        if ($runId>0) { try { $f=$db->prepare("UPDATE `RENJUNET_ELO_RUN` SET `finished_at`=NOW(),`status`='failed',`message`=? WHERE `id`=?"); $f->execute([mb_substr($e->getMessage(),0,4000),$runId]); } catch (Throwable $ignored) {} }
+        if ($runId>0) {
+            try {
+                $f=$db->prepare("UPDATE `RENJUNET_ELO_RUN` SET `finished_at`=NOW(),`status`='failed',`message`=? WHERE `id`=?");
+                $f->execute([mb_substr($e->getMessage(),0,4000),$runId]);
+            } catch (Throwable $ignored) {}
+        }
         throw $e;
     } finally {
         try { $db->query("SELECT RELEASE_LOCK('renjunet_elo_recalculate')")->fetchColumn(); } catch (Throwable $ignored) {}

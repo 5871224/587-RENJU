@@ -92,14 +92,14 @@ body{background:#eef3f8}.rn-main{padding:26px clamp(16px,3vw,42px) 48px}.rn-hero
 <header class="topbar-simple"><strong>RenjuNet Elo</strong><a href="./">← 排名管理首頁</a><a href="renjunet-elo-compare.php">舊保存分數比對</a><a href="?">重新整理</a></header>
 <main class="rn-main">
 <section class="rn-hero">
-    <div><h1>RenjuNet 歷史 Elo 重算</h1><p>重建 2021 年改用 WHR 以前的 RIF Elo：1995/96 舊制建立歷史基礎，1997 年新制後依 provisional／established 規則逐賽事計算。</p></div>
+    <div><h1>RenjuNet 歷史 Elo 重算</h1><p>以 1999-07-15 官方 RIF Rating List 作為歷史基準，之後依 provisional／established 規則逐賽事重建舊制 Elo。</p></div>
     <div class="rn-badge">Historical RIF Elo · 非 WHR</div>
 </section>
 
 <?php if ($message !== ''): ?><div class="rn-success"><?= rnH($message) ?></div><?php endif; ?>
 <?php if ($error !== ''): ?><div class="rn-error">重算失敗：<?= rnH($error) ?></div><?php endif; ?>
 
-<div class="rn-notice"><strong>歷史規則：</strong>沒有固定 1900 初始分。1997-08-06 起，新棋手只計算對 established 棋手的對局；累積至少 10 局且至少 3 分後才轉 established。Provisional 採 Rp=Ra+400(W-L)/N（上限 Ra+300）；established 採 K=32、We=1/(1+2^(dR/120))，賽事結束後才更新。只納入 rated=1 且 RENJUNET_RULE.category=1 的 Renju 比賽。</div>
+<div class="rn-notice"><strong>歷史基準：</strong>使用 1999-07-15 官方 RIF Rating List（已核對 221 位 RenjuNet 身份）作 seed；其後新棋手只計算對 established 棋手的對局，累積至少 10 局且至少 3 分後轉 established。Provisional 採 Rp=Ra+400(W-L)/N（上限 Ra+300）；established 採 K=32、We=1/(1+2^(dR/120))。真正沒有官方／歷史 Elo 的棋手，台灣排名端才以 1900 作 fallback。</div>
 
 <section class="rn-grid">
     <div class="rn-card"><div class="label">Renju Rated 比賽</div><div class="value"><?= number_format($eligibleTournaments) ?></div></div>
