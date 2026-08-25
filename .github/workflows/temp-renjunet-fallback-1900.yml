@@ -36,7 +36,7 @@ jobs:
                     // RenjuNet 沒有此棋士／賽事歷史時，視為尚未建立世界等級分的新人。
                     $startRating = (float)RN_ELO_INITIAL_RATING;
                     $ratingSource = 'renjunet_initial';
-'''
+          '''
           text = text[:start] + replacement + text[end:]
           path.write_text(text, encoding='utf-8')
 
