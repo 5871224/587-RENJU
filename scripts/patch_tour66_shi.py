@@ -2,7 +2,7 @@
 import json
 from renjunet_sync import Bridge
 
-TOUR_ID = 66
+TOUR_ID = 64
 SHI_PLAYER_ID = 363
 SHI_RENJUNET_DISP_ID = '100132'
 
@@ -40,6 +40,11 @@ def main():
             f"FROM `GAME` WHERE `比賽`={TOUR_ID}"
         )[0]
 
+        li_before_total = int(before.get('p1_li') or 0) + int(before.get('p2_li') or 0)
+        shi_before_total = int(before.get('p1_shi') or 0) + int(before.get('p2_shi') or 0)
+        if li_before_total == 0 and shi_before_total == 0:
+            raise RuntimeError(f"賽號 {TOUR_ID} 找不到李士文或師曉林對局，停止修改")
+
         rank_before = db.query(
             f"SELECT `代號`,`績分`,`勝`,`和`,`負` FROM `RANK` WHERE `比賽`={TOUR_ID} AND `代號` IN ({li_id},{SHI_PLAYER_ID}) ORDER BY `代號`"
         )
@@ -52,7 +57,7 @@ def main():
             f"UPDATE `RANK` SET `代號`={SHI_PLAYER_ID} WHERE `比賽`={TOUR_ID} AND `代號`={li_id}",
             f"DELETE FROM `PLAYER_RENJUNET` WHERE `player_id`={SHI_PLAYER_ID} OR `renjunet_player_id`={shi_renjunet_id}",
             "INSERT INTO `PLAYER_RENJUNET` (`player_id`,`renjunet_player_id`,`matched_by`,`note`) "
-            f"VALUES ({SHI_PLAYER_ID},{shi_renjunet_id},'manual','師曉林；RenjuNet disp_id {SHI_RENJUNET_DISP_ID}；賽號66資料修正')",
+            f"VALUES ({SHI_PLAYER_ID},{shi_renjunet_id},'manual','師曉林；RenjuNet disp_id {SHI_RENJUNET_DISP_ID}；賽號64資料修正')",
         ]
         db.batch(statements)
 
@@ -72,33 +77,21 @@ def main():
             f"SELECT `player_id`,`renjunet_player_id`,`matched_by`,`note` FROM `PLAYER_RENJUNET` "
             f"WHERE `player_id`={SHI_PLAYER_ID}"
         )
-
         tournament = db.query(
             f"SELECT `賽號`,`賽名`,`開始`,`結束`,`等級` FROM `TOURNAMENT` WHERE `賽號`={TOUR_ID}"
-        )
-        tour_games = db.query(
-            f"SELECT G.`輪次`,G.`P1`,P1.`姓名` AS p1_name,G.`勝負`,G.`P2`,P2.`姓名` AS p2_name "
-            f"FROM `GAME` G LEFT JOIN `PLAYER` P1 ON P1.`代號`=G.`P1` LEFT JOIN `PLAYER` P2 ON P2.`代號`=G.`P2` "
-            f"WHERE G.`比賽`={TOUR_ID} ORDER BY G.`輪次`,G.`P1`,G.`P2`"
-        )
-        li_game_refs = db.query(
-            f"SELECT G.`比賽`,T.`賽名`,T.`開始`,T.`結束`,COUNT(*) AS game_rows "
-            f"FROM `GAME` G LEFT JOIN `TOURNAMENT` T ON T.`賽號`=G.`比賽` "
-            f"WHERE G.`P1`={li_id} OR G.`P2`={li_id} GROUP BY G.`比賽`,T.`賽名`,T.`開始`,T.`結束` ORDER BY G.`比賽`"
-        )
-        li_rank_refs = db.query(
-            f"SELECT R.`比賽`,T.`賽名`,T.`開始`,T.`結束`,R.`績分`,R.`勝`,R.`和`,R.`負` "
-            f"FROM `RANK` R LEFT JOIN `TOURNAMENT` T ON T.`賽號`=R.`比賽` "
-            f"WHERE R.`代號`={li_id} ORDER BY R.`比賽`"
         )
 
         if int(after.get('p1_li') or 0) != 0 or int(after.get('p2_li') or 0) != 0:
             raise RuntimeError(f"賽號 {TOUR_ID} 仍有李士文對局: {after}")
+        shi_after_total = int(after.get('p1_shi') or 0) + int(after.get('p2_shi') or 0)
+        if shi_after_total != li_before_total + shi_before_total:
+            raise RuntimeError(f"師曉林對局數不守恆：before={before}, after={after}")
         if not mapping or int(mapping[0]['renjunet_player_id']) != shi_renjunet_id:
             raise RuntimeError(f"師曉林 PLAYER_RENJUNET mapping 未建立: {mapping}")
 
         print(json.dumps({
             'tour_id': TOUR_ID,
+            'tournament': tournament,
             'li_player_id': li_id,
             'shi_player_id': SHI_PLAYER_ID,
             'shi_renjunet_disp_id': SHI_RENJUNET_DISP_ID,
@@ -109,10 +102,6 @@ def main():
             'rank_before': rank_before,
             'rank_after': rank_after,
             'mapping': mapping,
-            'tournament': tournament,
-            'tour_66_games': tour_games,
-            'li_game_refs': li_game_refs,
-            'li_rank_refs': li_rank_refs,
         }, ensure_ascii=False, indent=2))
 
 
