@@ -1,0 +1,189 @@
+name: Temp switch RIF Elo to official seed
+on:
+  push:
+    paths: ['.github/workflows/temp-switch-rif-elo-official-seed.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch historical RIF Elo implementation
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          core_path=Path('rank/lib/renjunet_rating.php')
+          core=core_path.read_text(encoding='utf-8')
+          core=core.replace("const RN_ELO_1997_EFFECTIVE_DATE = '1997-08-06';\nconst RN_ELO_K = 32.0;", "const RN_ELO_1997_EFFECTIVE_DATE = '1997-08-06';\nconst RN_ELO_SEED_DATE = '1999-07-15';\nconst RN_ELO_INITIAL_RATING = 1900.0; // Taiwan project fallback only; not the historical RIF seed.\nconst RN_ELO_K = 32.0;")
+
+          marker='function rnEloRecalculate(PDO $db): array'
+          if marker not in core:
+              raise SystemExit('rnEloRecalculate marker not found')
+          helper=r'''function rnEloOfficialSeed(): array
+          {
+              static $seed = null;
+              if ($seed === null) {
+                  $path = dirname(__DIR__) . '/data/rif_rating_19990715.php';
+                  $loaded = require $path;
+                  if (!is_array($loaded)) throw new RuntimeException('RIF 1999-07-15 官方 seed 格式錯誤。');
+                  $seed = $loaded;
+              }
+              return $seed;
+          }
+
+          function rnEloSeedRatingForPlayer(int $playerId, string $asOf): ?float
+          {
+              if ($playerId <= 0 || $asOf < RN_ELO_SEED_DATE) return null;
+              $seed = rnEloOfficialSeed();
+              return array_key_exists($playerId, $seed) ? (float)$seed[$playerId] : null;
+          }
+
+          function rnEloSeedStates(): array
+          {
+              $states = [];
+              foreach (rnEloOfficialSeed() as $playerId => $rating) {
+                  $states[(int)$playerId] = [
+                      'rating'=>(float)$rating,
+                      'established'=>true,
+                      'qual_games'=>0,
+                      'qual_points'=>0.0,
+                      'opp_sum'=>0.0,
+                      'wins'=>0,
+                      'draws'=>0,
+                      'losses'=>0,
+                      'old_official'=>true,
+                  ];
+              }
+              return $states;
+          }
+
+          '''
+          before, oldfunc = core.split(marker,1)
+          # rnEloRecalculate is the last function in this library. Replace it entirely.
+          newfunc=r'''function rnEloRecalculate(PDO $db): array
+          {
+              rnEloEnsureSchema($db);
+              $lockStmt=$db->query("SELECT GET_LOCK('renjunet_elo_recalculate',0)");
+              if ((int)$lockStmt->fetchColumn()!==1) throw new RuntimeException('另一個 RenjuNet Elo 重算正在執行，請稍後再試。');
+              $runId=0;
+              try {
+                  $startedAt=date('Y-m-d H:i:s');
+                  $stmtRun=$db->prepare("INSERT INTO `RENJUNET_ELO_RUN` (`started_at`,`status`,`initial_rating`,`rated_only`) VALUES (?,'running',0,1)");
+                  $stmtRun->execute([$startedAt]);
+                  $runId=(int)$db->lastInsertId();
+                  $db->exec('DELETE FROM `RENJUNET_ELO_BUILD`');
+
+                  $dateExpr=rnEloTournamentDateExpression('T');
+                  $sql="SELECT T.`id` AS tournament_id,{$dateExpr} AS tournament_date,G.`id` AS game_id,G.`black_player_id`,G.`white_player_id`,G.`black_result`\n".
+                      "FROM `RENJUNET_TOURNAMENT` T JOIN `RENJUNET_RULE` R ON R.`id`=T.`rule_id` JOIN `RENJUNET_GAME` G ON G.`tournament_id`=T.`id`\n".
+                      "WHERE T.`rated`=1 AND R.`category`=1 AND {$dateExpr} IS NOT NULL AND {$dateExpr}>'".RN_ELO_SEED_DATE."'\n".
+                      "ORDER BY tournament_date,T.`id`,G.`id`";
+                  $stmt=$db->query($sql);
+                  $states=rnEloSeedStates();
+                  $currentTourId=null; $currentTournament=null; $currentGames=[];
+                  $tournamentCount=0; $gameCount=0; $rowCount=0; $skippedGames=0; $calculatedAt=date('Y-m-d H:i:s');
+                  $flush=function() use ($db,&$states,&$currentTourId,&$currentTournament,&$currentGames,&$tournamentCount,&$gameCount,&$rowCount,&$skippedGames,$runId,$calculatedAt): void {
+                      if ($currentTourId===null || $currentTournament===null || !$currentGames) return;
+                      $stats=rnEloProcess1997Tournament($db,$states,$currentTournament,$currentGames,$runId,$calculatedAt);
+                      $tournamentCount++;
+                      $gameCount+=(int)$stats['games'];
+                      $rowCount+=(int)$stats['players'];
+                      $skippedGames+=(int)$stats['skipped_games'];
+                      $currentGames=[];
+                  };
+                  while ($row=$stmt->fetch(PDO::FETCH_ASSOC)) {
+                      $tourId=(int)$row['tournament_id'];
+                      if ($currentTourId!==null && $tourId!==$currentTourId) $flush();
+                      if ($currentTourId===null || $tourId!==$currentTourId) {
+                          $currentTourId=$tourId;
+                          $currentTournament=['tournament_id'=>$tourId,'tournament_date'=>(string)$row['tournament_date']];
+                      }
+                      $currentGames[]=['black_player_id'=>(int)$row['black_player_id'],'white_player_id'=>(int)$row['white_player_id'],'black_result'=>(float)$row['black_result']];
+                  }
+                  $flush();
+                  $stmt->closeCursor();
+
+                  $undated=(int)$db->query("SELECT COUNT(*) FROM `RENJUNET_TOURNAMENT` T JOIN `RENJUNET_RULE` R ON R.`id`=T.`rule_id` WHERE T.`rated`=1 AND R.`category`=1 AND {$dateExpr} IS NULL")->fetchColumn();
+                  $excluded=(int)$db->query("SELECT COUNT(*) FROM `RENJUNET_TOURNAMENT` T LEFT JOIN `RENJUNET_RULE` R ON R.`id`=T.`rule_id` WHERE T.`rated`=1 AND COALESCE(R.`category`,0)<>1")->fetchColumn();
+                  $establishedCount=count(array_filter($states,fn($s)=>(bool)$s['established']));
+                  $seedCount=count(rnEloOfficialSeed());
+
+                  $db->beginTransaction();
+                  try {
+                      $db->exec('DELETE FROM `RENJUNET_ELO`');
+                      $db->exec('INSERT INTO `RENJUNET_ELO` (`tournament_id`,`tournament_date`,`player_id`,`rating_before`,`rating_after`,`games_before`,`games_after`,`wins`,`draws`,`losses`,`total_wins`,`total_draws`,`total_losses`,`run_id`,`calculated_at`) SELECT `tournament_id`,`tournament_date`,`player_id`,`rating_before`,`rating_after`,`games_before`,`games_after`,`wins`,`draws`,`losses`,`total_wins`,`total_draws`,`total_losses`,`run_id`,`calculated_at` FROM `RENJUNET_ELO_BUILD`');
+                      $db->exec('DELETE FROM `RENJUNET_ELO_BUILD`');
+                      $message="歷史 RIF Elo 重算成功（以 1999-07-15 官方 RIF rating list 的 {$seedCount} 位已核對棋手為 seed；其後依 GA1997 provisional/established 規則逐賽事計算；歷史 Elo 無固定 1900 初始分）";
+                      if ($excluded>0) $message.="；排除 {$excluded} 場非 Renju 的 rated 比賽";
+                      if ($skippedGames>0) $message.="；略過 {$skippedGames} 局無效棋手資料";
+                      if ($undated>0) $message.="；另有 {$undated} 場缺少日期未納入";
+                      $message.='。';
+                      $finish=$db->prepare("UPDATE `RENJUNET_ELO_RUN` SET `finished_at`=NOW(),`status`='success',`tournament_count`=?,`game_count`=?,`row_count`=?,`player_count`=?,`message`=? WHERE `id`=?");
+                      $finish->execute([$tournamentCount,$gameCount,$rowCount,count($states),$message,$runId]);
+                      $db->commit();
+                  } catch (Throwable $e) {
+                      if ($db->inTransaction()) $db->rollBack();
+                      throw $e;
+                  }
+                  return [
+                      'run_id'=>$runId,
+                      'seed_date'=>RN_ELO_SEED_DATE,
+                      'seed_count'=>$seedCount,
+                      'tournament_count'=>$tournamentCount,
+                      'game_count'=>$gameCount,
+                      'row_count'=>$rowCount,
+                      'player_count'=>count($states),
+                      'established_count'=>$establishedCount,
+                      'skipped_games'=>$skippedGames,
+                      'undated_tournaments'=>$undated,
+                      'excluded_non_renju_tournaments'=>$excluded,
+                  ];
+              } catch (Throwable $e) {
+                  if ($runId>0) {
+                      try {
+                          $f=$db->prepare("UPDATE `RENJUNET_ELO_RUN` SET `finished_at`=NOW(),`status`='failed',`message`=? WHERE `id`=?");
+                          $f->execute([mb_substr($e->getMessage(),0,4000),$runId]);
+                      } catch (Throwable $ignored) {}
+                  }
+                  throw $e;
+              } finally {
+                  try { $db->query("SELECT RELEASE_LOCK('renjunet_elo_recalculate')")->fetchColumn(); } catch (Throwable $ignored) {}
+              }
+          }
+          '''
+          core=before+helper+newfunc
+          # Correct historical games display for established players without changing calculation.
+          core=core.replace("'games_before'=>(int)$prior['qual_games'],'games_after'=>(int)$prior['qual_games']+(int)$p['relevant_games'],", "'games_before'=>(int)$prior['wins']+(int)$prior['draws']+(int)$prior['losses'],'games_after'=>$tw+$td+$tl,")
+          core_path.write_text(core,encoding='utf-8')
+
+          rating_path=Path('rank/lib/rating.php')
+          rating=rating_path.read_text(encoding='utf-8')
+          old="""    // 該日期以前沒有已完成的 rated Renju 比賽時，等同尚未建立歷史分數，\n    // 使用 RenjuNet Elo 統一初始分 1900。\n    $rating = ($value === false || $value === null || $value === '')\n        ? (float)RN_ELO_INITIAL_RATING\n        : (float)$value;"""
+          new="""    if ($value === false || $value === null || $value === '') {\n        // 1999-07-15 官方 RIF rating list 是歷史重建基準。\n        // 棋手在 seed 後、尚未再參賽時，直接使用當日官方分數。\n        $seedRating = rnEloSeedRatingForPlayer($renjuNetPlayerId, $ratingDate);\n        $rating = $seedRating !== null ? $seedRating : (float)RN_ELO_INITIAL_RATING;\n    } else {\n        $rating = (float)$value;\n    }"""
+          if old not in rating:
+              raise SystemExit('rating fallback block not found')
+          rating=rating.replace(old,new)
+          rating_path.write_text(rating,encoding='utf-8')
+
+          ui_path=Path('rank/renjunet-elo.php')
+          ui=ui_path.read_text(encoding='utf-8')
+          ui=ui.replace('重建 2021 年改用 WHR 以前的 RIF Elo：1995/96 舊制建立歷史基礎，1997 年新制後依 provisional／established 規則逐賽事計算。','以 1999-07-15 官方 RIF Rating List 作為歷史基準，之後依 provisional／established 規則逐賽事重建舊制 Elo。')
+          ui=ui.replace('<strong>歷史規則：</strong>沒有固定 1900 初始分。1997-08-06 起，新棋手只計算對 established 棋手的對局；累積至少 10 局且至少 3 分後才轉 established。Provisional 採 Rp=Ra+400(W-L)/N（上限 Ra+300）；established 採 K=32、We=1/(1+2^(dR/120))，賽事結束後才更新。只納入 rated=1 且 RENJUNET_RULE.category=1 的 Renju 比賽。','<strong>歷史基準：</strong>使用 1999-07-15 官方 RIF Rating List（已核對 221 位 RenjuNet 身份）作 seed；其後新棋手只計算對 established 棋手的對局，累積至少 10 局且至少 3 分後轉 established。Provisional 採 Rp=Ra+400(W-L)/N（上限 Ra+300）；established 採 K=32、We=1/(1+2^(dR/120))。真正沒有官方／歷史 Elo 的棋手，台灣排名端才以 1900 作 fallback。')
+          ui_path.write_text(ui,encoding='utf-8')
+      - name: Validate PHP
+        run: |
+          php -l rank/data/rif_rating_19990715.php
+          php -l rank/lib/renjunet_rating.php
+          php -l rank/lib/rating.php
+          php -l rank/renjunet-elo.php
+      - name: Commit patch and remove helper
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add rank/data/rif_rating_19990715.php rank/lib/renjunet_rating.php rank/lib/rating.php rank/renjunet-elo.php
+          git rm .github/workflows/temp-switch-rif-elo-official-seed.yml
+          git commit -m 'Use official July 1999 RIF rating seed' || true
+          git push
