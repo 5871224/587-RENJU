@@ -291,13 +291,19 @@ function rrRecalculateHistory(PDO $db): array
                 $ratingSource = ($state['rating'] === null) ? 'tournament_base' : 'taiwan_previous';
             } elseif ($useRenjuNetRating) {
                 if ($ratingDate === null) {
-          $warnings[] = "賽號 {$tourId} 外部棋士 {$playerId} 無比賽日期，改用 RenjuNet 初始分 " . RN_ELO_INITIAL_RATING;
-          $startRating = (float)RN_ELO_INITIAL_RATING;
-          $ratingSource = 'renjunet_initial';
-      } elseif ($renjuNetPlayerId === null || $renjuNetPlayerId <= 0) {
-          // RenjuNet 沒有此棋士／賽事歷史時，視為尚未建立世界等級分的新人。
-          $startRating = (float)RN_ELO_INITIAL_RATING;
-          $ratingSource = 'renjunet_initial';
+                    $warnings[] = "賽號 {$tourId} 外部棋士 {$playerId} 無比賽日期，改用 RenjuNet 初始分 " . RN_ELO_INITIAL_RATING;
+                    $startRating = (float)RN_ELO_INITIAL_RATING;
+                    $ratingSource = 'renjunet_initial';
+                } elseif ($renjuNetPlayerId === null || $renjuNetPlayerId <= 0) {
+                    if ($tourId === 233) {
+                        // RenjuNet 沒有安吉 C 組資料，未建立世界歷史分數的外國新人統一從 1900 起算。
+                        $startRating = (float)RN_ELO_INITIAL_RATING;
+                        $ratingSource = 'renjunet_initial';
+                    } else {
+                        $warnings[] = "賽號 {$tourId} 外部棋士 {$playerId} 找不到 PLAYER_RENJUNET／RIF 對應，無法取得 RenjuNet Elo；暫用 GAME 保存分數";
+                        $startRating = ($savedStart !== null && $savedStart >= 1000) ? $savedStart : (float)RN_ELO_INITIAL_RATING;
+                        $ratingSource = ($savedStart !== null && $savedStart >= 1000) ? 'game_saved_fallback' : 'renjunet_initial_fallback';
+                    }
                 } else {
                     $startRating = rrRenjuNetRatingAt(
                         $db,
