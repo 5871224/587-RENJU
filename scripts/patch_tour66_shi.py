@@ -4,7 +4,7 @@ from renjunet_sync import Bridge
 
 TOUR_ID = 66
 SHI_PLAYER_ID = 363
-SHI_RENJUNET_ID = 100132
+SHI_RENJUNET_DISP_ID = '100132'
 
 
 def main():
@@ -22,6 +22,14 @@ def main():
         li_id = int(li[0]['代號'])
         if li_id == SHI_PLAYER_ID:
             raise RuntimeError('李士文與師曉林代號不應相同')
+
+        rn_players = db.query(
+            "SELECT `id`,`disp_id`,`surname`,`name`,`native_name` FROM `RENJUNET_PLAYER` "
+            f"WHERE `disp_id`='{SHI_RENJUNET_DISP_ID}'"
+        )
+        if len(rn_players) != 1:
+            raise RuntimeError(f"RenjuNet disp_id={SHI_RENJUNET_DISP_ID} 找不到唯一棋手: {rn_players}")
+        shi_renjunet_id = int(rn_players[0]['id'])
 
         before = db.query(
             f"SELECT "
@@ -42,9 +50,9 @@ def main():
             f"UPDATE `GAME` SET `P1`={SHI_PLAYER_ID} WHERE `比賽`={TOUR_ID} AND `P1`={li_id}",
             f"UPDATE `GAME` SET `P2`={SHI_PLAYER_ID} WHERE `比賽`={TOUR_ID} AND `P2`={li_id}",
             f"UPDATE `RANK` SET `代號`={SHI_PLAYER_ID} WHERE `比賽`={TOUR_ID} AND `代號`={li_id}",
-            f"DELETE FROM `PLAYER_RENJUNET` WHERE `player_id`={SHI_PLAYER_ID} OR `renjunet_player_id`={SHI_RENJUNET_ID}",
+            f"DELETE FROM `PLAYER_RENJUNET` WHERE `player_id`={SHI_PLAYER_ID} OR `renjunet_player_id`={shi_renjunet_id}",
             "INSERT INTO `PLAYER_RENJUNET` (`player_id`,`renjunet_player_id`,`matched_by`,`note`) "
-            f"VALUES ({SHI_PLAYER_ID},{SHI_RENJUNET_ID},'manual','師曉林；賽號66資料修正')",
+            f"VALUES ({SHI_PLAYER_ID},{shi_renjunet_id},'manual','師曉林；RenjuNet disp_id {SHI_RENJUNET_DISP_ID}；賽號66資料修正')",
         ]
         db.batch(statements)
 
@@ -67,16 +75,19 @@ def main():
 
         if int(after.get('p1_li') or 0) != 0 or int(after.get('p2_li') or 0) != 0:
             raise RuntimeError(f"賽號 {TOUR_ID} 仍有李士文對局: {after}")
-        if not mapping or int(mapping[0]['renjunet_player_id']) != SHI_RENJUNET_ID:
+        if not mapping or int(mapping[0]['renjunet_player_id']) != shi_renjunet_id:
             raise RuntimeError(f"師曉林 PLAYER_RENJUNET mapping 未建立: {mapping}")
 
         print(json.dumps({
             'tour_id': TOUR_ID,
             'li_player_id': li_id,
             'shi_player_id': SHI_PLAYER_ID,
-            'shi_renjunet_player_id': SHI_RENJUNET_ID,
+            'shi_renjunet_disp_id': SHI_RENJUNET_DISP_ID,
+            'shi_renjunet_player_id': shi_renjunet_id,
+            'renjunet_player': rn_players[0],
             'before': before,
             'after': after,
+            'rank_before': rank_before,
             'rank_after': rank_after,
             'mapping': mapping,
         }, ensure_ascii=False, indent=2))
