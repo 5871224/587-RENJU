@@ -28,10 +28,15 @@ jobs:
           from pathlib import Path
           p = Path('rank/lib/rating.php')
           s = p.read_text(encoding='utf-8')
-          start = s.index('                } elseif ($renjuNetPlayerId === null || $renjuNetPlayerId <= 0) {')
+          start_marker = '                if ($ratingDate === null) {'
           end_marker = "                } else {\n                    $startRating = rrRenjuNetRatingAt("
+          start = s.index(start_marker)
           end = s.index(end_marker, start)
           lines = [
+              '                if ($ratingDate === null) {',
+              '                    $warnings[] = "賽號 {$tourId} 外部棋士 {$playerId} 無比賽日期，改用 RenjuNet 初始分 " . RN_ELO_INITIAL_RATING;',
+              '                    $startRating = (float)RN_ELO_INITIAL_RATING;',
+              "                    $ratingSource = 'renjunet_initial';",
               '                } elseif ($renjuNetPlayerId === null || $renjuNetPlayerId <= 0) {',
               '                    if ($tourId === 233) {',
               '                        // RenjuNet 沒有安吉 C 組資料，未建立世界歷史分數的外國新人統一從 1900 起算。',
