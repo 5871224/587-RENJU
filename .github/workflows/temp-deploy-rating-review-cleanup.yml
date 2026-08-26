@@ -1,66 +1,86 @@
-name: Temp deploy rating review cleanup
+name: Temp finish rating review integration
 on:
   push:
     paths: ['.github/workflows/temp-deploy-rating-review-cleanup.yml']
 permissions:
   contents: write
 jobs:
-  deploy:
+  patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fix integrated links and validate
+      - name: Update integrated page protection and project checks
         shell: python
         run: |
           from pathlib import Path
+
+          p=Path('rank/rating-review.php')
+          s=p.read_text(encoding='utf-8')
+          old="<?php\nrequire_once __DIR__ . '/lib/rating.php';"
+          new="<?php\nif (!isset($MYSQL)) require_once __DIR__ . '/login.php';\nif (!function_exists('h')) { function h($value): string { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); } }\nrequire_once __DIR__ . '/lib/rating.php';"
+          if old in s: s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+
           p=Path('rank/recalculated-ranking.php')
           s=p.read_text(encoding='utf-8')
           s=s.replace('href="?view=rating-tools&amp;tool=review&amp;section=history"','href="./?view=rating-tools&amp;tool=review&amp;section=history"')
           s=s.replace('href="?view=rating-tools&amp;tool=review&amp;section=check"','href="./?view=rating-tools&amp;tool=review&amp;section=check"')
           p.write_text(s,encoding='utf-8')
-      - name: PHP syntax check
-        run: |
-          php -l rank/index.php
-          php -l rank/rating-review.php
-          php -l rank/recalculated-ranking.php
-      - name: Upload integrated files and remove legacy pages
-        shell: python
-        env:
-          FTP_SERVER: ${{ secrets.FTP_SERVER }}
-          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
-        run: |
-          import ftplib,os,posixpath
-          def clean(v): return v.strip('\r\n')
-          ftp=ftplib.FTP_TLS(); ftp.connect(clean(os.environ['FTP_SERVER']),21,timeout=60); ftp.login(clean(os.environ['FTP_USERNAME']),clean(os.environ['FTP_PASSWORD'])); ftp.prot_p()
-          server_dir=clean(os.environ.get('FTP_SERVER_DIR','')).strip()
-          def ensure(path):
-            path=path.replace('\\','/').strip()
-            if not path or path=='.': return
-            if path.startswith('/'): ftp.cwd('/')
-            for part in path.strip('/').split('/'):
-              if not part: continue
-              try: ftp.cwd(part)
-              except ftplib.error_perm: ftp.mkd(part); ftp.cwd(part)
-          ensure(server_dir); base=ftp.pwd()
-          for local in ['rank/index.php','rank/rating-review.php','rank/recalculated-ranking.php']:
-            remote=local.replace('\\','/'); ftp.cwd(base); ensure(posixpath.dirname(remote))
-            with open(local,'rb') as fh: ftp.storbinary('STOR '+posixpath.basename(remote),fh)
-            print('uploaded',remote)
-          ftp.cwd(base); ensure('rank')
-          for name in ['recalculate.php','recalculate-check.php','final-diff.php']:
-            try:
-              ftp.delete(name); print('deleted',name)
-            except ftplib.error_perm as e:
-              if not str(e).startswith('550'): raise
-              print('already absent',name)
-          ftp.quit()
-      - name: Commit link fix and remove workflow
+
+          p=Path('scripts/check-project.ps1')
+          s=p.read_text(encoding='utf-8')
+          old="""$rankProtectedPages = @(
+              'rank/index.php',
+              'rank/recalculate.php',
+              'rank/recalculate-check.php',
+              'rank/recalculate-export.php',
+              'rank/recalculated-ranking.php',
+              'rank/final-diff.php',
+              'rank/elo-audit.php'
+          )"""
+          new="""$rankProtectedPages = @(
+              'rank/index.php',
+              'rank/rating-review.php',
+              'rank/recalculate-export.php',
+              'rank/recalculated-ranking.php',
+              'rank/elo-audit.php'
+          )"""
+          if old not in s: raise SystemExit('rankProtectedPages block not found')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+
+          p=Path('.github/workflows/deploy.yml')
+          s=p.read_text(encoding='utf-8')
+          needle="""              'rank/index.php',
+              'rank/swiss.php',"""
+          replacement="""              'rank/index.php',
+              'rank/rating-review.php',
+              'rank/recalculated-ranking.php',
+              'rank/swiss.php',"""
+          if needle not in s: raise SystemExit('forced_files insertion point not found')
+          s=s.replace(needle,replacement,1)
+          needle="""          for local_path in files:
+            remote_path=local_path.replace('\\\\','/'); ftp.cwd(base_dir); ensure_dir(posixpath.dirname(remote_path))
+            with open(local_path,'rb') as fh: ftp.storbinary(f'STOR {posixpath.basename(remote_path)}',fh)
+          ftp.quit()"""
+          replacement="""          for local_path in files:
+            remote_path=local_path.replace('\\\\','/'); ftp.cwd(base_dir); ensure_dir(posixpath.dirname(remote_path))
+            with open(local_path,'rb') as fh: ftp.storbinary(f'STOR {posixpath.basename(remote_path)}',fh)
+          # Legacy rating comparison pages were merged into rank/rating-review.php.
+          ftp.cwd(base_dir); ensure_dir('rank')
+          for legacy_name in ('recalculate.php','recalculate-check.php','final-diff.php'):
+            try: ftp.delete(legacy_name)
+            except ftplib.error_perm as exc:
+              if not str(exc).startswith('550'): raise
+          ftp.quit()"""
+          if needle not in s: raise SystemExit('deploy upload block not found')
+          p.write_text(s.replace(needle,replacement,1),encoding='utf-8')
+      - name: Validate full project
+        shell: pwsh
+        run: ./scripts/check-project.ps1
+      - name: Commit fixes
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git rm .github/workflows/temp-deploy-rating-review-cleanup.yml
-          git add rank/recalculated-ranking.php
-          git commit -m 'Finish integrated rating review deployment' || true
+          git add rank/rating-review.php rank/recalculated-ranking.php scripts/check-project.ps1 .github/workflows/deploy.yml
+          git commit -m 'Finish integrated rating review checks' || true
           git push
