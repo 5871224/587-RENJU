@@ -162,7 +162,7 @@ try {
         ['name'=>'重算資料列','value'=>number_format(count($rows)),'ok'=>count($rows)>0,'note'=>'每位棋士每場比賽一筆'],
         ['name'=>'對局累計守恆','value'=>number_format($finalParticipationCount).' / '.number_format($formalGames*2),'ok'=>$finalParticipationCount===$formalGames*2,'note'=>'所有最終 W/D/L 應等於 GAME × 2'],
         ['name'=>'台灣分數鏈錯誤','value'=>number_format($localChainErrors),'ok'=>$localChainErrors===0,'note'=>'上一場結束分必須銜接下一場起始分'],
-        ['name'=>'外國身份／Elo fallback','value'=>number_format(count($externalFallback)),'ok'=>count($externalFallback)===0,'note'=>'找不到 RenjuNet 對應而退回 GAME／1900 的資料'],
+        ['name'=>'外國身份／Elo fallback','value'=>number_format(count($externalFallback)),'ok'=>count($externalFallback)===0,'note'=>'找不到 RenjuNet 對應而固定使用 1900 的資料'],
         ['name'=>'最低／最高分','value'=>number_format((float)$ratingMin,2).' / '.number_format((float)$ratingMax,2),'ok'=>$ratingMin!==null&&$ratingMin>0&&$ratingMax<5000,'note'=>'基本範圍檢查'],
     ];
     $allOk=true;foreach($checks as $c)if(!$c['ok']){$allOk=false;break;}
@@ -177,7 +177,7 @@ try {
     <div class="rr-panel"><div class="rr-panel-head"><div><h3>所有納入重算的比賽</h3><div class="rr-sub">不再只列特定賽號，全部資料可分頁查看</div></div></div>
         <div class="rr-table-wrap"><table class="rr-table"><thead><tr><th>賽號</th><th>比賽</th><th>日期</th><th>等級</th><th>正式對局</th><th>重算筆數</th><th>舊 RANK 筆數</th></tr></thead><tbody><?php foreach($checkPageRows as $row): ?><tr><td><?= h($row['tour_id']) ?></td><td><?= h($row['tour_name']) ?></td><td><?= h($row['date']) ?></td><td class="rr-num"><?= h($row['level']) ?></td><td class="rr-num"><?= h($row['games']) ?></td><td class="rr-num rr-ok"><?= h($row['players']) ?></td><td class="rr-num"><?= h($row['old_rank_rows']) ?></td></tr><?php endforeach; ?></tbody></table></div><?php rrReviewPager('check_page',$checkPage,$checkPages,$checkTotal); ?>
     </div>
-    <div class="rr-panel"><div class="rr-panel-head"><div><h3>外國身份／Elo fallback</h3><div class="rr-sub">只有找不到正常 RenjuNet 來源、被迫退回舊 GAME 分數或 1900 的資料才列在這裡</div></div></div>
+    <div class="rr-panel"><div class="rr-panel-head"><div><h3>外國身份／Elo fallback</h3><div class="rr-sub">只有找不到正常 RenjuNet 對應、因此固定以 1900 起算的資料才列在這裡</div></div></div>
         <?php if($issuePageRows): ?><div class="rr-table-wrap"><table class="rr-table"><thead><tr><th>賽號</th><th>棋士</th><th>國家</th><th>RIF</th><th>來源</th><th>起始分</th><th>舊保存分</th></tr></thead><tbody><?php foreach($issuePageRows as $row): ?><tr><td><?= h($row['tour_id']) ?></td><td><?= h($row['player_name']) ?></td><td><?= h($row['country']) ?></td><td><?= h($row['rif']) ?></td><td class="rr-bad"><?= h($row['rating_source']) ?></td><td class="rr-num"><?= h(rrReviewFmt4($row['start_rating'])) ?></td><td class="rr-num"><?= h(rrReviewFmt4($row['saved_start_rating'])) ?></td></tr><?php endforeach; ?></tbody></table></div><?php else: ?><div class="rr-empty">沒有 fallback 資料。</div><?php endif; ?><?php rrReviewPager('issue_page',$issuePage,$issuePages,$issueTotal); ?>
     </div>
 
