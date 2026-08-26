@@ -54,19 +54,22 @@ $views = [
     'meijin' => ['title' => '名人', 'table' => 'MEIJIN', 'desc' => '名人戰歷史資料'],
 ];
 $ratingTools = [
-    'recalculate' => ['title' => '歷史重算比較', 'file' => 'recalculate.php', 'desc' => '依目前 TOURNAMENT、GAME、PLAYER 重新計算並與舊 RANK 比較'],
-    'renjunet' => ['title' => 'RenjuNet Elo 重算', 'file' => 'renjunet-elo.php', 'desc' => '只計 rated=1 的 RenjuNet 比賽，所有棋手以 1850 為初始分完整重算歷史 Elo'],
+    'review' => ['title' => '台灣排名重算檢查', 'file' => 'rating-review.php', 'desc' => '整合逐場差異、完整性檢查與每位棋士最終差異，所有明細皆可分頁查看'],
+    'renjunet' => ['title' => 'RenjuNet Elo 重算', 'file' => 'renjunet-elo.php', 'desc' => '依官方歷史 Rating List 與舊 RIF 規則重建 RenjuNet 歷史 Elo'],
     'latest' => ['title' => '重算後最新排名', 'file' => 'recalculated-ranking.php', 'desc' => '查看由歷史資料重新計算後的最新棋士排名'],
-    'check' => ['title' => '重算完整性檢查', 'file' => 'recalculate-check.php', 'desc' => '檢查重算鏈條、局數守恆與外部 Elo 來源'],
-    'final-diff' => ['title' => '最終差異比較', 'file' => 'final-diff.php', 'desc' => '比較每位顯示棋士重算後最後績分與舊 RANK 最後績分'],
     'elo-audit' => ['title' => '舊世界 Elo 盤點', 'file' => 'elo-audit.php', 'desc' => '盤點國外棋士 GAME.P1分／P2分 是否保存歷史 Elo'],
 ];
 
 $view = isset($_POST['view']) ? (string)$_POST['view'] : (isset($_GET['view']) ? (string)$_GET['view'] : 'dashboard');
 $q = trim((string)($_POST['q'] ?? $_GET['q'] ?? ''));
 $searchField = trim((string)($_POST['field_search'] ?? $_GET['field_search'] ?? ''));
-$tool = trim((string)($_GET['tool'] ?? 'recalculate'));
-if (!isset($ratingTools[$tool])) $tool = 'recalculate';
+$tool = trim((string)($_GET['tool'] ?? 'review'));
+$legacyRatingTools = ['recalculate' => 'history', 'check' => 'check', 'final-diff' => 'final'];
+if (isset($legacyRatingTools[$tool])) {
+    if (!isset($_GET['section'])) $_GET['section'] = $legacyRatingTools[$tool];
+    $tool = 'review';
+}
+if (!isset($ratingTools[$tool])) $tool = 'review';
 
 $error = '';
 $message = '';
@@ -103,7 +106,7 @@ try {
             'SELECT `賽號`,`賽名`,`開始`,`結束` FROM `TOURNAMENT` ORDER BY `賽號` DESC LIMIT 12'
         )->fetchAll(PDO::FETCH_ASSOC);
     } elseif ($view === 'rating-tools') {
-        // 工具頁本身不需要額外查詢；內容由同網域既有工具頁嵌入。
+        // 等級分工具內容在下方直接整合；只有尚未整合的工具暫時保留舊頁。
     } elseif (isset($views[$view])) {
         $current = $views[$view];
         $table = $current['table'];
@@ -360,7 +363,11 @@ $totalRecords = array_sum($counts);
             <?php endforeach; ?>
         </div>
         <div class="tool-description"><strong><?= h($ratingTools[$tool]['title']) ?></strong><span><?= h($ratingTools[$tool]['desc']) ?></span></div>
-        <iframe class="tool-frame" src="<?= h($ratingTools[$tool]['file']) ?>" title="<?= h($ratingTools[$tool]['title']) ?>" onload="integrateToolFrame(this)"></iframe>
+        <?php if ($tool === 'review'): ?>
+    <?php require __DIR__ . '/rating-review.php'; ?>
+<?php else: ?>
+    <iframe class="tool-frame" src="<?= h($ratingTools[$tool]['file']) ?>" title="<?= h($ratingTools[$tool]['title']) ?>" onload="integrateToolFrame(this)"></iframe>
+<?php endif; ?>
     </section>
 
 <?php elseif ($current): ?>

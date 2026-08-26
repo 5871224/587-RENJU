@@ -58,8 +58,8 @@ try {
 <header class="topbar">
     <div class="brand">重算後最新排名</div>
     <a href="./">← 排名系統首頁</a>
-    <a href="recalculate.php">歷史重算比較</a>
-    <a href="recalculate-check.php">完整性檢查</a>
+    <a href="?view=rating-tools&amp;tool=review&amp;section=history">歷史重算比較</a>
+    <a href="?view=rating-tools&amp;tool=review&amp;section=check">完整性檢查</a>
 </header>
 <main class="main">
     <section class="hero">
