@@ -13,7 +13,7 @@ jobs:
       - name: Patch integrated rating tools
         run: |
           python3 scripts/temp_patch_1900.py
-          rm -f rank/recalculated-ranking.php rank/elo-audit.php
+          git rm -f rank/recalculated-ranking.php rank/elo-audit.php
       - name: Validate
         run: |
           php -l rank/lib/rating.php
