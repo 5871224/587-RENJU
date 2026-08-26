@@ -53,6 +53,8 @@ jobs:
           # Ranking pages and all Swiss dependencies are force-uploaded together so a successful later run repairs any earlier partial deployment.
           forced_files=(
               'rank/index.php',
+              'rank/rating-review.php',
+              'rank/recalculated-ranking.php',
               'rank/swiss.php',
               'rank/swiss-lib.php',
               'rank/swiss-table-render.php',
@@ -82,6 +84,12 @@ jobs:
           for local_path in files:
             remote_path=local_path.replace('\\','/'); ftp.cwd(base_dir); ensure_dir(posixpath.dirname(remote_path))
             with open(local_path,'rb') as fh: ftp.storbinary(f'STOR {posixpath.basename(remote_path)}',fh)
+          # These three pages were merged into rank/rating-review.php and must not remain deployed.
+          ftp.cwd(base_dir); ensure_dir('rank')
+          for legacy_name in ('recalculate.php','recalculate-check.php','final-diff.php'):
+            try: ftp.delete(legacy_name)
+            except ftplib.error_perm as exc:
+              if not str(exc).startswith('550'): raise
           ftp.quit()
 
       - name: Verify public security boundaries
@@ -98,6 +106,9 @@ jobs:
             '/bb/SQL.php'
             '/bb/querysql.php'
             '/bb/readsql.php'
+            '/rank/recalculate.php'
+            '/rank/recalculate-check.php'
+            '/rank/final-diff.php'
           )
           failed=0
           for path in "${paths[@]}"; do
