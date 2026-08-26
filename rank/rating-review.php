@@ -1,4 +1,6 @@
 <?php
+if (!isset($MYSQL)) require_once __DIR__ . '/login.php';
+if (!function_exists('h')) { function h($value): string { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); } }
 require_once __DIR__ . '/lib/rating.php';
 
 if (!function_exists('rrReviewUrl')) {
