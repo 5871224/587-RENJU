@@ -1,4 +1,4 @@
-name: Temp integrate rating tools and rebuild
+name: Temp finish rating tools integration
 on:
   push:
     paths:
@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch integrated rating tools
+      - name: Finish integrated rating tools
         run: |
           python3 scripts/temp_patch_1900.py
-          git rm -f rank/recalculated-ranking.php rank/elo-audit.php
+          git rm -f --ignore-unmatch rank/recalculated-ranking.php rank/elo-audit.php
       - name: Validate
         run: |
           php -l rank/lib/rating.php
@@ -27,5 +27,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A rank scripts/check-project.ps1
-          git commit -m 'Integrate rating tools and add safe RANK rebuild' || true
+          git commit -m 'Finish integrated rating tools' || true
           git push
