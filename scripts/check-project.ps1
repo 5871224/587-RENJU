@@ -79,9 +79,9 @@ foreach ($required in @('$rankAdminConfigured', "rank_admin_user'] ?? ''", "rank
 $rankProtectedPages = @(
     'rank/index.php',
     'rank/rating-review.php',
-    'rank/recalculate-export.php',
-    'rank/recalculated-ranking.php',
-    'rank/elo-audit.php'
+    'rank/rating-latest.php',
+    'rank/rating-elo-audit.php',
+    'rank/recalculate-export.php'
 )
 foreach ($file in $rankProtectedPages) {
     $source = Get-Content -Raw $file

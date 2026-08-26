@@ -56,8 +56,8 @@ $views = [
 $ratingTools = [
     'review' => ['title' => '台灣排名重算檢查', 'file' => 'rating-review.php', 'desc' => '整合逐場差異、完整性檢查與每位棋士最終差異，所有明細皆可分頁查看'],
     'renjunet' => ['title' => 'RenjuNet Elo 重算', 'file' => 'renjunet-elo.php', 'desc' => '依官方歷史 Rating List 與舊 RIF 規則重建 RenjuNet 歷史 Elo'],
-    'latest' => ['title' => '重算後最新排名', 'file' => 'recalculated-ranking.php', 'desc' => '查看由歷史資料重新計算後的最新棋士排名'],
-    'elo-audit' => ['title' => '舊世界 Elo 盤點', 'file' => 'elo-audit.php', 'desc' => '盤點國外棋士 GAME.P1分／P2分 是否保存歷史 Elo'],
+    'latest' => ['title' => '重算後最新排名', 'file' => 'rating-latest.php', 'desc' => '查看由歷史資料重新計算後的最新棋士排名'],
+    'elo-audit' => ['title' => '舊世界 Elo 盤點', 'file' => 'rating-elo-audit.php', 'desc' => '盤點國外棋士 GAME.P1分／P2分 是否保存歷史 Elo'],
 ];
 
 $view = isset($_POST['view']) ? (string)$_POST['view'] : (isset($_GET['view']) ? (string)$_GET['view'] : 'dashboard');
@@ -70,10 +70,12 @@ if (isset($legacyRatingTools[$tool])) {
     $tool = 'review';
 }
 if (!isset($ratingTools[$tool])) $tool = 'review';
+if (empty($_SESSION['rank_rebuild_csrf'])) $_SESSION['rank_rebuild_csrf'] = bin2hex(random_bytes(32));
 
 $error = '';
 $message = '';
-if (isset($_GET['saved'])) $message = '資料已更新。';
+if (!empty($_SESSION['rank_rebuild_flash'])) { $message = (string)$_SESSION['rank_rebuild_flash']; unset($_SESSION['rank_rebuild_flash']); }
+elseif (isset($_GET['saved'])) $message = '資料已更新。';
 elseif (isset($_GET['created'])) $message = '資料已新增。';
 elseif (isset($_GET['deleted'])) $message = '資料已刪除。';
 elseif (isset($_GET['shifted'])) {
@@ -97,6 +99,20 @@ $recentTournaments = [];
 $newDefaults = [];
 
 try {
+    if ($view === 'rating-tools' && $_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'rebuild_rank') {
+        if ($tool !== 'review') throw new RuntimeException('正式排名只能從台灣排名重算檢查執行。');
+        $csrf = (string)($_POST['csrf'] ?? '');
+        if ($csrf === '' || !hash_equals((string)$_SESSION['rank_rebuild_csrf'], $csrf)) {
+            throw new RuntimeException('驗證碼失效，請重新整理頁面後再執行。');
+        }
+        require_once __DIR__ . '/lib/rating.php';
+        $rankCalculation = rrRecalculateHistory($MYSQL);
+        $rankRebuild = rrRebuildRankTable($MYSQL, $rankCalculation);
+        $_SESSION['rank_rebuild_flash'] = '正式 RANK 已由完整重算結果重建，共 ' . number_format((int)$rankRebuild['rows']) . ' 筆；上一版保留於 ' . $rankRebuild['backup_table'] . '。';
+        header('Location: ' . listUrl('rating-tools', '', '', ['tool'=>'review','section'=>'history','rebuilt'=>1]));
+        exit;
+    }
+
     foreach ($views as $key => $meta) {
         $counts[$key] = (int)$MYSQL->query('SELECT COUNT(*) FROM ' . qi($meta['table']))->fetchColumn();
     }
@@ -364,10 +380,14 @@ $totalRecords = array_sum($counts);
         </div>
         <div class="tool-description"><strong><?= h($ratingTools[$tool]['title']) ?></strong><span><?= h($ratingTools[$tool]['desc']) ?></span></div>
         <?php if ($tool === 'review'): ?>
-    <?php require __DIR__ . '/rating-review.php'; ?>
-<?php else: ?>
-    <iframe class="tool-frame" src="<?= h($ratingTools[$tool]['file']) ?>" title="<?= h($ratingTools[$tool]['title']) ?>" onload="integrateToolFrame(this)"></iframe>
-<?php endif; ?>
+            <?php require __DIR__ . '/rating-review.php'; ?>
+        <?php elseif ($tool === 'latest'): ?>
+            <?php require __DIR__ . '/rating-latest.php'; ?>
+        <?php elseif ($tool === 'elo-audit'): ?>
+            <?php require __DIR__ . '/rating-elo-audit.php'; ?>
+        <?php else: ?>
+            <iframe class="tool-frame" src="<?= h($ratingTools[$tool]['file']) ?>" title="<?= h($ratingTools[$tool]['title']) ?>" onload="integrateToolFrame(this)"></iframe>
+        <?php endif; ?>
     </section>
 
 <?php elseif ($current): ?>

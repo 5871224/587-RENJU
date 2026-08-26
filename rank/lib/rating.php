@@ -558,3 +558,101 @@ function rrCompareWithCurrent(PDO $db, array $calculation): array
         ],
     ];
 }
+
+
+/**
+ * 以完整重算結果重建正式 RANK。
+ * 正式 RANK 目前是 MyISAM，不能依賴 transaction rollback；因此先建立 staging table，
+ * 寫完與驗證後再以 RENAME TABLE 原子交換。上一版保留在 RANK_REBUILD_BACKUP。
+ */
+function rrRebuildRankTable(PDO $db, array $calculation): array
+{
+    $computed = $calculation['rows'] ?? [];
+    if (!$computed) {
+        throw new RuntimeException('重算結果為空，禁止重建 RANK。');
+    }
+
+    $stage = 'RANK_REBUILD_NEW';
+    $backup = 'RANK_REBUILD_BACKUP';
+    $failed = 'RANK_REBUILD_FAILED';
+    $swapped = false;
+
+    foreach ($computed as $row) {
+        if ((int)($row['tour_id'] ?? 0) <= 0 || (int)($row['player_id'] ?? 0) <= 0) {
+            throw new RuntimeException('重算結果含無效的賽號或棋士代號，禁止重建 RANK。');
+        }
+        foreach (['end_rating','wins','draws','losses'] as $required) {
+            if (!array_key_exists($required, $row) || !is_numeric($row[$required])) {
+                throw new RuntimeException('重算結果缺少必要欄位：' . $required);
+            }
+        }
+    }
+
+    try {
+        $db->exec("DROP TABLE IF EXISTS `{$stage}`");
+        $db->exec("CREATE TABLE `{$stage}` LIKE `RANK`");
+
+        foreach (array_chunk(array_values($computed), 300) as $chunk) {
+            $values = [];
+            $params = [];
+            foreach ($chunk as $row) {
+                $values[] = '(?,?,?,?,?,?)';
+                $params[] = (int)$row['tour_id'];
+                $params[] = (int)$row['player_id'];
+                $params[] = (float)$row['end_rating'];
+                $params[] = (int)$row['wins'];
+                $params[] = (int)$row['draws'];
+                $params[] = (int)$row['losses'];
+            }
+            $stmt = $db->prepare(
+                "INSERT INTO `{$stage}` (`比賽`,`代號`,`績分`,`勝`,`和`,`負`) VALUES " . implode(',', $values)
+            );
+            $stmt->execute($params);
+        }
+
+        $stageCount = (int)$db->query("SELECT COUNT(*) FROM `{$stage}`")->fetchColumn();
+        if ($stageCount !== count($computed)) {
+            throw new RuntimeException('RANK staging 筆數驗證失敗：預期 ' . count($computed) . '，實際 ' . $stageCount . '。');
+        }
+
+        $db->exec("DROP TABLE IF EXISTS `{$failed}`");
+        $db->exec("DROP TABLE IF EXISTS `{$backup}`");
+        $db->exec("RENAME TABLE `RANK` TO `{$backup}`, `{$stage}` TO `RANK`");
+        $swapped = true;
+
+        $verification = rrCompareWithCurrent($db, $calculation);
+        $summary = $verification['summary'] ?? [];
+        $expected = count($computed);
+        $verified = (int)($summary['current_rows'] ?? -1) === $expected
+            && (int)($summary['computed_rows'] ?? -1) === $expected
+            && (int)($summary['full_matches'] ?? -1) === $expected
+            && (int)($summary['missing_current'] ?? -1) === 0
+            && (int)($summary['extra_current'] ?? -1) === 0;
+        if (!$verified) {
+            throw new RuntimeException('新 RANK 完整比對未通過，自動還原舊 RANK。');
+        }
+
+        return [
+            'rows' => $expected,
+            'backup_table' => $backup,
+            'full_matches' => (int)$summary['full_matches'],
+        ];
+    } catch (Throwable $e) {
+        if ($swapped) {
+            try {
+                $db->exec("DROP TABLE IF EXISTS `{$failed}`");
+                $db->exec("RENAME TABLE `RANK` TO `{$failed}`, `{$backup}` TO `RANK`");
+                $db->exec("DROP TABLE IF EXISTS `{$failed}`");
+            } catch (Throwable $rollbackError) {
+                throw new RuntimeException(
+                    $e->getMessage() . '；且自動還原 RANK 失敗：' . $rollbackError->getMessage(),
+                    0,
+                    $e
+                );
+            }
+        } else {
+            try { $db->exec("DROP TABLE IF EXISTS `{$stage}`"); } catch (Throwable $ignored) {}
+        }
+        throw $e;
+    }
+}
