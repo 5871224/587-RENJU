@@ -78,11 +78,8 @@ foreach ($required in @('$rankAdminConfigured', "rank_admin_user'] ?? ''", "rank
 
 $rankProtectedPages = @(
     'rank/index.php',
-    'rank/recalculate.php',
-    'rank/recalculate-check.php',
     'rank/recalculate-export.php',
     'rank/recalculated-ranking.php',
-    'rank/final-diff.php',
     'rank/elo-audit.php'
 )
 foreach ($file in $rankProtectedPages) {
