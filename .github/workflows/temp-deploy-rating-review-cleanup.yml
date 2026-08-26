@@ -50,29 +50,19 @@ jobs:
 
           p=Path('.github/workflows/deploy.yml')
           s=p.read_text(encoding='utf-8')
-          needle="""              'rank/index.php',
-              'rank/swiss.php',"""
-          replacement="""              'rank/index.php',
-              'rank/rating-review.php',
-              'rank/recalculated-ranking.php',
-              'rank/swiss.php',"""
+          needle="'rank/index.php',\n              'rank/swiss.php',"
+          replacement="'rank/index.php',\n              'rank/rating-review.php',\n              'rank/recalculated-ranking.php',\n              'rank/swiss.php',"
           if needle not in s: raise SystemExit('forced_files insertion point not found')
           s=s.replace(needle,replacement,1)
-          needle="""          for local_path in files:
-            remote_path=local_path.replace('\\\\','/'); ftp.cwd(base_dir); ensure_dir(posixpath.dirname(remote_path))
-            with open(local_path,'rb') as fh: ftp.storbinary(f'STOR {posixpath.basename(remote_path)}',fh)
-          ftp.quit()"""
-          replacement="""          for local_path in files:
-            remote_path=local_path.replace('\\\\','/'); ftp.cwd(base_dir); ensure_dir(posixpath.dirname(remote_path))
-            with open(local_path,'rb') as fh: ftp.storbinary(f'STOR {posixpath.basename(remote_path)}',fh)
-          # Legacy rating comparison pages were merged into rank/rating-review.php.
+          needle="          ftp.quit()"
+          replacement="""          # Legacy rating comparison pages were merged into rank/rating-review.php.
           ftp.cwd(base_dir); ensure_dir('rank')
           for legacy_name in ('recalculate.php','recalculate-check.php','final-diff.php'):
             try: ftp.delete(legacy_name)
             except ftplib.error_perm as exc:
               if not str(exc).startswith('550'): raise
           ftp.quit()"""
-          if needle not in s: raise SystemExit('deploy upload block not found')
+          if needle not in s: raise SystemExit('ftp quit insertion point not found')
           p.write_text(s.replace(needle,replacement,1),encoding='utf-8')
       - name: Validate full project
         shell: pwsh
