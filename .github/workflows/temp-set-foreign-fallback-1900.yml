@@ -1,4 +1,4 @@
-name: Temp set foreign fallback 1900
+name: Temp integrate rating tools and rebuild
 on:
   push:
     paths:
@@ -10,17 +10,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch foreign fallback
-        run: python3 scripts/temp_patch_1900.py
+      - name: Patch integrated rating tools
+        run: |
+          python3 scripts/temp_patch_1900.py
+          rm -f rank/recalculated-ranking.php rank/elo-audit.php
       - name: Validate
         run: |
           php -l rank/lib/rating.php
+          php -l rank/index.php
           php -l rank/rating-review.php
+          php -l rank/rating-latest.php
+          php -l rank/rating-elo-audit.php
           pwsh ./scripts/check-project.ps1
       - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add rank/lib/rating.php rank/rating-review.php
-          git commit -m 'Use 1900 for missing foreign RenjuNet Elo' || true
+          git add -A rank scripts/check-project.ps1
+          git commit -m 'Integrate rating tools and add safe RANK rebuild' || true
           git push
