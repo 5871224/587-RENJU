@@ -76,7 +76,7 @@ try {
 </style>
 <div class="rr-wrap">
     <div class="rr-head">
-        <div><h2>台灣排名重算檢查</h2><p>同一次重算結果，同時查看逐場差異、計算完整性與每位棋士最後差異；現階段全部唯讀，不會更新 RANK。</p></div>
+        <div><h2>台灣排名重算檢查</h2><p>同一次重算結果，同時查看逐場差異、計算完整性與每位棋士最後差異；預覽本身唯讀，只有按「一鍵重建正式台灣排名」才會更新 RANK。</p></div>
         <div class="rr-head-actions">
             <div class="rr-badge">唯讀預覽 · <?= number_format($reviewElapsed, 3) ?> 秒</div>
             <form method="post" onsubmit="return confirm('確定要用目前完整重算結果重建正式 RANK 嗎？\n\n系統會先建立 staging table、完整驗證後再原子交換；目前正式 RANK 會保留成 RANK_REBUILD_BACKUP。');">
