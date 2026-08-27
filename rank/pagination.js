@@ -11,16 +11,35 @@
   document.head.appendChild(inlineStyle);
 
   function saveReturnScroll(){
-    try{sessionStorage.setItem(returnScrollKey,String(Math.max(0,window.scrollY||0)));}catch(e){}
+    const tableWrap=document.querySelector('.table-wrap');
+    const state={
+      windowY:Math.max(0,window.scrollY||0),
+      tableY:tableWrap?Math.max(0,tableWrap.scrollTop||0):0,
+      tableX:tableWrap?Math.max(0,tableWrap.scrollLeft||0):0
+    };
+    try{sessionStorage.setItem(returnScrollKey,JSON.stringify(state));}catch(e){}
   }
 
   function restoreReturnScroll(){
     if(params.has('edit')||params.has('new'))return;
     let raw='';
     try{raw=sessionStorage.getItem(returnScrollKey)||'';sessionStorage.removeItem(returnScrollKey);}catch(e){}
-    const y=parseInt(raw,10);
-    if(!Number.isFinite(y)||y<0)return;
-    requestAnimationFrame(function(){requestAnimationFrame(function(){window.scrollTo(0,y);});});
+    if(!raw)return;
+    let state=null;
+    try{state=JSON.parse(raw);}catch(e){}
+    if(!state||typeof state!=='object'){
+      const legacyY=parseInt(raw,10);
+      if(!Number.isFinite(legacyY)||legacyY<0)return;
+      state={windowY:legacyY,tableY:0,tableX:0};
+    }
+    const windowY=Math.max(0,Number(state.windowY)||0);
+    const tableY=Math.max(0,Number(state.tableY)||0);
+    const tableX=Math.max(0,Number(state.tableX)||0);
+    requestAnimationFrame(function(){requestAnimationFrame(function(){
+      const tableWrap=document.querySelector('.table-wrap');
+      if(tableWrap){tableWrap.scrollTop=tableY;tableWrap.scrollLeft=tableX;}
+      window.scrollTo(0,windowY);
+    });});
   }
 
   function hiddenField(form,name,value){
