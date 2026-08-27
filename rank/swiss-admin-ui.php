@@ -176,21 +176,8 @@ function swissRenderAdminTournamentSection(PDO $db, array $data): string {
         'promotion_heading'=>'段級',
         'title_override'=>(string)($data['_title_override'] ?? ''),
     ];
-    $body = swissRenderTournament($db, $tour, $opt);
-    $extra = swissRenderHistory($data, $opt) . swissRenderPromotions($data, $opt);
-    $metaStart = strpos($body, '<div class="swiss-meta">');
-    if ($metaStart !== false) {
-        $metaEnd = strpos($body, '</div>', $metaStart);
-        if ($metaEnd !== false) {
-            $metaEnd += 6;
-            $body = substr($body, 0, $metaEnd) . $extra . substr($body, $metaEnd);
-        } else {
-            $body .= $extra;
-        }
-    } else {
-        $body = $extra . $body;
-    }
-    return '<section class="swiss-tournament-section" id="tour-' . $tour . '">' . $body . '</section>';
+    $opt['after_meta_html'] = swissRenderHistory($data, $opt) . swissRenderPromotions($data, $opt);
+    return '<section class="swiss-tournament-section" id="tour-' . $tour . '">' . swissRenderTournament($db, $tour, $opt) . '</section>';
 }
 
 function swissGroupInfo(PDO $db, int $tour): array {
