@@ -2,11 +2,17 @@
 
 declare(strict_types=1);
 
+$rankTimeZone = new DateTimeZone('Asia/Taipei');
+$rankNow = new DateTimeImmutable('now', $rankTimeZone);
+$rankToday = $rankNow->format('Y-m-d');
+$rankTomorrow = $rankNow->modify('tomorrow')->setTime(0, 0, 0);
+$sessionLifetime = max(60, $rankTomorrow->getTimestamp() - $rankNow->getTimestamp());
 $secureCookie = (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off');
 if (session_status() !== PHP_SESSION_ACTIVE) {
     ini_set('session.use_strict_mode', '1');
+    ini_set('session.gc_maxlifetime', '90000');
     session_set_cookie_params([
-        'lifetime' => 0,
+        'lifetime' => $sessionLifetime,
         'path' => '/rank/',
         'secure' => $secureCookie,
         'httponly' => true,
@@ -30,13 +36,19 @@ if (!is_array($config)) {
 $rankAdminUser = trim((string)($config['rank_admin_user'] ?? ''));
 $rankAdminPasswordHash = trim((string)($config['rank_admin_password_hash'] ?? ''));
 $rankAdminConfigured = ($rankAdminUser !== '' && $rankAdminPasswordHash !== '');
-$sessionMaxAge = 8 * 60 * 60;
 
 if (isset($_GET['logout']) && $_GET['logout'] === '1') {
     $_SESSION = [];
     if (ini_get('session.use_cookies')) {
         $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'] ?? '', (bool)$params['secure'], (bool)$params['httponly']);
+        setcookie(session_name(), '', [
+            'expires' => time() - 42000,
+            'path' => $params['path'],
+            'domain' => $params['domain'] ?? '',
+            'secure' => (bool)$params['secure'],
+            'httponly' => (bool)$params['httponly'],
+            'samesite' => $params['samesite'] ?? 'Strict',
+        ]);
     }
     session_destroy();
     header('Location: ./');
@@ -50,7 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['rank_auth_action']
     if ($rankAdminConfigured && hash_equals($rankAdminUser, $username) && password_verify($password, $rankAdminPasswordHash)) {
         session_regenerate_id(true);
         $_SESSION['rank_admin_authenticated'] = true;
-        $_SESSION['rank_admin_last_activity'] = time();
+        $_SESSION['rank_admin_login_date'] = $rankToday;
+        unset($_SESSION['rank_admin_last_activity']);
         $target = (string)($_SERVER['REQUEST_URI'] ?? '/rank/');
         header('Location: ' . $target);
         exit;
@@ -59,13 +72,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['rank_auth_action']
     $loginError = $rankAdminConfigured ? '帳號或密碼錯誤。' : '管理登入尚未設定。';
 }
 
-$authenticated = ($_SESSION['rank_admin_authenticated'] ?? false) === true;
-$lastActivity = (int)($_SESSION['rank_admin_last_activity'] ?? 0);
-if ($authenticated && ($lastActivity <= 0 || time() - $lastActivity > $sessionMaxAge)) {
+$sessionAuthenticated = ($_SESSION['rank_admin_authenticated'] ?? false) === true;
+$sessionLoginDate = (string)($_SESSION['rank_admin_login_date'] ?? '');
+$authenticated = $sessionAuthenticated && $sessionLoginDate !== '' && hash_equals($rankToday, $sessionLoginDate);
+if ($sessionAuthenticated && !$authenticated) {
     $_SESSION = [];
     session_regenerate_id(true);
-    $authenticated = false;
-    $loginError = '登入已逾時，請重新登入。';
+    $loginError = '登入已跨日，請重新登入。';
 }
 
 if (!$authenticated) {
@@ -74,8 +87,6 @@ if (!$authenticated) {
     echo '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>排名管理登入</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#eef3f8;font-family:Arial,"Microsoft JhengHei",sans-serif;color:#172033}.card{width:min(92vw,390px);background:#fff;border:1px solid #dbe4ee;border-radius:14px;padding:26px;box-shadow:0 12px 35px rgba(15,23,42,.1)}h1{font-size:23px;margin:0 0 6px}.sub{color:#64748b;font-size:14px;margin-bottom:20px}label{display:block;font-weight:700;font-size:13px;margin:12px 0 6px}input{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:16px}button{width:100%;margin-top:18px;padding:10px;border:0;border-radius:8px;background:#1769aa;color:#fff;font-size:16px;font-weight:700;cursor:pointer}.error{margin:0 0 14px;padding:10px 12px;border-radius:8px;background:#fff1f2;color:#9f1239;border:1px solid #fecdd3}</style></head><body><main class="card"><h1>排名管理登入</h1><div class="sub">登入後才能存取排名資料管理與重算工具。</div>' . $errorHtml . '<form method="post" autocomplete="off"><input type="hidden" name="rank_auth_action" value="login"><label for="username">帳號</label><input id="username" name="username" type="text" autocomplete="username" required autofocus><label for="password">密碼</label><input id="password" name="password" type="password" autocomplete="current-password" required><button type="submit">登入</button></form></main></body></html>';
     exit;
 }
-
-$_SESSION['rank_admin_last_activity'] = time();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $origin = trim((string)($_SERVER['HTTP_ORIGIN'] ?? ''));
