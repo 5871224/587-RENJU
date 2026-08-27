@@ -1,26 +1,6 @@
 <?php
 require_once __DIR__ . '/swiss-table-render.php';
 
-function swissAdminPromotionBlock(array $data): string {
-    $tour = (int)$data['tournament']['賽號'];
-    $rows = $data['promotions'] ?? [];
-    $html = '<div class="swiss-subsection promotion-card">';
-    $html .= '<div class="swiss-subhead"><h3>段級</h3>';
-    $html .= '<a class="swiss-btn" href="swiss-den-add.php?TOUR=' . $tour . '" data-swiss-modal="den" data-tour="' . $tour . '">新增段級</a></div>';
-    if (!$rows) return $html . '</div>';
-
-    $html .= '<div class="swiss-scroll"><table class="swiss-mini"><thead><tr><th>姓名</th><th>升段／升級</th><th>原因</th><th>操作</th></tr></thead><tbody>';
-    foreach ($rows as $row) {
-        $id = (int)($row['代號'] ?? 0);
-        $name = (string)($row['姓名'] ?? $id);
-        $html .= '<tr><td>' . ($id > 0 ? '<a href="player.php?PLAYER=' . $id . '">' . swissH($name) . '</a>' : swissH($name)) . '</td>';
-        $html .= '<td>晉升 ' . swissH($row['段位'] ?? '') . '</td><td>' . swissH($row['原因'] ?? '') . '</td>';
-        $html .= '<td><form class="inline-delete" method="post" action="swiss-record-delete.php" onsubmit="return confirm(\'確定要刪除這筆段級紀錄嗎？\')">';
-        $html .= '<input type="hidden" name="type" value="DEN"><input type="hidden" name="TOUR" value="' . $tour . '"><input type="hidden" name="id" value="' . swissH($row['序號'] ?? '') . '"><button type="submit" class="link-danger">刪除</button></form></td></tr>';
-    }
-    return $html . '</tbody></table></div></div>';
-}
-
 function swissHistoryEligiblePlayers(array $data): array {
     $existing = [];
     foreach ($data['history'] as $row) {
@@ -182,19 +162,34 @@ function swissRenderDenModal(array $data): string {
 
 function swissRenderAdminTournamentSection(PDO $db, array $data): string {
     $tour = (int)$data['tournament']['賽號'];
-    $opt = ['admin'=>true,'show_title'=>true,'show_meta'=>true,'show_section_headings'=>true,'player_prefix'=>'','action_prefix'=>'','include_history'=>false,'include_promotions'=>false];
+    $opt = [
+        'admin'=>true,
+        'show_title'=>true,
+        'show_meta'=>true,
+        'show_section_headings'=>true,
+        'player_prefix'=>'',
+        'action_prefix'=>'',
+        'include_history'=>false,
+        'include_promotions'=>false,
+        'suppress_empty_history'=>true,
+        'suppress_empty_promotions'=>true,
+        'promotion_heading'=>'段級',
+        'title_override'=>(string)($data['_title_override'] ?? ''),
+    ];
     $body = swissRenderTournament($db, $tour, $opt);
-    $history = swissRenderHistory($data, $opt);
-    $history = str_replace('<div class="swiss-empty">目前沒有歷程。</div>', '', $history);
-    $extra = $history . swissAdminPromotionBlock($data);
+    $extra = swissRenderHistory($data, $opt) . swissRenderPromotions($data, $opt);
     $metaStart = strpos($body, '<div class="swiss-meta">');
     if ($metaStart !== false) {
         $metaEnd = strpos($body, '</div>', $metaStart);
         if ($metaEnd !== false) {
             $metaEnd += 6;
             $body = substr($body, 0, $metaEnd) . $extra . substr($body, $metaEnd);
-        } else $body .= $extra;
-    } else $body = $extra . $body;
+        } else {
+            $body .= $extra;
+        }
+    } else {
+        $body = $extra . $body;
+    }
     return '<section class="swiss-tournament-section" id="tour-' . $tour . '">' . $body . '</section>';
 }
 
