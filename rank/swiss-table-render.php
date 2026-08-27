@@ -200,7 +200,7 @@ function swissRenderTournament(PDO $db, int $tour, array $options=[]): string {
     $opt=array_merge([
         'admin'=>false,'show_title'=>true,'show_meta'=>true,'show_section_headings'=>true,
         'player_prefix'=>'','action_prefix'=>'','include_history'=>true,'include_promotions'=>true,
-        'title_override'=>'',
+        'title_override'=>'','after_meta_html'=>'',
     ],$options);
     $data=swissBuildTournamentData($db,$tour);$t=$data['tournament'];$html='<div class="swiss-component" data-tour="'.(int)$tour.'">';
     if($opt['show_title']){
@@ -212,6 +212,7 @@ function swissRenderTournament(PDO $db, int $tour, array $options=[]): string {
         $date=trim((string)$t['開始']);if(!empty($t['結束'])&&$t['結束']!==$t['開始'])$date.=' ~ '.$t['結束'];
         $html.='<div class="swiss-meta">賽號 '.(int)$tour.($date!==''?'　'.swissH($date):'').($data['format']!==''?'　｜　'.swissH($data['format']):'').'</div>';
     }
+    $html.=(string)$opt['after_meta_html'];
     if($opt['include_history'])$html.=swissRenderHistory($data,$opt);
     if($opt['include_promotions'])$html.=swissRenderPromotions($data,$opt);
     if($data['standard']){
