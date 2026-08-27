@@ -2,6 +2,30 @@
   'use strict';
 
   const pageSize=500;
+  const params=new URLSearchParams(location.search);
+  const returnScrollKey='renju-rank:return-scroll:'+String(params.get('view')||'dashboard')+':'+String(params.get('field_search')||'')+':'+String(params.get('q')||'');
+
+  function saveReturnScroll(){
+    try{sessionStorage.setItem(returnScrollKey,String(Math.max(0,window.scrollY||0)));}catch(e){}
+  }
+
+  function restoreReturnScroll(){
+    if(params.has('edit')||params.has('new'))return;
+    let raw='';
+    try{raw=sessionStorage.getItem(returnScrollKey)||'';sessionStorage.removeItem(returnScrollKey);}catch(e){}
+    const y=parseInt(raw,10);
+    if(!Number.isFinite(y)||y<0)return;
+    requestAnimationFrame(function(){requestAnimationFrame(function(){window.scrollTo(0,y);});});
+  }
+
+  document.addEventListener('click',function(e){
+    const link=e.target.closest&&e.target.closest('a[href*="edit="]');
+    if(link)saveReturnScroll();
+  });
+  document.querySelectorAll('form.delete-form').forEach(function(form){
+    form.addEventListener('submit',function(e){if(!e.defaultPrevented)saveReturnScroll();});
+  });
+
   const tables=Array.from(document.querySelectorAll('table.data'));
   const table=tables.find(function(t){
     const headers=t.querySelectorAll('thead th');
@@ -80,14 +104,13 @@
     });
   });
 
-  if(!table) return;
+  if(!table){restoreReturnScroll();return;}
   const tbody=table.tBodies[0];
-  if(!tbody) return;
+  if(!tbody){restoreReturnScroll();return;}
   let rows=Array.from(tbody.rows);
-  if(!rows.length) return;
+  if(!rows.length){restoreReturnScroll();return;}
 
   const totalPages=Math.max(1,Math.ceil(rows.length/pageSize));
-  const params=new URLSearchParams(location.search);
   const baseStorageKey='renju-rank:'+String(params.get('view')||'')+':'+String(params.get('field_search')||'')+':'+String(params.get('q')||'');
   const pageStorageKey=baseStorageKey+':page';
   const sortStorageKey=baseStorageKey+':sort';
@@ -99,7 +122,7 @@
   let sortColumn=-1;
   let sortDirection='asc';
   const wrap=table.closest('.table-wrap');
-  if(!wrap) return;
+  if(!wrap){restoreReturnScroll();return;}
 
   let topPager=null;
   let bottomPager=null;
@@ -226,4 +249,5 @@
   }
 
   showPage(current,false);
+  restoreReturnScroll();
 })();
