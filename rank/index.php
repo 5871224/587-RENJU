@@ -55,7 +55,7 @@ $views = [
 ];
 $ratingTools = [
     'review' => ['title' => '台灣排名重算檢查', 'file' => 'rating-review.php', 'desc' => '整合逐場差異、完整性檢查與每位棋士最終差異，所有明細皆可分頁查看'],
-    'renjunet' => ['title' => 'RenjuNet Elo 重算', 'file' => 'renjunet-elo.php', 'desc' => '依官方歷史 Rating List 與舊 RIF 規則重建 RenjuNet 歷史 Elo'],
+    'renjunet' => ['title' => 'RenjuNet Elo 重算', 'file' => 'renjunet-elo-embed.php', 'desc' => '依官方歷史 Rating List 與舊 RIF 規則重建 RenjuNet 歷史 Elo'],
     'latest' => ['title' => '重算後最新排名', 'file' => 'rating-latest.php', 'desc' => '查看由歷史資料重新計算後的最新棋士排名'],
     'elo-audit' => ['title' => '舊世界 Elo 盤點', 'file' => 'rating-elo-audit.php', 'desc' => '盤點國外棋士 GAME.P1分／P2分 是否保存歷史 Elo'],
 ];
@@ -122,7 +122,7 @@ try {
             'SELECT `賽號`,`賽名`,`開始`,`結束` FROM `TOURNAMENT` ORDER BY `賽號` DESC LIMIT 12'
         )->fetchAll(PDO::FETCH_ASSOC);
     } elseif ($view === 'rating-tools') {
-        // 等級分工具內容在下方直接整合；只有尚未整合的工具暫時保留舊頁。
+        // 等級分工具內容在下方直接整合；只有尚未整合的工具使用明確的嵌入入口。
     } elseif (isset($views[$view])) {
         $current = $views[$view];
         $table = $current['table'];
@@ -387,7 +387,7 @@ $totalRecords = array_sum($counts);
         <?php elseif ($tool === 'elo-audit'): ?>
             <?php require __DIR__ . '/rating-elo-audit.php'; ?>
         <?php else: ?>
-            <iframe class="tool-frame" src="<?= h($ratingTools[$tool]['file']) ?>" title="<?= h($ratingTools[$tool]['title']) ?>" onload="integrateToolFrame(this)"></iframe>
+            <iframe class="tool-frame" src="<?= h($ratingTools[$tool]['file']) ?>" title="<?= h($ratingTools[$tool]['title']) ?>"></iframe>
         <?php endif; ?>
     </section>
 
@@ -483,24 +483,6 @@ $totalRecords = array_sum($counts);
 <?php endif; ?>
 </main>
 </div>
-<script>
-function integrateToolFrame(frame) {
-    try {
-        const doc = frame.contentDocument;
-        if (!doc) return;
-        doc.querySelectorAll('.topbar, .topbar-simple').forEach(bar => bar.remove());
-        doc.documentElement.style.background = '#fff';
-        doc.body.style.background = '#fff';
-        doc.body.style.margin = '0';
-        const main = doc.querySelector('.main, .rn-main');
-        if (main) main.style.padding = '18px';
-        const homeLinks = doc.querySelectorAll('a[href="./"]');
-        homeLinks.forEach(link => link.style.display = 'none');
-    } catch (e) {
-        console.warn('工具頁整合樣式無法套用', e);
-    }
-}
-</script>
 <script src="pagination.js?v=20260827"></script>
 </body>
 </html>
