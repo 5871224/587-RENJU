@@ -311,6 +311,7 @@ $totalRecords = array_sum($counts);
 <title>台灣連珠排名管理</title>
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
+<link rel="stylesheet" href="pagination.css?v=20260827">
 </head>
 <body>
 <div class="app">
@@ -500,5 +501,6 @@ function integrateToolFrame(frame) {
     }
 }
 </script>
+<script src="pagination.js?v=20260827"></script>
 </body>
 </html>
