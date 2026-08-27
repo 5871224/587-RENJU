@@ -4,6 +4,11 @@
   const pageSize=500;
   const params=new URLSearchParams(location.search);
   const returnScrollKey='renju-rank:return-scroll:'+String(params.get('view')||'dashboard')+':'+String(params.get('field_search')||'')+':'+String(params.get('q')||'');
+  let activeInlineEdit=null;
+
+  const inlineStyle=document.createElement('style');
+  inlineStyle.textContent='table.data tr.inline-editing{background:#fffbea}table.data tr.inline-editing:hover{background:#fffbea}.inline-edit-input{display:block;width:100%;min-width:90px;min-height:32px;padding:5px 7px;border:1px solid #94a3b8;border-radius:6px;background:#fff;color:inherit;font:inherit;line-height:1.35}.inline-edit-input:focus{outline:2px solid rgba(23,105,170,.2);border-color:#1769aa}.inline-edit-actions{display:flex;align-items:center;gap:7px;white-space:nowrap}.inline-edit-actions .btn{min-height:30px;padding:4px 9px;font-size:13px}';
+  document.head.appendChild(inlineStyle);
 
   function saveReturnScroll(){
     try{sessionStorage.setItem(returnScrollKey,String(Math.max(0,window.scrollY||0)));}catch(e){}
@@ -18,9 +23,113 @@
     requestAnimationFrame(function(){requestAnimationFrame(function(){window.scrollTo(0,y);});});
   }
 
+  function hiddenField(form,name,value){
+    const input=document.createElement('input');
+    input.type='hidden';
+    input.name=name;
+    input.value=value==null?'':String(value);
+    form.appendChild(input);
+  }
+
+  function cancelInlineEdit(){
+    if(!activeInlineEdit)return;
+    const state=activeInlineEdit;
+    activeInlineEdit=null;
+    if(state.form&&state.form.parentNode)state.form.parentNode.removeChild(state.form);
+    state.row.innerHTML=state.originalHtml;
+    state.row.classList.remove('inline-editing');
+    preservePageOnEditLinks();
+  }
+
+  function startInlineEdit(link){
+    const row=link.closest('tr');
+    const targetTable=link.closest('table.data');
+    if(!row||!targetTable||!row.cells.length)return false;
+
+    if(activeInlineEdit){
+      if(activeInlineEdit.row===row)return true;
+      cancelInlineEdit();
+    }
+
+    let editUrl;
+    try{editUrl=new URL(link.href,location.href);}catch(e){return false;}
+    const token=editUrl.searchParams.get('edit')||'';
+    if(!token)return false;
+
+    const headers=Array.from(targetTable.querySelectorAll('thead th'));
+    const dataCells=Array.from(row.cells).slice(0,-1);
+    if(!dataCells.length||headers.length!==dataCells.length+1)return false;
+
+    const originalHtml=row.innerHTML;
+    const form=document.createElement('form');
+    form.method='post';
+    form.action=location.pathname;
+    form.id='inline-edit-'+Date.now()+'-'+Math.random().toString(36).slice(2);
+    form.className='inline-edit-submit-form';
+    form.hidden=true;
+    hiddenField(form,'action','update');
+    hiddenField(form,'view',params.get('view')||'');
+    hiddenField(form,'q',params.get('q')||'');
+    hiddenField(form,'field_search',params.get('field_search')||'');
+    hiddenField(form,'original',token);
+    form.addEventListener('submit',function(e){
+      if(!confirm('確定要更新這筆資料嗎？')){e.preventDefault();return;}
+      saveReturnScroll();
+    });
+    document.body.appendChild(form);
+
+    dataCells.forEach(function(cell,index){
+      const column=headers[index].textContent.trim();
+      const value=cell.textContent;
+      const input=document.createElement('input');
+      input.type='text';
+      input.className='inline-edit-input';
+      input.name='field['+column+']';
+      input.value=value;
+      input.setAttribute('form',form.id);
+      input.setAttribute('aria-label',column);
+      input.autocomplete='off';
+      cell.textContent='';
+      cell.appendChild(input);
+    });
+
+    const actions=row.cells[row.cells.length-1];
+    actions.className='actions-cell inline-edit-actions';
+    actions.textContent='';
+
+    const save=document.createElement('button');
+    save.type='submit';
+    save.className='btn primary';
+    save.textContent='儲存';
+    save.setAttribute('form',form.id);
+    actions.appendChild(save);
+
+    const cancel=document.createElement('button');
+    cancel.type='button';
+    cancel.className='btn inline-edit-cancel';
+    cancel.textContent='取消';
+    actions.appendChild(cancel);
+
+    row.classList.add('inline-editing');
+    activeInlineEdit={row:row,form:form,originalHtml:originalHtml};
+    const first=row.querySelector('.inline-edit-input');
+    if(first){first.focus();first.select();}
+    return true;
+  }
+
   document.addEventListener('click',function(e){
+    const cancel=e.target.closest&&e.target.closest('.inline-edit-cancel');
+    if(cancel){
+      e.preventDefault();
+      cancelInlineEdit();
+      return;
+    }
+
     const link=e.target.closest&&e.target.closest('a[href*="edit="]');
-    if(link)saveReturnScroll();
+    if(link){
+      e.preventDefault();
+      startInlineEdit(link);
+    }
   });
   document.querySelectorAll('form.delete-form').forEach(function(form){
     form.addEventListener('submit',function(e){if(!e.defaultPrevented)saveReturnScroll();});
@@ -33,6 +142,10 @@
   });
 
   function normalizedText(cell){
+    if(cell){
+      const input=cell.querySelector('.inline-edit-input');
+      if(input)return input.value.replace(/\u00a0/g,' ').trim();
+    }
     return (cell ? cell.textContent : '').replace(/\u00a0/g,' ').trim();
   }
 
@@ -196,6 +309,7 @@
   }
 
   function showPage(page,scroll){
+    if(activeInlineEdit)cancelInlineEdit();
     current=Math.min(totalPages,Math.max(1,page));
     const start=(current-1)*pageSize,end=start+pageSize;
     rows.forEach(function(row,i){row.hidden=!(i>=start&&i<end);});
@@ -209,6 +323,7 @@
   }
 
   const headers=markSortableHeaders(table,function(column){
+    if(activeInlineEdit)cancelInlineEdit();
     const nextDirection=(sortColumn===column&&sortDirection==='asc')?'desc':'asc';
     sortRows(column,nextDirection,true);
   });
