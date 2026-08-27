@@ -297,14 +297,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="brand">台灣連珠排名管理<small>RENJU RANK ADMIN</small></div>
     <nav class="nav">
         <a href="./">首頁</a>
-        <a href="?view=players">棋士</a>
-        <a class="active" href="?view=tournaments">比賽</a>
-        <a href="?view=games">對局</a>
-        <a href="?view=ranking">排名</a>
-        <a href="?view=den">段級</a>
-        <a href="?view=history">歷程</a>
-        <a href="?view=meijin">名人</a>
-        <a href="?view=rating-tools">等級分工具</a>
+        <a href="./?view=players">棋士</a>
+        <a class="active" href="./?view=tournaments">比賽</a>
+        <a href="./?view=games">對局</a>
+        <a href="./?view=ranking">排名</a>
+        <a href="./?view=den">段級</a>
+        <a href="./?view=history">歷程</a>
+        <a href="./?view=meijin">名人</a>
+        <a href="./?view=rating-tools">等級分工具</a>
         <a class="swiss" href="swiss.php">瑞士制戰績</a>
     </nav>
 </header>
@@ -315,7 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <section class="hero transfer-hero">
     <div><h1>轉移棋手</h1><p>將指定棋手由原本賽號移到另一賽號，並同步處理對局、排名、段級與歷程。</p></div>
-    <a class="btn" href="?view=tournaments">← 返回比賽</a>
+    <a class="btn" href="./?view=tournaments">← 返回比賽</a>
 </section>
 
 <section class="panel transfer-panel">
