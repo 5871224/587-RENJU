@@ -19,20 +19,33 @@ function swissPlayerLink(array $p, string $prefix): string {
     return '<a href="' . swissH($prefix . 'player.php?PLAYER=' . rawurlencode((string)$p['id'])) . '">' . swissH($p['name']) . '</a>';
 }
 
+function swissRecordEditButton(string $kind, int $recordId, int $tour, int $playerId, string $playerName, array $fields = []): string {
+    if ($recordId <= 0 || $tour <= 0 || $playerId <= 0) return '';
+    $html = '<button type="button" class="swiss-record-edit" data-kind="' . swissH($kind) . '" data-id="' . $recordId . '" data-tour="' . $tour . '" data-player="' . $playerId . '" data-player-name="' . swissH($playerName) . '"';
+    foreach ($fields as $name => $value) {
+        $html .= ' data-' . swissH((string)$name) . '="' . swissH((string)$value) . '"';
+    }
+    return $html . '>修改</button>';
+}
+
 function swissRenderHistory(array $data, array $opt): string {
     $rows = $data['history'];
     $admin = !empty($opt['admin']);
     if (!$rows && !$admin) return '';
     $showHeading = !empty($opt['show_section_headings']);
     $prefix = (string)($opt['action_prefix'] ?? '');
+    $defaultTour = (int)$data['tournament']['賽號'];
     $html = '<div class="swiss-subsection history-card">';
     if ($showHeading || $admin) {
         $html .= '<div class="swiss-subhead">';
         if ($showHeading) $html .= '<h3>歷程</h3>';
-        if ($admin) $html .= '<a class="swiss-btn" href="' . swissH($prefix . 'swiss-history-add.php?TOUR=' . (int)$data['tournament']['賽號']) . '">新增歷程</a>';
+        if ($admin) $html .= '<a class="swiss-btn" href="' . swissH($prefix . 'swiss-history-add.php?TOUR=' . $defaultTour) . '" data-swiss-modal="history" data-tour="' . $defaultTour . '">新增歷程</a>';
         $html .= '</div>';
     }
-    if (!$rows) return $html . '<div class="swiss-empty">目前沒有歷程。</div></div>';
+    if (!$rows) {
+        if (empty($opt['suppress_empty_history'])) $html .= '<div class="swiss-empty">目前沒有歷程。</div>';
+        return $html . '</div>';
+    }
 
     $hasDate = array_key_exists('日期', $rows[0]);
     $hasSummary = array_key_exists('摘要', $rows[0]);
@@ -47,14 +60,21 @@ function swissRenderHistory(array $data, array $opt): string {
     foreach ($rows as $row) {
         $id = (int)($row['代號'] ?? 0);
         $name = (string)($row['棋手姓名'] ?? $row['姓名'] ?? $id);
+        $recordTour = max(0, (int)($row['賽號'] ?? $defaultTour));
+        $recordId = max(0, (int)($row['序號'] ?? 0));
         $html .= '<tr>';
         if ($hasDate) $html .= '<td>' . swissH($row['日期'] ?? '') . '</td>';
         $html .= '<td>' . ($id > 0 ? '<a href="' . swissH(($opt['player_prefix'] ?? '') . 'player.php?PLAYER=' . $id) . '">' . swissH($name) . '</a>' : swissH($name)) . '</td>';
         if ($hasSummary) $html .= '<td class="text-left">' . swissH($row['摘要'] ?? '') . '</td>';
         if ($hasTitle) $html .= '<td>' . swissH($row['頭銜'] ?? '') . '</td>';
         if ($admin) {
-            $html .= '<td><form class="inline-delete" method="post" action="' . swissH($prefix . 'swiss-record-delete.php') . '" onsubmit="return confirm(\'確定要刪除這筆歷程嗎？\')">';
-            $html .= '<input type="hidden" name="type" value="SUMMARY"><input type="hidden" name="TOUR" value="' . (int)$data['tournament']['賽號'] . '"><input type="hidden" name="id" value="' . swissH($row['序號'] ?? '') . '"><button type="submit" class="link-danger">刪除</button></form></td>';
+            $html .= '<td class="swiss-record-actions">';
+            $html .= swissRecordEditButton('history', $recordId, $recordTour, $id, $name, [
+                'summary' => (string)($row['摘要'] ?? ''),
+                'title' => (string)($row['頭銜'] ?? ''),
+            ]);
+            $html .= '<form class="inline-delete" method="post" action="' . swissH($prefix . 'swiss-record-delete.php') . '" onsubmit="return confirm(\'確定要刪除這筆歷程嗎？\')">';
+            $html .= '<input type="hidden" name="type" value="SUMMARY"><input type="hidden" name="TOUR" value="' . $recordTour . '"><input type="hidden" name="id" value="' . $recordId . '"><button type="submit" class="link-danger">刪除</button></form></td>';
         }
         $html .= '</tr>';
     }
@@ -63,21 +83,35 @@ function swissRenderHistory(array $data, array $opt): string {
 
 function swissRenderPromotions(array $data, array $opt): string {
     if ($data['format'] === '自由對局') return '';
-    $rows = $data['promotions']; $admin = !empty($opt['admin']);
+    $rows = $data['promotions'];
+    $admin = !empty($opt['admin']);
     if (!$rows && !$admin) return '';
     $showHeading = !empty($opt['show_section_headings']);
     $prefix = (string)($opt['action_prefix'] ?? '');
+    $defaultTour = (int)$data['tournament']['賽號'];
+    $heading = (string)($opt['promotion_heading'] ?? '升段／升級');
     $html = '<div class="swiss-subsection promotion-card"><div class="swiss-subhead">';
-    if ($showHeading) $html .= '<h3>升段／升級</h3>';
-    if ($admin) $html .= '<a class="swiss-btn" href="' . swissH($prefix . 'swiss-den-add.php?TOUR=' . (int)$data['tournament']['賽號']) . '">新增段級</a>';
+    if ($showHeading) $html .= '<h3>' . swissH($heading) . '</h3>';
+    if ($admin) $html .= '<a class="swiss-btn" href="' . swissH($prefix . 'swiss-den-add.php?TOUR=' . $defaultTour) . '" data-swiss-modal="den" data-tour="' . $defaultTour . '">新增段級</a>';
     $html .= '</div>';
-    if (!$rows) return $html . '<div class="swiss-empty">目前沒有升段／升級紀錄。</div></div>';
+    if (!$rows) {
+        if (empty($opt['suppress_empty_promotions'])) $html .= '<div class="swiss-empty">目前沒有升段／升級紀錄。</div>';
+        return $html . '</div>';
+    }
     $html .= '<div class="swiss-scroll"><table class="swiss-mini"><thead><tr><th>姓名</th><th>升段／升級</th><th>原因</th>' . ($admin ? '<th>操作</th>' : '') . '</tr></thead><tbody>';
     foreach ($rows as $row) {
-        $id=(int)($row['代號']??0); $name=(string)($row['姓名']??$id);
-        $html .= '<tr><td>' . ($id>0?'<a href="'.swissH(($opt['player_prefix']??'').'player.php?PLAYER='.$id).'">'.swissH($name).'</a>':swissH($name)) . '</td><td>晉升 ' . swissH($row['段位'] ?? '') . '</td><td>' . swissH($row['原因'] ?? '') . '</td>';
+        $id = (int)($row['代號'] ?? 0);
+        $name = (string)($row['姓名'] ?? $id);
+        $recordTour = max(0, (int)($row['賽號'] ?? $defaultTour));
+        $recordId = max(0, (int)($row['序號'] ?? 0));
+        $html .= '<tr><td>' . ($id > 0 ? '<a href="' . swissH(($opt['player_prefix'] ?? '') . 'player.php?PLAYER=' . $id) . '">' . swissH($name) . '</a>' : swissH($name)) . '</td><td>晉升 ' . swissH($row['段位'] ?? '') . '</td><td>' . swissH($row['原因'] ?? '') . '</td>';
         if ($admin) {
-            $html .= '<td><form class="inline-delete" method="post" action="' . swissH($prefix . 'swiss-record-delete.php') . '" onsubmit="return confirm(\'確定要刪除這筆段級紀錄嗎？\')"><input type="hidden" name="type" value="DEN"><input type="hidden" name="TOUR" value="' . (int)$data['tournament']['賽號'] . '"><input type="hidden" name="id" value="' . swissH($row['序號'] ?? '') . '"><button type="submit" class="link-danger">刪除</button></form></td>';
+            $html .= '<td class="swiss-record-actions">';
+            $html .= swissRecordEditButton('den', $recordId, $recordTour, $id, $name, [
+                'rank' => (string)($row['段位'] ?? ''),
+                'reason' => (string)($row['原因'] ?? ''),
+            ]);
+            $html .= '<form class="inline-delete" method="post" action="' . swissH($prefix . 'swiss-record-delete.php') . '" onsubmit="return confirm(\'確定要刪除這筆段級紀錄嗎？\')"><input type="hidden" name="type" value="DEN"><input type="hidden" name="TOUR" value="' . $recordTour . '"><input type="hidden" name="id" value="' . $recordId . '"><button type="submit" class="link-danger">刪除</button></form></td>';
         }
         $html .= '</tr>';
     }
@@ -166,13 +200,19 @@ function swissRenderTournament(PDO $db, int $tour, array $options=[]): string {
     $opt=array_merge([
         'admin'=>false,'show_title'=>true,'show_meta'=>true,'show_section_headings'=>true,
         'player_prefix'=>'','action_prefix'=>'','include_history'=>true,'include_promotions'=>true,
+        'title_override'=>'','after_meta_html'=>'',
     ],$options);
     $data=swissBuildTournamentData($db,$tour);$t=$data['tournament'];$html='<div class="swiss-component" data-tour="'.(int)$tour.'">';
-    if($opt['show_title'])$html.='<h2 class="swiss-title">'.swissH($t['賽名']).'</h2>';
+    if($opt['show_title']){
+        $title=trim((string)$opt['title_override']);
+        if($title==='')$title=(string)$t['賽名'];
+        $html.='<h2 class="swiss-title">'.swissH($title).'</h2>';
+    }
     if($opt['show_meta']){
         $date=trim((string)$t['開始']);if(!empty($t['結束'])&&$t['結束']!==$t['開始'])$date.=' ~ '.$t['結束'];
         $html.='<div class="swiss-meta">賽號 '.(int)$tour.($date!==''?'　'.swissH($date):'').($data['format']!==''?'　｜　'.swissH($data['format']):'').'</div>';
     }
+    $html.=(string)$opt['after_meta_html'];
     if($opt['include_history'])$html.=swissRenderHistory($data,$opt);
     if($opt['include_promotions'])$html.=swissRenderPromotions($data,$opt);
     if($data['standard']){

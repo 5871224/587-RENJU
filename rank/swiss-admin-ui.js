@@ -1,8 +1,22 @@
 (function(){
+  'use strict';
+
   var rowIndex=100000;
+  var scrollStorageKey='renju-rank:swiss:scroll';
 
   function modalBy(kind,tour){return document.getElementById('swiss-'+kind+'-modal-'+tour);}
-  function tourFromHref(href){var m=(href||'').match(/[?&]TOUR=(\d+)/);return m?m[1]:'';}
+
+  function saveScroll(){
+    try{sessionStorage.setItem(scrollStorageKey,String(Math.max(0,window.scrollY||0)));}catch(e){}
+  }
+
+  function restoreScroll(){
+    var raw='';
+    try{raw=sessionStorage.getItem(scrollStorageKey)||'';sessionStorage.removeItem(scrollStorageKey);}catch(e){}
+    var y=parseInt(raw,10);
+    if(!Number.isFinite(y)||y<0)return;
+    requestAnimationFrame(function(){requestAnimationFrame(function(){window.scrollTo(0,y);});});
+  }
 
   function cacheModal(modal){
     if(!modal||modal.dataset.stateCached==='1')return;
@@ -68,21 +82,6 @@
     if(reason)reason.value=opt.dataset.reason||'';
   }
 
-  function headerIndex(row,label){
-    var table=row.closest('table');if(!table)return -1;
-    var headers=table.querySelectorAll('thead th');
-    for(var i=0;i<headers.length;i++)if(headers[i].textContent.trim()===label)return i;
-    return -1;
-  }
-
-  function cellText(row,label){var i=headerIndex(row,label);return i>=0&&row.cells[i]?row.cells[i].textContent.trim():'';}
-  function playerInfo(row){
-    var link=row.querySelector('a[href*="player.php?PLAYER="]');
-    if(!link)return {id:'',name:cellText(row,'姓名')};
-    var m=(link.getAttribute('href')||'').match(/[?&]PLAYER=(\d+)/);
-    return {id:m?m[1]:'',name:link.textContent.trim()};
-  }
-
   function ensurePlayerOption(select,id,name){
     if(!select||!id)return null;
     var opt=null;
@@ -92,9 +91,10 @@
     return opt;
   }
 
-  function promotionScore(tour,player){
-    var section=document.getElementById('tour-'+tour);if(!section||!player)return '';
-    var nameCell=section.querySelector('td.name[data-player-id="'+player+'"]');if(!nameCell)return '';
+  function promotionScore(player){
+    if(!player)return '';
+    var nameCell=document.querySelector('td.name[data-player-id="'+player+'"]');
+    if(!nameCell)return '';
     var cells=nameCell.parentElement.querySelectorAll('td.swiss-summary-cell');
     return cells.length?cells[cells.length-1].textContent.trim():'';
   }
@@ -109,6 +109,7 @@
     var select=row.querySelector('select[name*="[player]"]');
     var opt=ensurePlayerOption(select,trigger.dataset.player||'',trigger.dataset.playerName||'');
     var form=modal.querySelector('.swiss-modal-form');
+    if(!form)return;
     var hidden=document.createElement('input');hidden.type='hidden';hidden.name='record_id';hidden.value=id;form.appendChild(hidden);
     var title=modal.querySelector('.swiss-modal-head h2');
     var submit=modal.querySelector('button[type="submit"]');
@@ -126,53 +127,22 @@
       if(submit)submit.textContent='修改歷程';
     }else{
       var rank=row.querySelector('[data-den-rank]'),reason=row.querySelector('[data-den-reason]'),score=row.querySelector('[data-den-score]');
-      if(opt){opt.dataset.rank=trigger.dataset.rank||'';opt.dataset.reason=trigger.dataset.reason||'';opt.dataset.promotion=promotionScore(tour,trigger.dataset.player||'');}
+      var currentScore=promotionScore(trigger.dataset.player||'');
+      if(opt){opt.dataset.rank=trigger.dataset.rank||'';opt.dataset.reason=trigger.dataset.reason||'';opt.dataset.promotion=currentScore;}
       if(rank&&trigger.dataset.rank)rank.value=trigger.dataset.rank;
       if(reason)reason.value=trigger.dataset.reason||'';
-      if(score)score.textContent=promotionScore(tour,trigger.dataset.player||'');
+      if(score)score.textContent=currentScore;
       if(title)title.textContent='修改段級';
       if(submit)submit.textContent='修改段級';
     }
     showModal(modal);
   }
 
-  function makeEditButton(row,type,id,tour){
-    var info=playerInfo(row);if(!info.id||!id||!tour)return;
-    var form=row.querySelector('form.inline-delete');if(!form||row.querySelector('.swiss-record-edit'))return;
-    var edit=document.createElement('button');
-    edit.type='button';edit.className='swiss-record-edit';edit.textContent='修改';
-    edit.style.border='0';edit.style.background='none';edit.style.color='#245c78';edit.style.cursor='pointer';edit.style.padding='0';edit.style.textDecoration='underline';edit.style.font='inherit';edit.style.marginRight='10px';
-    edit.dataset.kind=type==='SUMMARY'?'history':'den';
-    edit.dataset.id=id;edit.dataset.tour=tour;edit.dataset.player=info.id;edit.dataset.playerName=info.name;
-    if(type==='SUMMARY'){
-      edit.dataset.summary=cellText(row,'摘要');
-      edit.dataset.title=cellText(row,'頭銜');
-    }else{
-      edit.dataset.rank=cellText(row,'升段／升級').replace(/^晉升\s*/, '');
-      edit.dataset.reason=cellText(row,'原因');
-    }
-    form.parentNode.insertBefore(edit,form);
-  }
-
-  function enhanceRenderedSections(){
-    document.querySelectorAll('.promotion-card').forEach(function(card){
-      var subhead=card.querySelector('.swiss-subhead');
-      if(subhead){var h3=subhead.querySelector('h3');if(!h3){h3=document.createElement('h3');subhead.insertBefore(h3,subhead.firstChild);}h3.textContent='段級';}
-      card.querySelectorAll('.swiss-empty').forEach(function(el){if(/目前沒有升段|目前沒有.*升級/.test(el.textContent))el.remove();});
-    });
-    document.querySelectorAll('.history-card .swiss-empty').forEach(function(el){if(/目前沒有歷程/.test(el.textContent))el.remove();});
-
-    document.querySelectorAll('form.inline-delete').forEach(function(form){
-      var typeInput=form.querySelector('input[name="type"]'),idInput=form.querySelector('input[name="id"]'),tourInput=form.querySelector('input[name="TOUR"]');
-      if(!typeInput||!idInput||!tourInput)return;
-      var type=typeInput.value;
-      if(type!=='SUMMARY'&&type!=='DEN')return;
-      var row=form.closest('tr');if(row)makeEditButton(row,type,idInput.value,tourInput.value);
-    });
-  }
-
   document.querySelectorAll('.swiss-modal').forEach(cacheModal);
-  enhanceRenderedSections();
+  document.querySelectorAll('form.inline-delete').forEach(function(form){
+    form.addEventListener('submit',function(e){if(!e.defaultPrevented)saveScroll();});
+  });
+  restoreScroll();
 
   document.addEventListener('change',function(e){var s=e.target.closest&&e.target.closest('[data-den-player]');if(s)syncDenRow(s);});
 
@@ -182,11 +152,6 @@
 
     var trigger=e.target.closest&&e.target.closest('[data-swiss-modal][data-tour]');
     if(trigger){e.preventDefault();openModal(trigger.getAttribute('data-swiss-modal'),trigger.getAttribute('data-tour'));return;}
-
-    var historyLink=e.target.closest&&e.target.closest('a[href*="swiss-history-add.php"]');
-    if(historyLink){var ht=tourFromHref(historyLink.getAttribute('href'));if(ht&&modalBy('history',ht)){e.preventDefault();openModal('history',ht);return;}}
-    var denLink=e.target.closest&&e.target.closest('a[href*="swiss-den-add.php"]');
-    if(denLink){var dt=tourFromHref(denLink.getAttribute('href'));if(dt&&modalBy('den',dt)){e.preventDefault();openModal('den',dt);return;}}
 
     var closer=e.target.closest&&e.target.closest('[data-modal-close]');
     if(closer){e.preventDefault();closeModal(closer.closest('.swiss-modal'));return;}
@@ -216,6 +181,7 @@
         var text=await res.text(),payload;
         try{payload=JSON.parse(text);}catch(_){payload={ok:false,message:text||'儲存失敗'};}
         if(!res.ok||!payload.ok)throw new Error(payload.message||'儲存失敗');
+        saveScroll();
         window.location.reload();
       }catch(ex){err.textContent=ex.message||'儲存失敗';err.hidden=false;if(submit){submit.disabled=false;submit.textContent=submit.dataset.oldText||'儲存';}}
     });

@@ -10,22 +10,31 @@ function rnH($value): string
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
+function rnPageUrl(array $params = []): string
+{
+    if (defined('RANK_ADMIN_EMBEDDED') && RANK_ADMIN_EMBEDDED) {
+        $params = array_merge(['view' => 'rating-tools', 'tool' => 'renjunet'], $params);
+    }
+    return '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+}
+
+$rnEmbedded = defined('RANK_ADMIN_EMBEDDED') && RANK_ADMIN_EMBEDDED;
 rnEloEnsureSchema($MYSQL);
 
-$error = '';
-$message = '';
-$q = trim((string)($_GET['q'] ?? ''));
-$asOf = trim((string)($_GET['as_of'] ?? ''));
-$limit = max(50, min(1000, (int)($_GET['limit'] ?? 300)));
-if ($asOf !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $asOf)) $asOf = '';
+$rnError = '';
+$rnMessage = '';
+$rnQ = trim((string)($_GET['q'] ?? ''));
+$rnAsOf = trim((string)($_GET['as_of'] ?? ''));
+$rnLimit = max(50, min(1000, (int)($_GET['limit'] ?? 300)));
+if ($rnAsOf !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $rnAsOf)) $rnAsOf = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'recalculate') {
     try {
         @set_time_limit(0);
         rnEloRecalculate($MYSQL);
-        $message = 'RenjuNet Elo 已依歷史 RIF 規則完整重算完成。';
+        $rnMessage = 'RenjuNet Elo 已依歷史 RIF 規則完整重算完成。';
     } catch (Throwable $e) {
-        $error = $e->getMessage();
+        $rnError = $e->getMessage();
     }
 }
 
@@ -51,31 +60,32 @@ $latestSql =
     "LEFT JOIN `RENJUNET_COUNTRY` C ON C.`id`=P.`country_id` " .
     "LEFT JOIN `RENJUNET_TOURNAMENT` T ON T.`id`=E.`tournament_id` " .
     "WHERE 1=1 ";
-$params = [];
-if ($asOf !== '') {
+$rnParams = [];
+if ($rnAsOf !== '') {
     $latestSql .= 'AND E.`tournament_date`<=? ';
-    $params[] = $asOf;
+    $rnParams[] = $rnAsOf;
 }
 $latestSql .= 'AND NOT EXISTS (SELECT 1 FROM `RENJUNET_ELO` E2 WHERE E2.`player_id`=E.`player_id` ';
-if ($asOf !== '') {
+if ($rnAsOf !== '') {
     $latestSql .= 'AND E2.`tournament_date`<=? ';
-    $params[] = $asOf;
+    $rnParams[] = $rnAsOf;
 }
 $latestSql .= 'AND (E2.`tournament_date`>E.`tournament_date` OR (E2.`tournament_date`=E.`tournament_date` AND E2.`tournament_id`>E.`tournament_id`))) ';
-if ($q !== '') {
+if ($rnQ !== '') {
     $latestSql .= "AND (CAST(E.`player_id` AS CHAR) LIKE ? OR P.`surname` LIKE ? OR P.`name` LIKE ? OR COALESCE(P.`native_name`,'') LIKE ? OR COALESCE(C.`abbr`,'') LIKE ?) ";
-    $like = '%' . $q . '%';
-    array_push($params, $like, $like, $like, $like, $like);
+    $like = '%' . $rnQ . '%';
+    array_push($rnParams, $like, $like, $like, $like, $like);
 }
-$latestSql .= 'ORDER BY E.`rating_after` DESC,E.`games_after` DESC,E.`player_id` LIMIT ' . $limit;
+$latestSql .= 'ORDER BY E.`rating_after` DESC,E.`games_after` DESC,E.`player_id` LIMIT ' . $rnLimit;
 $stmtLatest = $MYSQL->prepare($latestSql);
-$stmtLatest->execute($params);
+$stmtLatest->execute($rnParams);
 $ranking = $stmtLatest->fetchAll(PDO::FETCH_ASSOC);
 
 $runHistory = $MYSQL->query(
     'SELECT `id`,`started_at`,`finished_at`,`status`,`initial_rating`,`tournament_count`,`game_count`,`row_count`,`player_count`,`message` FROM `RENJUNET_ELO_RUN` ORDER BY `id` DESC LIMIT 10'
 )->fetchAll(PDO::FETCH_ASSOC);
 ?>
+<?php if (!$rnEmbedded): ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -84,20 +94,21 @@ $runHistory = $MYSQL->query(
 <title>RenjuNet Elo 重算</title>
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260825">
-<style>
-body{background:#eef3f8}.rn-main{padding:26px clamp(16px,3vw,42px) 48px}.rn-hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;margin-bottom:18px}.rn-hero h1{margin:0;font-size:29px}.rn-hero p{margin:7px 0 0;color:#64748b}.rn-badge{padding:6px 10px;border-radius:999px;background:#dff5f1;color:#0f766e;font-weight:800;white-space:nowrap}.rn-grid{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:11px;margin-bottom:18px}.rn-card{padding:15px;background:#fff;border:1px solid #dbe4ee;border-radius:12px}.rn-card .label{font-size:12px;color:#64748b;font-weight:700}.rn-card .value{margin-top:4px;font-size:23px;font-weight:800;color:#1769aa}.rn-panel{margin-bottom:18px;background:#fff;border:1px solid #dbe4ee;border-radius:13px;overflow:hidden}.rn-head{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:15px 18px;background:#fbfdff;border-bottom:1px solid #dbe4ee}.rn-head h2{margin:0;font-size:18px}.rn-sub{font-size:13px;color:#64748b}.rn-notice,.rn-success,.rn-error{padding:13px 15px;border-radius:10px;margin-bottom:18px}.rn-notice{background:#eef7ff;border:1px solid #bfd9ee;color:#234b69}.rn-success{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46}.rn-error{background:#fff1f2;border:1px solid #fecdd3;color:#9f1239}.rn-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.rn-tools input{padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px}.rn-tools label{display:flex;gap:6px;align-items:center;font-size:13px;color:#475569;font-weight:700}.rn-table{width:100%;border-collapse:collapse;white-space:nowrap}.rn-table th{padding:9px 10px;background:#edf4f9;color:#334155;border-bottom:1px solid #cad7e2;text-align:left;font-size:12px}.rn-table td{padding:8px 10px;border-bottom:1px solid #e8eef4;font-size:13px}.rn-table tbody tr:hover{background:#f7fbff}.rn-table-wrap{overflow:auto}.num{text-align:right}.rating{font-weight:800;color:#1769aa}.rank-no{font-weight:800;color:#64748b}.status-success{color:#0f766e;font-weight:800}.status-failed{color:#b42318;font-weight:800}.status-running{color:#a16207;font-weight:800}.danger-note{font-size:12px;color:#9f1239;margin-top:6px}.topbar-simple{display:flex;align-items:center;gap:16px;min-height:58px;padding:10px clamp(16px,3vw,42px);background:#10263b;color:#fff}.topbar-simple a{color:#dbe9f5;text-decoration:none;font-weight:700}.topbar-simple strong{font-size:18px}@media(max-width:900px){.rn-grid{grid-template-columns:repeat(2,1fr)}.rn-hero,.rn-head{align-items:flex-start;flex-direction:column}}@media(max-width:520px){.rn-grid{grid-template-columns:1fr}}
-</style>
+<link rel="stylesheet" href="renjunet-elo.css?v=20260827">
 </head>
-<body>
+<body class="rn-standalone">
 <header class="topbar-simple"><strong>RenjuNet Elo</strong><a href="./">← 排名管理首頁</a><a href="renjunet-elo-compare.php">舊保存分數比對</a><a href="?">重新整理</a></header>
-<main class="rn-main">
+<?php else: ?>
+<link rel="stylesheet" href="renjunet-elo.css?v=20260827">
+<?php endif; ?>
+<<?= $rnEmbedded ? 'div' : 'main' ?> class="rn-main<?= $rnEmbedded ? ' rn-embedded' : '' ?>">
 <section class="rn-hero">
     <div><h1>RenjuNet 歷史 Elo 重算</h1><p>以 1999-07-15 官方 RIF Rating List 作為歷史基準，之後依 provisional／established 規則逐賽事重建舊制 Elo。</p></div>
-    <div class="rn-badge">Historical RIF Elo · 非 WHR</div>
+    <div class="rn-hero-actions"><div class="rn-badge">Historical RIF Elo · 非 WHR</div><?php if ($rnEmbedded): ?><a class="btn" href="renjunet-elo-compare.php">舊保存分數比對</a><?php endif; ?></div>
 </section>
 
-<?php if ($message !== ''): ?><div class="rn-success"><?= rnH($message) ?></div><?php endif; ?>
-<?php if ($error !== ''): ?><div class="rn-error">重算失敗：<?= rnH($error) ?></div><?php endif; ?>
+<?php if ($rnMessage !== ''): ?><div class="rn-success"><?= rnH($rnMessage) ?></div><?php endif; ?>
+<?php if ($rnError !== ''): ?><div class="rn-error">重算失敗：<?= rnH($rnError) ?></div><?php endif; ?>
 
 <div class="rn-notice"><strong>歷史基準：</strong>使用 1999-07-15 官方 RIF Rating List（已核對 221 位 RenjuNet 身份）作 seed；其後新棋手只計算對 established 棋手的對局，累積至少 10 局且至少 3 分後轉 established。Provisional 採 Rp=Ra+400(W-L)/N（上限 Ra+300）；established 採 K=32、We=1/(1+2^(dR/120))。真正沒有官方／歷史 Elo 的棋手，台灣排名端才以 1900 作 fallback。</div>
 
@@ -112,6 +123,7 @@ body{background:#eef3f8}.rn-main{padding:26px clamp(16px,3vw,42px) 48px}.rn-hero
     <div class="rn-head">
         <div><h2>完整重算</h2><div class="rn-sub">歷史成績、rated 標記或棋手身份修正後，可重新建立全部歷史 RIF Elo。</div></div>
         <form method="post" onsubmit="return confirm('確定要依歷史 RIF Elo 規則完整重算嗎？')">
+            <?php if ($rnEmbedded): ?><input type="hidden" name="view" value="rating-tools"><input type="hidden" name="tool" value="renjunet"><?php endif; ?>
             <input type="hidden" name="action" value="recalculate">
             <button class="btn danger" type="submit">完整重算 RENJUNET Elo</button>
             <div class="danger-note">只替換 RENJUNET_ELO 計算結果，不修改 RenjuNet 原始比賽與對局。</div>
@@ -130,14 +142,15 @@ body{background:#eef3f8}.rn-main{padding:26px clamp(16px,3vw,42px) 48px}.rn-hero
 
 <section class="rn-panel">
     <div class="rn-head">
-        <div><h2><?= $asOf !== '' ? rnH($asOf) . ' 時點排名' : '目前重算排名' ?></h2><div class="rn-sub"><?= $asOf !== '' ? '每位棋手取該日期以前最後一場比賽的 rating_after。' : '每位棋手取最後一場比賽的 rating_after。' ?></div></div>
+        <div><h2><?= $rnAsOf !== '' ? rnH($rnAsOf) . ' 時點排名' : '目前重算排名' ?></h2><div class="rn-sub"><?= $rnAsOf !== '' ? '每位棋手取該日期以前最後一場比賽的 rating_after。' : '每位棋手取最後一場比賽的 rating_after。' ?></div></div>
         <form class="rn-tools" method="get">
-            <label>排名日期 <input type="date" name="as_of" value="<?= rnH($asOf) ?>"></label>
-            <input type="search" name="q" value="<?= rnH($q) ?>" placeholder="棋手姓名／ID／國家">
-            <input type="number" name="limit" min="50" max="1000" value="<?= rnH($limit) ?>" title="最多顯示筆數">
+            <?php if ($rnEmbedded): ?><input type="hidden" name="view" value="rating-tools"><input type="hidden" name="tool" value="renjunet"><?php endif; ?>
+            <label>排名日期 <input type="date" name="as_of" value="<?= rnH($rnAsOf) ?>"></label>
+            <input type="search" name="q" value="<?= rnH($rnQ) ?>" placeholder="棋手姓名／ID／國家">
+            <input type="number" name="limit" min="50" max="1000" value="<?= rnH($rnLimit) ?>" title="最多顯示筆數">
             <button class="btn" type="submit">查看</button>
-            <?php if ($asOf !== ''): ?><a class="btn" href="?<?= $q !== '' ? 'q=' . rawurlencode($q) . '&limit=' . rawurlencode((string)$limit) : 'limit=' . rawurlencode((string)$limit) ?>">最新排名</a><?php endif; ?>
-            <?php if ($q !== ''): ?><a class="btn" href="?<?= $asOf !== '' ? 'as_of=' . rawurlencode($asOf) . '&limit=' . rawurlencode((string)$limit) : 'limit=' . rawurlencode((string)$limit) ?>">清除搜尋</a><?php endif; ?>
+            <?php if ($rnAsOf !== ''): ?><a class="btn" href="<?= rnH(rnPageUrl(array_filter(['q'=>$rnQ,'limit'=>$rnLimit], static fn($v) => $v !== ''))) ?>">最新排名</a><?php endif; ?>
+            <?php if ($rnQ !== ''): ?><a class="btn" href="<?= rnH(rnPageUrl(array_filter(['as_of'=>$rnAsOf,'limit'=>$rnLimit], static fn($v) => $v !== ''))) ?>">清除搜尋</a><?php endif; ?>
         </form>
     </div>
     <?php if ($ranking): ?>
@@ -146,7 +159,7 @@ body{background:#eef3f8}.rn-main{padding:26px clamp(16px,3vw,42px) 48px}.rn-hero
         <tr><td class="rank-no"><?= number_format($i+1) ?></td><td><?= rnH($row['player_id']) ?></td><td><?= rnH($name) ?></td><td><?= rnH($row['country'] ?? '') ?></td><td class="num rating"><?= number_format((float)$row['rating_after'],4,'.','') ?></td><td class="num"><?= number_format((int)$row['games_after']) ?></td><td class="num"><?= number_format((int)$row['total_wins']) ?></td><td class="num"><?= number_format((int)$row['total_draws']) ?></td><td class="num"><?= number_format((int)$row['total_losses']) ?></td><td><?= rnH($row['tournament_date']) ?></td><td><?= rnH($row['tournament_name'] ?? ('#'.$row['tournament_id'])) ?></td></tr>
     <?php endforeach; ?>
     </tbody></table></div>
-    <?php else: ?><div class="rn-sub" style="padding:18px"><?= $asOf !== '' ? rnH($asOf) . ' 以前沒有可顯示的重算結果。' : '目前沒有可顯示的重算結果。' ?></div><?php endif; ?>
+    <?php else: ?><div class="rn-sub" style="padding:18px"><?= $rnAsOf !== '' ? rnH($rnAsOf) . ' 以前沒有可顯示的重算結果。' : '目前沒有可顯示的重算結果。' ?></div><?php endif; ?>
 </section>
 
 <section class="rn-panel">
@@ -155,6 +168,8 @@ body{background:#eef3f8}.rn-main{padding:26px clamp(16px,3vw,42px) 48px}.rn-hero
     <?php foreach ($runHistory as $run): ?><tr><td>#<?= rnH($run['id']) ?></td><td><?= rnH($run['started_at']) ?></td><td><?= rnH($run['finished_at'] ?? '') ?></td><td class="status-<?= rnH($run['status']) ?>"><?= rnH($run['status']) ?></td><td class="num"><?= (float)$run['initial_rating'] > 0 ? number_format((float)$run['initial_rating'],0) : '無' ?></td><td class="num"><?= number_format((int)$run['tournament_count']) ?></td><td class="num"><?= number_format((int)$run['game_count']) ?></td><td class="num"><?= number_format((int)$run['player_count']) ?></td><td class="num"><?= number_format((int)$run['row_count']) ?></td><td><?= rnH($run['message'] ?? '') ?></td></tr><?php endforeach; ?>
     </tbody></table></div><?php endif; ?>
 </section>
-</main>
+</<?= $rnEmbedded ? 'div' : 'main' ?>>
+<?php if (!$rnEmbedded): ?>
 </body>
 </html>
+<?php endif; ?>

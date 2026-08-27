@@ -65,9 +65,56 @@ function swissRenjuDetailGameQueues(PDO $db, array $groupData): array {
     ];
 }
 
+function swissAdminVisibleGroup(array $groupData, string $label): array {
+    $visible = [];
+    $challengeIndex = null;
+    $challengeCount = 0;
+
+    foreach ($groupData as $data) {
+        $isChallenge = !isset($data['error']) && ($data['format'] ?? '') === '挑戰賽';
+        if (!$isChallenge) {
+            $visible[] = $data;
+            continue;
+        }
+
+        $challengeCount++;
+        if ($challengeIndex === null) {
+            $challengeIndex = count($visible);
+            $visible[] = $data;
+            continue;
+        }
+
+        $visible[$challengeIndex]['history'] = array_merge(
+            $visible[$challengeIndex]['history'] ?? [],
+            $data['history'] ?? []
+        );
+        $visible[$challengeIndex]['promotions'] = array_merge(
+            $visible[$challengeIndex]['promotions'] ?? [],
+            $data['promotions'] ?? []
+        );
+    }
+
+    $groupedChallenge = $challengeCount > 1 && $challengeIndex !== null;
+    if ($groupedChallenge) {
+        $title = trim($label);
+        if ($title === '') {
+            $title = trim((string)($visible[$challengeIndex]['tournament']['賽標'] ?? ''));
+        }
+        if ($title === '') {
+            $title = trim((string)($visible[$challengeIndex]['tournament']['賽名'] ?? ''));
+        }
+        if ($title !== '' && !preg_match('/挑戰賽$/u', $title)) $title .= '挑戰賽';
+        $visible[$challengeIndex]['_title_override'] = $title;
+    }
+
+    return [$visible, $groupedChallenge];
+}
+
 $tour = isset($_GET['TOUR']) ? max(0, (int)$_GET['TOUR']) : 0;
 $group = ['current'=>null,'same'=>[],'previous'=>null,'next'=>null,'label'=>''];
 $groupData = [];
+$visibleGroupData = [];
+$groupedChallenge = false;
 $renjuGameLinks = [];
 $detailGameQueues = ['byTour'=>[], 'challenge'=>[]];
 $pageError = '';
@@ -88,6 +135,10 @@ if ($tour > 0) {
                 }
             }
             $detailGameQueues = swissRenjuDetailGameQueues($MYSQL, $groupData);
+            [$visibleGroupData, $groupedChallenge] = swissAdminVisibleGroup(
+                $groupData,
+                trim((string)($group['label'] ?? ''))
+            );
         }
     } catch (Throwable $e) {
         $pageError = $e->getMessage();
@@ -103,17 +154,7 @@ if ($tour > 0) {
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
 <link rel="stylesheet" href="swiss.css?v=20260824f">
-<link rel="stylesheet" href="swiss-admin-ui.css?v=20260824a">
-<style>
-.swiss-rank td.round-score a.renju-game-link{display:block;color:inherit!important;text-decoration:none;font:inherit}
-.swiss-rank td.round-score a.renju-game-link:hover{text-decoration:underline}
-.game-list td.game-result a.renju-game-link{display:block;color:inherit!important;text-decoration:none;font:inherit;font-weight:inherit}
-.game-list td.game-result a.renju-game-link:hover{text-decoration:underline}
-/* 段級區塊標題固定由本頁輸出樣式補上，避免不同渲染路徑只剩新增按鈕。 */
-.promotion-card .swiss-subhead{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.promotion-card .swiss-subhead::before{content:"段級";margin:0;color:#334155;font-size:18px;font-weight:700;line-height:1.55}
-.promotion-card .swiss-subhead>h3{display:none!important}
-</style>
+<link rel="stylesheet" href="swiss-admin-ui.css?v=20260827">
 </head>
 <body>
 <div class="app">
@@ -162,20 +203,23 @@ if ($tour <= 0) {
 } else {
     $label = trim((string)($group['label'] ?? ''));
     if (count($groupData) > 1) {
-        echo '<div class="swiss-group-title">' . ($label !== '' ? '賽標：' . swissH($label) . '　｜　' : '') . '共 ' . count($groupData) . ' 場比賽，以下依賽號順序全部列出</div>';
+        $groupNote = $groupedChallenge ? '場比賽；挑戰賽依賽標合併顯示' : '場比賽，以下依賽號順序全部列出';
+        echo '<div class="swiss-group-title">' . ($label !== '' ? '賽標：' . swissH($label) . '　｜　' : '') . '共 ' . count($groupData) . ' ' . $groupNote . '</div>';
     }
 
-    $modalHtml = '';
-    foreach ($groupData as $data) {
+    foreach ($visibleGroupData as $data) {
         if (isset($data['error'])) {
             echo '<section class="swiss-tournament-section"><h2>' . swissH($data['tournament']['賽名'] ?? ('賽號 ' . $data['tour'])) . '</h2><div class="swiss-empty">讀取失敗：' . swissH($data['error']) . '</div></section>';
             continue;
         }
         echo swissRenderAdminTournamentSection($MYSQL, $data);
-        $modalHtml .= swissRenderHistoryModal($data);
-        $modalHtml .= swissRenderDenModal($data);
     }
-    echo $modalHtml;
+
+    foreach ($groupData as $data) {
+        if (isset($data['error'])) continue;
+        echo swissRenderHistoryModal($data);
+        echo swissRenderDenModal($data);
+    }
 }
 ?>
 </main>
@@ -184,57 +228,11 @@ if ($tour <= 0) {
 (function () {
     const linkMap = <?= json_encode($renjuGameLinks, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     const detailQueues = <?= json_encode($detailGameQueues, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
-    const challengeLabel = <?= json_encode(trim((string)($group['label'] ?? '')), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    const groupedChallenge = <?= $groupedChallenge ? 'true' : 'false' ?>;
 
     function isChallengeSection(section) {
         const meta = section.querySelector('.swiss-meta');
         return !!meta && meta.textContent.indexOf('挑戰賽') !== -1;
-    }
-
-    function mergeCard(primary, laterSections, selector) {
-        const firstCard = primary.querySelector(selector);
-        if (!firstCard) return;
-        let firstTable = firstCard.querySelector('table.swiss-mini');
-
-        laterSections.forEach(function (section) {
-            const card = section.querySelector(selector);
-            if (!card) return;
-            const sourceTable = card.querySelector('table.swiss-mini');
-            if (sourceTable) {
-                if (!firstTable) {
-                    const scroll = card.querySelector('.swiss-scroll');
-                    if (scroll) {
-                        firstCard.appendChild(scroll);
-                        firstTable = firstCard.querySelector('table.swiss-mini');
-                    }
-                } else {
-                    const targetBody = firstTable.querySelector('tbody');
-                    const sourceBody = sourceTable.querySelector('tbody');
-                    if (targetBody && sourceBody) {
-                        while (sourceBody.firstChild) targetBody.appendChild(sourceBody.firstChild);
-                    }
-                }
-            }
-            card.remove();
-        });
-    }
-
-    const challengeSections = Array.prototype.slice.call(document.querySelectorAll('.swiss-tournament-section')).filter(isChallengeSection);
-    if (challengeSections.length > 1) {
-        const primary = challengeSections[0];
-        const later = challengeSections.slice(1);
-        mergeCard(primary, later, '.history-card');
-        mergeCard(primary, later, '.promotion-card');
-
-        const title = primary.querySelector('.swiss-title');
-        if (title) {
-            let mergedTitle = challengeLabel;
-            if (!mergedTitle) mergedTitle = title.textContent.trim().replace(/挑戰賽.*$/u, '');
-            if (mergedTitle && !/挑戰賽$/u.test(mergedTitle)) mergedTitle += '挑戰賽';
-            if (mergedTitle) title.textContent = mergedTitle;
-        }
-
-        later.forEach(function (section) { section.remove(); });
     }
 
     document.querySelectorAll('.swiss-component[data-tour]').forEach(function (section) {
@@ -262,9 +260,7 @@ if ($tour <= 0) {
     }
 
     document.querySelectorAll('.swiss-component[data-tour]').forEach(function (component) {
-        const meta = component.querySelector('.swiss-meta');
-        const isChallenge = !!meta && meta.textContent.indexOf('挑戰賽') !== -1;
-        const queues = isChallenge && challengeSections.length > 1
+        const queues = isChallengeSection(component) && groupedChallenge
             ? (detailQueues.challenge || {})
             : ((detailQueues.byTour || {})[component.dataset.tour] || {});
 
@@ -295,6 +291,6 @@ if ($tour <= 0) {
 }());
 </script>
 <script src="swiss-ui.js?v=20260824e"></script>
-<script src="swiss-admin-ui.js?v=20260824b"></script>
+<script src="swiss-admin-ui.js?v=20260827"></script>
 </body>
 </html>
