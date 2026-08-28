@@ -107,6 +107,7 @@ function swissDenPlayerOptions(array $data, array $eligible, int $selected = 0):
 
 function swissDenRankOptions(string $selected = ''): string {
     $ranks = ['初段','二段','三段','四段','五段','六段','七段','八段','九段','十段'];
+    for ($kyu = 1; $kyu <= 16; $kyu++) $ranks[] = $kyu . '級';
     $html = '';
     foreach ($ranks as $rank) {
         $sel = $selected === $rank ? ' selected' : '';
@@ -153,7 +154,7 @@ function swissRenderDenModal(array $data): string {
     else $html .= '<div class="swiss-modal-note">本場沒有可計算的比賽輪數，可按「新增列」自行選擇。</div>';
     $html .= '<div class="swiss-modal-error" hidden></div>';
     $html .= '<form class="swiss-edit swiss-modal-form" method="post" action="swiss-den-add.php"><input type="hidden" name="TOUR" value="' . $tour . '">';
-    $html .= '<div class="swiss-modal-table"><table class="den-modal-table"><thead><tr><th>棋手</th><th>升段分</th><th>段位</th><th>原因</th><th>操作</th></tr></thead><tbody data-row-container>';
+    $html .= '<div class="swiss-modal-table"><table class="den-modal-table"><thead><tr><th>棋手</th><th>升段分</th><th>段級</th><th>原因</th><th>操作</th></tr></thead><tbody data-row-container>';
     foreach ($defaults as $i => $row) $html .= swissDenRow($data, $eligible, $i, $row);
     $html .= '</tbody></table></div><template data-row-template>' . swissDenRow($data, $eligible, 99999, ['player'=>0,'promotion'=>'','rank'=>'初段','reason'=>'']) . '</template>';
     $html .= '<div class="swiss-modal-actions swiss-row-actions"><button type="button" class="swiss-btn" data-add-row' . (!$eligible ? ' disabled' : '') . '>新增列</button><div class="swiss-modal-action-right"><button type="button" class="swiss-btn" data-modal-close>取消</button><button class="swiss-modal-primary" type="submit"' . (!$eligible ? ' disabled' : '') . '>新增段級</button></div></div>';
