@@ -153,7 +153,7 @@ if ($tour > 0) {
 <title>瑞士制戰績表</title>
 <link rel="stylesheet" href="../renju.css?v=20260828a">
 <link rel="stylesheet" href="admin.css?v=20260828a">
-<link rel="stylesheet" href="swiss.css?v=20260828a">
+<link rel="stylesheet" href="swiss.css?v=20260828b">
 <link rel="stylesheet" href="swiss-admin-ui.css?v=20260828a">
 </head>
 <body>
@@ -270,7 +270,7 @@ if ($tour <= 0) {
             const p1 = parseInt(playerIdFromCell(row.cells[2]), 10);
             const p2 = parseInt(playerIdFromCell(row.cells[4]), 10);
             if (!round || !p1 || !p2) return;
-            const key = 'game-' + Math.min(p1, p2) + '-' + Math.max(p1, p2) + '-' + round;
+            const key = 'game-' . Math.min(p1, p2) . '-' . Math.max(p1, p2) . '-' . round;
             const queue = queues[key];
             if (!queue || !queue.length) return;
             const gameId = String(queue.shift() || '').trim();
@@ -290,7 +290,7 @@ if ($tour <= 0) {
     });
 }());
 </script>
-<script src="swiss-ui.js?v=20260828b"></script>
+<script src="swiss-ui.js?v=20260828c"></script>
 <script src="swiss-admin-ui.js?v=20260828a"></script>
 </body>
 </html>
