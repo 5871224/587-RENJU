@@ -290,7 +290,7 @@ if ($tour <= 0) {
     });
 }());
 </script>
-<script src="swiss-ui.js?v=20260828a"></script>
+<script src="swiss-ui.js?v=20260828b"></script>
 <script src="swiss-admin-ui.js?v=20260828a"></script>
 </body>
 </html>
