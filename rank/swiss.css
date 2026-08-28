@@ -280,6 +280,17 @@
     outline-offset: -2px;
 }
 
+/* 可點擊總分／輔分／升段分：懸停時來源分數與本列姓名為綠框，固定時改為藍框。 */
+.swiss-rank td.swiss-summary-anchor {
+    position: relative;
+    z-index: 3;
+    outline: 2px solid #16a34a;
+    outline-offset: -2px;
+}
+.swiss-rank td.swiss-summary-anchor.swiss-summary-pinned {
+    outline-color: #2563eb;
+}
+
 /* 輔分互動視覺化。 */
 .swiss-rank td.swiss-hover-source,
 .swiss-rank tbody tr:hover > td.swiss-hover-source { background: #e7f7d5; }
