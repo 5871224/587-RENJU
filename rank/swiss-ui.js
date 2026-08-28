@@ -1,5 +1,6 @@
 (function(){
   var scoreClasses=['score-win','score-draw','score-loss'];
+  var pinnedSwissSummary=null;
 
   function setupCrossTables(){
     document.querySelectorAll('table.swiss-cross').forEach(function(table){
@@ -233,15 +234,31 @@
     else if(label==='輔七')focusOpponentColumn(table,sourceRow,ids,'輔二',true);
   }
 
+  function togglePinnedSwissSummary(cell){
+    if(pinnedSwissSummary===cell){
+      pinnedSwissSummary=null;
+      clearSwissFocus();
+      return;
+    }
+    pinnedSwissSummary=cell;
+    focusSwissOpponents(cell);
+  }
+
   document.addEventListener('mouseover',function(e){
     var cross=e.target.closest&&e.target.closest('.cross-result[data-pair]');
     if(cross){focusPair(cross);return;}
 
     var gameCell=e.target.closest&&e.target.closest('.swiss-game-cell[data-game-key]');
-    if(gameCell){focusSwissGame(gameCell);return;}
+    if(gameCell){
+      if(!pinnedSwissSummary)focusSwissGame(gameCell);
+      return;
+    }
 
     var summaryCell=e.target.closest&&e.target.closest('.swiss-summary-cell[data-opponents]');
-    if(summaryCell){focusSwissOpponents(summaryCell);return;}
+    if(summaryCell){
+      if(!pinnedSwissSummary)focusSwissOpponents(summaryCell);
+      return;
+    }
 
     var head=e.target.closest&&e.target.closest('[data-tooltip]');
     if(head&&window.matchMedia('(hover:hover)').matches)showTip(head);
@@ -252,13 +269,13 @@
     if(cross&&!cross.contains(e.relatedTarget))clearPairs();
 
     var gameCell=e.target.closest&&e.target.closest('.swiss-game-cell[data-game-key]');
-    if(gameCell){
+    if(gameCell&&!pinnedSwissSummary){
       var next=e.relatedTarget&&e.relatedTarget.closest?e.relatedTarget.closest('.swiss-game-cell[data-game-key]'):null;
       if(!next||next.getAttribute('data-game-key')!==gameCell.getAttribute('data-game-key'))clearSwissFocus();
     }
 
     var summaryCell=e.target.closest&&e.target.closest('.swiss-summary-cell[data-opponents]');
-    if(summaryCell){
+    if(summaryCell&&!pinnedSwissSummary){
       var nextSummary=e.relatedTarget&&e.relatedTarget.closest?e.relatedTarget.closest('.swiss-summary-cell[data-opponents]'):null;
       if(!nextSummary)clearSwissFocus();
     }
@@ -268,6 +285,13 @@
   });
 
   document.addEventListener('click',function(e){
+    var summaryCell=e.target.closest&&e.target.closest('.swiss-summary-cell[data-opponents]');
+    if(summaryCell){
+      togglePinnedSwissSummary(summaryCell);
+      removeTip();
+      return;
+    }
+
     var cell=e.target.closest&&e.target.closest('.cross-result[data-pair]');
     if(cell){focusPair(cell);return;}
     var head=e.target.closest&&e.target.closest('[data-tooltip]');
