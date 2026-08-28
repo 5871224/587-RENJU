@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/login.php';
 require_once __DIR__ . '/swiss-table-render.php';
+require_once __DIR__ . '/swiss-sequence.php';
 
 $tour = max(0, (int)($_POST['TOUR'] ?? $_GET['TOUR'] ?? 0));
 $ajax = isset($_POST['ajax']) || strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
@@ -85,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // 不限制同一賽號＋同一棋手只能有一筆歷程；需要時仍可重複登錄。
-            swissInsertAdaptive($MYSQL, 'SUMMARY', [
+            swissInsertChronological($MYSQL, 'SUMMARY', [
                 '日期' => $date,
                 '賽號' => $tour,
                 '代號' => $player,
