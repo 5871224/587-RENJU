@@ -122,7 +122,7 @@ function swissRenderStandard(array $data, array $opt): string {
     if (!$data['display']) return '<div class="swiss-empty">這場比賽沒有可顯示的戰績資料。</div>';
     $players=$data['players']; $prefix=(string)($opt['player_prefix']??'');
     $labels=['輔一','輔二','輔三','輔四','輔五','輔六','輔七'];
-    $html='<div class="swiss-scroll"><table class="swiss-rank"><thead><tr><th>名次</th><th>等級分</th><th>姓名</th><th>段位</th>';
+    $html='<div class="swiss-scroll"><table class="swiss-rank"><thead><tr><th>名次</th><th>等級分</th><th>姓名</th><th>段級</th>';
     foreach ($data['roundNos'] as $r) $html.='<th class="round-head">R'.swissH($r).'</th><th class="opponent-head">對手</th>';
     $html.='<th class="total-head">總分</th>';
     for($i=0;$i<$data['tieDepth'];$i++) $html.='<th class="help-head" tabindex="0" data-tooltip="'.swissH(swissTooltip('t'.($i+1))).'">'.swissH($labels[$i]).'</th>';
@@ -163,7 +163,7 @@ function swissRenderStandard(array $data, array $opt): string {
 function swissRenderCross(array $data, array $opt): string {
     if (!$data['display']) return '<div class="swiss-empty">這場比賽沒有可顯示的戰績資料。</div>';
     $prefix=(string)($opt['player_prefix']??''); $matrix=$data['matrix']; $display=$data['display'];
-    $html='<div class="swiss-scroll"><table class="swiss-cross"><thead><tr><th>名次</th><th>等級分</th><th>姓名</th><th>段位</th>';
+    $html='<div class="swiss-scroll"><table class="swiss-cross"><thead><tr><th>名次</th><th>等級分</th><th>姓名</th><th>段級</th>';
     foreach($display as $opp)$html.='<th class="cross-player">'.swissH($opp['name']).'</th>';
     $html.='<th class="total-head">總分</th></tr></thead><tbody>';
     foreach($display as $p){
