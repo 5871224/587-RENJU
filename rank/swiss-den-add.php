@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/login.php';
 require_once __DIR__ . '/swiss-table-render.php';
+require_once __DIR__ . '/swiss-sequence.php';
 
 $tour = max(0, (int)($_POST['TOUR'] ?? $_GET['TOUR'] ?? 0));
 $ajax = isset($_POST['ajax']) || strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
@@ -120,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $duplicate->execute([$tour, $id, $rank]);
             if ((int)$duplicate->fetchColumn() > 0) continue;
 
-            swissInsertAdaptive($MYSQL, 'DEN', [
+            swissInsertChronological($MYSQL, 'DEN', [
                 '代號' => $id,
                 '姓名' => $p['name'],
                 '原因' => $reason,
