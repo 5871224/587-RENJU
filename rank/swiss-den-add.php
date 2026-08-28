@@ -25,6 +25,14 @@ function denPlaceLabel(int $place): string {
     return $place > 0 ? '第' . $place . '名' : '';
 }
 
+function denRankNumber(string $rank): int {
+    $rank = trim($rank);
+    if (preg_match('/^(1[0-6]|[1-9])\s*級$/u', $rank, $m)) {
+        return -(int)$m[1];
+    }
+    return swissRankNumber($rank);
+}
+
 if ($tour <= 0) {
     if ($ajax) denRespond(false, '缺少賽號。', $tour, true);
     http_response_code(400);
@@ -61,9 +69,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($rank === '') {
                 $rank = swissNextDan((string)$p['rank'])['段位'];
             }
-            $rankNumber = swissRankNumber($rank);
-            if ($rankNumber <= 0) {
-                throw new RuntimeException($p['name'] . ' 的段位格式不正確。');
+            $rankNumber = denRankNumber($rank);
+            if ($rankNumber === 0) {
+                throw new RuntimeException($p['name'] . ' 的段級格式不正確。');
             }
 
             $reason = trim((string)($row['reason'] ?? ''));
@@ -75,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $duplicate = $MYSQL->prepare('SELECT COUNT(*) FROM `DEN` WHERE `賽號`=? AND `代號`=? AND `段位`=? AND `序號`<>?');
                 $duplicate->execute([$tour, $id, $rank, $recordId]);
                 if ((int)$duplicate->fetchColumn() > 0) {
-                    throw new RuntimeException($p['name'] . ' 已有相同段位紀錄。');
+                    throw new RuntimeException($p['name'] . ' 已有相同段級紀錄。');
                 }
 
                 $values = [
