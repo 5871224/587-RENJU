@@ -38,11 +38,9 @@ if ($scriptName === 'record.php') {
     if ($safeDate === null) unset($_GET['DATE']);
     else $_GET['DATE'] = $safeDate;
 
-    // record.php 的各項紀錄只統計實際對局，不把輪空算進 GAME。
-    // 建立同名暫存表只影響本次 record.php 請求；其他頁面仍使用正式 GAME 資料表。
-    $MYSQL->exec("CREATE TEMPORARY TABLE `GAME` AS
-        SELECT * FROM `renjuorg_587`.`GAME`
-        WHERE COALESCE(`備註`, '') <> '輪空'");
+    // 不以同名 TEMPORARY GAME 覆蓋正式資料表。
+    // record.php 有查詢會在同一個 SQL 內多次引用 GAME；MySQL 對 temporary table
+    // 會觸發 "Can't reopen table"，導致後續統計整頁中斷。
 }
 
 ?>
