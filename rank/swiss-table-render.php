@@ -38,7 +38,7 @@ function swissRenderHistory(array $data, array $opt): string {
     $html = '<div class="swiss-subsection history-card">';
     if ($showHeading || $admin) {
         $html .= '<div class="swiss-subhead">';
-        if ($showHeading) $html .= '<h3>歷程</h3>';
+        if ($showHeading || $admin) $html .= '<h3>歷程</h3>';
         if ($admin) $html .= '<a class="swiss-btn" href="' . swissH($prefix . 'swiss-history-add.php?TOUR=' . $defaultTour) . '" data-swiss-modal="history" data-tour="' . $defaultTour . '">新增歷程</a>';
         $html .= '</div>';
     }
@@ -91,7 +91,7 @@ function swissRenderPromotions(array $data, array $opt): string {
     $defaultTour = (int)$data['tournament']['賽號'];
     $heading = (string)($opt['promotion_heading'] ?? '升段／升級');
     $html = '<div class="swiss-subsection promotion-card"><div class="swiss-subhead">';
-    if ($showHeading) $html .= '<h3>' . swissH($heading) . '</h3>';
+    if ($showHeading || $admin) $html .= '<h3>' . swissH($heading) . '</h3>';
     if ($admin) $html .= '<a class="swiss-btn" href="' . swissH($prefix . 'swiss-den-add.php?TOUR=' . $defaultTour) . '" data-swiss-modal="den" data-tour="' . $defaultTour . '">新增段級</a>';
     $html .= '</div>';
     if (!$rows) {
