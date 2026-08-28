@@ -106,7 +106,7 @@ function swissDenPlayerOptions(array $data, array $eligible, int $selected = 0):
 }
 
 function swissDenRankOptions(string $selected = ''): string {
-    $ranks = ['初段','二段','三段','四段','五段','六段','七段','八段','九段','十段'];
+    $ranks = ['初段','二段','三段','四段','五段','六段','七段','八段','九段'];
     for ($kyu = 1; $kyu <= 16; $kyu++) $ranks[] = $kyu . '級';
     $html = '';
     foreach ($ranks as $rank) {
