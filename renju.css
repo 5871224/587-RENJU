@@ -96,58 +96,6 @@ table.rank tbody tr:hover td {
 	background: #EDF7E9;
 }
 
-/* Swiss 戰績表不使用斑馬紋與整列 hover，普通欄位維持白底。 */
-table.swiss-rank tbody tr:nth-child(even) td,
-table.swiss-rank tbody tr:hover td {
-	background: #FFFFFF !important;
-}
-
-/* Swiss 戰績表：僅保留勝和負與總分的語意底色 */
-table.swiss-rank tbody tr:nth-child(even) td.score-win,
-table.swiss-rank tbody tr:hover td.score-win,
-table.swiss-rank td.score-win {
-	background: #E7F7D5 !important;
-}
-
-table.swiss-rank tbody tr:nth-child(even) td.score-draw,
-table.swiss-rank tbody tr:hover td.score-draw,
-table.swiss-rank td.score-draw {
-	background: #FFF4C7 !important;
-}
-
-table.swiss-rank tbody tr:nth-child(even) td.score-loss,
-table.swiss-rank tbody tr:hover td.score-loss,
-table.swiss-rank td.score-loss {
-	background: #FBE4E4 !important;
-}
-
-table.swiss-rank tbody tr:nth-child(even) td.name,
-table.swiss-rank tbody tr:hover td.name,
-table.swiss-rank td.name,
-table.swiss-rank tbody tr:nth-child(even) td.rank-name,
-table.swiss-rank tbody tr:hover td.rank-name,
-table.swiss-rank td.rank-name,
-table.swiss-rank tbody tr:nth-child(even) td.place,
-table.swiss-rank tbody tr:hover td.place,
-table.swiss-rank td.place {
-	background: #FFFFFF !important;
-}
-
-table.swiss-rank tbody tr:nth-child(even) td.total,
-table.swiss-rank tbody tr:hover td.total,
-table.swiss-rank td.total {
-	background: #E6F0FF !important;
-}
-
-/* Swiss 升段／升級區塊：有資料只顯示表格，沒有資料則整段隱藏。 */
-.promotion-card h3 {
-	display: none !important;
-}
-
-.promotion-card:has(.promotion-empty) {
-	display: none !important;
-}
-
 /* 表格內超連結：藍色字，表格內容維持正黑體一般字重 */
 table.tb a,
 table.rank a,
