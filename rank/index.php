@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/login.php';
+require_once __DIR__ . '/swiss-lib.php';
+require_once __DIR__ . '/swiss-sequence.php';
 
 function h($value): string {
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
@@ -136,7 +138,7 @@ try {
 
         if ($searchField !== '' && !in_array($searchField, $columns, true)) $searchField = '';
 
-        if ($isNew && isset($columnMeta['序號'])) {
+        if ($isNew && isset($columnMeta['序號']) && !in_array($table, ['DEN', 'SUMMARY'], true)) {
             $newDefaults['序號'] = (string)((int)$MYSQL->query(
                 'SELECT COALESCE(MAX(' . qi('序號') . '),0)+1 FROM ' . qi($table)
             )->fetchColumn());
@@ -185,6 +187,31 @@ try {
 
         if ($action === 'create') {
             $fields = isset($_POST['field']) && is_array($_POST['field']) ? $_POST['field'] : [];
+
+            if (in_array($table, ['DEN', 'SUMMARY'], true)) {
+                $values = [];
+                foreach ($columns as $column) {
+                    if ($column === '序號') continue;
+                    $meta = $columnMeta[$column] ?? [];
+                    $raw = $fields[$column] ?? '';
+                    if (($meta['Extra'] ?? '') === 'auto_increment' && (string)$raw === '') continue;
+                    $values[$column] = normalizeFieldValue($raw, $meta);
+                }
+                if (trim((string)($values['日期'] ?? '')) === '') {
+                    throw new RuntimeException($table === 'DEN' ? '段級資料必須填寫日期。' : '歷程資料必須填寫日期。');
+                }
+                try {
+                    $MYSQL->beginTransaction();
+                    swissInsertChronological($MYSQL, $table, $values);
+                    $MYSQL->commit();
+                } catch (Throwable $insertError) {
+                    if ($MYSQL->inTransaction()) $MYSQL->rollBack();
+                    throw $insertError;
+                }
+                header('Location: ' . listUrl($view, $q, $searchField, ['created' => 1]));
+                exit;
+            }
+
             if (isset($columnMeta['序號']) && trim((string)($fields['序號'] ?? '')) === '') {
                 $fields['序號'] = (string)((int)$MYSQL->query(
                     'SELECT COALESCE(MAX(' . qi('序號') . '),0)+1 FROM ' . qi($table)
@@ -438,10 +465,11 @@ $totalRecords = array_sum($counts);
                 $meta = $columnMeta[$column] ?? [];
                 $type = inputTypeForColumn((string)($meta['Type'] ?? ''));
                 $step = $type === 'number' ? ' step="any"' : '';
-                $default = array_key_exists($column, $newDefaults) ? $newDefaults[$column] : ($meta['Default'] ?? '');
+                $isChronologicalSequence = $column === '序號' && in_array($current['table'], ['DEN', 'SUMMARY'], true);
+                $default = $isChronologicalSequence ? '' : (array_key_exists($column, $newDefaults) ? $newDefaults[$column] : ($meta['Default'] ?? ''));
                 if ($default === null) $default = '';
             ?>
-                <div class="edit-field"><label><?= h($column) ?><?= in_array($column, $primaryKeys, true) ? '（主鍵）' : '' ?><?= $column === '序號' && array_key_exists('序號', $newDefaults) ? '（自動下一號）' : '' ?></label><input type="<?= h($type) ?>"<?= $step ?> name="field[<?= h($column) ?>]" value="<?= h($default) ?>"></div>
+                <div class="edit-field"><label><?= h($column) ?><?= in_array($column, $primaryKeys, true) ? '（主鍵）' : '' ?><?= $isChronologicalSequence ? '（依日期自動）' : ($column === '序號' && array_key_exists('序號', $newDefaults) ? '（自動下一號）' : '') ?></label><input type="<?= h($type) ?>"<?= $step ?> name="field[<?= h($column) ?>]" value="<?= h($default) ?>"<?= $isChronologicalSequence ? ' readonly' : '' ?>></div>
             <?php endforeach; ?>
             </div>
             <div class="edit-actions"><button class="btn primary" type="submit" onclick="return confirm('確定要新增這筆資料嗎？')">新增資料</button><a class="btn" href="<?= h(listUrl($view, $q, $searchField)) ?>">取消</a></div>
