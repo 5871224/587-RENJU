@@ -12,7 +12,7 @@ foreach ($file in $phpFiles) {
     }
 }
 
-php rank/tests/swiss-render-regression.php
+php scripts/check-swiss-render.php
 if ($LASTEXITCODE -ne 0) {
     throw 'Swiss render regression checks failed.'
 }
