@@ -4,12 +4,12 @@ on:
   push:
     paths:
       - 'rank/swiss*.php'
-      - 'scripts/test_swiss_render.php'
+      - 'scripts/test_swiss_*.php'
       - '.github/workflows/swiss-regression.yml'
   pull_request:
     paths:
       - 'rank/swiss*.php'
-      - 'scripts/test_swiss_render.php'
+      - 'scripts/test_swiss_*.php'
       - '.github/workflows/swiss-regression.yml'
   workflow_dispatch:
 
@@ -33,9 +33,13 @@ jobs:
         run: |
           set -euo pipefail
           php -v
-          for file in rank/swiss*.php; do
+          for file in rank/swiss*.php scripts/test_swiss_*.php; do
             php -l "$file"
           done
+
+      - name: Run Swiss calculation regression tests
+        shell: bash
+        run: php scripts/test_swiss_calculation.php
 
       - name: Run Swiss render regression tests
         shell: bash
