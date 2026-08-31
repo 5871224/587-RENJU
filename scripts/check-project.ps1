@@ -96,7 +96,11 @@ $rankProtectedPages = @(
     'rank/rating-review.php',
     'rank/rating-latest.php',
     'rank/rating-elo-audit.php',
-    'rank/recalculate-export.php'
+    'rank/recalculate-export.php',
+    'rank/swiss.php',
+    'rank/swiss-history-add.php',
+    'rank/swiss-den-add.php',
+    'rank/swiss-record-delete.php'
 )
 foreach ($file in $rankProtectedPages) {
     $source = Get-Content -Raw $file
