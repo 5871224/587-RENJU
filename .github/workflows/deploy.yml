@@ -92,6 +92,11 @@ jobs:
             try: ftp.delete(legacy_name)
             except ftplib.error_perm as exc:
               if not str(exc).startswith('550'): raise
+          # Regression tests belong to CI only and must never remain in the public rank tree.
+          ftp.cwd(base_dir); ensure_dir('rank/tests')
+          try: ftp.delete('swiss-render-regression.php')
+          except ftplib.error_perm as exc:
+            if not str(exc).startswith('550'): raise
           ftp.quit()
 
       - name: Verify public security boundaries
@@ -113,6 +118,7 @@ jobs:
             '/rank/final-diff.php'
             '/rank/recalculated-ranking.php'
             '/rank/elo-audit.php'
+            '/rank/tests/swiss-render-regression.php'
           )
           failed=0
           for path in "${paths[@]}"; do
