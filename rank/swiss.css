@@ -273,11 +273,25 @@
 .swiss-rank td.opponent { font-size: 14px; }
 .swiss-game-cell,
 .swiss-summary-cell { cursor: pointer; }
+
+/* 同一輪的「分數＋對手」視為一個 hover 區塊，只畫最外層橘框。 */
 .swiss-rank td.swiss-focus {
     position: relative;
     z-index: 2;
-    outline: 2px solid #f59e0b;
-    outline-offset: -2px;
+    outline: 0;
+}
+.swiss-rank td.round-score.swiss-focus {
+    border-right-color: transparent;
+    box-shadow:
+        inset 2px 0 #f59e0b,
+        inset 0 2px #f59e0b,
+        inset 0 -2px #f59e0b;
+}
+.swiss-rank td.opponent.swiss-focus {
+    box-shadow:
+        inset -2px 0 #f59e0b,
+        inset 0 2px #f59e0b,
+        inset 0 -2px #f59e0b;
 }
 
 /* 可點擊總分／輔分／升段分：懸停時來源分數與本列姓名為綠框，固定時改為藍框。 */
