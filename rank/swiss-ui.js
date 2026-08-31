@@ -1,6 +1,7 @@
 (function(){
   var scoreClasses=['score-win','score-draw','score-loss'];
   var pinnedSwissSummary=null;
+  var pinnedSwissGame=null;
 
   function setupCrossTables(){
     document.querySelectorAll('table.swiss-cross').forEach(function(table){
@@ -56,6 +57,10 @@
 
   function clearSwissFocus(){
     document.querySelectorAll('.swiss-rank .swiss-focus').forEach(function(el){el.classList.remove('swiss-focus');});
+    document.querySelectorAll('.swiss-rank .swiss-game-primary').forEach(function(el){
+      el.classList.remove('swiss-game-primary','swiss-game-primary-pinned');
+    });
+    document.querySelectorAll('.swiss-rank .swiss-game-opponent').forEach(function(el){el.classList.remove('swiss-game-opponent');});
     document.querySelectorAll('.swiss-rank .swiss-hover-source').forEach(function(el){el.classList.remove('swiss-hover-source');});
     document.querySelectorAll('.swiss-rank .swiss-summary-anchor').forEach(function(el){
       el.classList.remove('swiss-summary-anchor','swiss-summary-pinned');
@@ -70,24 +75,39 @@
     });
   }
 
-  function focusSwissGame(cell){
+  function markSwissGameSide(table,key,playerId,className,pinned){
+    if(!key||!playerId)return;
+    table.querySelectorAll('.swiss-game-cell[data-game-key="'+key+'"][data-player="'+playerId+'"]').forEach(function(el){
+      el.classList.add(className);
+      if(pinned&&className==='swiss-game-primary')el.classList.add('swiss-game-primary-pinned');
+    });
+    var name=table.querySelector('.name[data-player-id="'+playerId+'"]');
+    if(name){
+      name.classList.add(className);
+      if(pinned&&className==='swiss-game-primary')name.classList.add('swiss-game-primary-pinned');
+    }
+  }
+
+  function focusSwissGame(cell,pinned){
     clearSwissFocus();
     var table=cell.closest('table.swiss-rank');
     if(!table)return;
     var key=cell.getAttribute('data-game-key');
-    if(key){
-      table.querySelectorAll('.swiss-game-cell[data-game-key="'+key+'"]').forEach(function(el){el.classList.add('swiss-focus');});
-    }
     var player=cell.getAttribute('data-player');
     var opponent=cell.getAttribute('data-opponent');
-    if(player){
-      var own=table.querySelector('.name[data-player-id="'+player+'"]');
-      if(own)own.classList.add('swiss-focus');
-    }
-    if(opponent){
-      var other=table.querySelector('.name[data-player-id="'+opponent+'"]');
-      if(other)other.classList.add('swiss-focus');
-    }
+
+    markSwissGameSide(table,key,player,'swiss-game-primary',!!pinned);
+    if(opponent)markSwissGameSide(table,key,opponent,'swiss-game-opponent',false);
+  }
+
+  function pinSwissGame(cell){
+    pinnedSwissGame=cell;
+    focusSwissGame(cell,true);
+  }
+
+  function releasePinnedSwissGame(){
+    pinnedSwissGame=null;
+    clearSwissFocus();
   }
 
   function headerLabel(table,index){
@@ -263,19 +283,23 @@
     if(summaryCell)focusSwissOpponents(summaryCell,false);
   }
 
+  function hasPinnedSwissFocus(){
+    return !!(pinnedSwissSummary||pinnedSwissGame);
+  }
+
   document.addEventListener('mouseover',function(e){
     var cross=e.target.closest&&e.target.closest('.cross-result[data-pair]');
     if(cross){focusPair(cross);return;}
 
     var gameCell=e.target.closest&&e.target.closest('.swiss-game-cell[data-game-key]');
     if(gameCell){
-      if(!pinnedSwissSummary)focusSwissGame(gameCell);
+      if(!hasPinnedSwissFocus())focusSwissGame(gameCell,false);
       return;
     }
 
     var summaryCell=e.target.closest&&e.target.closest('.swiss-summary-cell[data-opponents]');
     if(summaryCell){
-      if(!pinnedSwissSummary)focusSwissOpponents(summaryCell,false);
+      if(!hasPinnedSwissFocus())focusSwissOpponents(summaryCell,false);
       return;
     }
 
@@ -288,13 +312,13 @@
     if(cross&&!cross.contains(e.relatedTarget))clearPairs();
 
     var gameCell=e.target.closest&&e.target.closest('.swiss-game-cell[data-game-key]');
-    if(gameCell&&!pinnedSwissSummary){
+    if(gameCell&&!hasPinnedSwissFocus()){
       var next=e.relatedTarget&&e.relatedTarget.closest?e.relatedTarget.closest('.swiss-game-cell[data-game-key]'):null;
-      if(!next||next.getAttribute('data-game-key')!==gameCell.getAttribute('data-game-key'))clearSwissFocus();
+      if(!next||next.getAttribute('data-game-key')!==gameCell.getAttribute('data-game-key')||next.getAttribute('data-player')!==gameCell.getAttribute('data-player'))clearSwissFocus();
     }
 
     var summaryCell=e.target.closest&&e.target.closest('.swiss-summary-cell[data-opponents]');
-    if(summaryCell&&!pinnedSwissSummary){
+    if(summaryCell&&!hasPinnedSwissFocus()){
       var nextSummary=e.relatedTarget&&e.relatedTarget.closest?e.relatedTarget.closest('.swiss-summary-cell[data-opponents]'):null;
       if(!nextSummary)clearSwissFocus();
     }
@@ -304,8 +328,21 @@
   });
 
   document.addEventListener('click',function(e){
+    if(pinnedSwissGame){
+      releasePinnedSwissGame();
+      removeTip();
+      return;
+    }
+
     if(pinnedSwissSummary){
       releasePinnedSwissSummary(e.target);
+      removeTip();
+      return;
+    }
+
+    var gameCell=e.target.closest&&e.target.closest('.swiss-game-cell[data-game-key]');
+    if(gameCell){
+      pinSwissGame(gameCell);
       removeTip();
       return;
     }
