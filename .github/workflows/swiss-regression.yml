@@ -4,11 +4,15 @@ on:
   push:
     paths:
       - 'rank/swiss*.php'
+      - 'rank/swiss*.js'
+      - 'rank/swiss*.css'
       - 'scripts/test_swiss_*.php'
       - '.github/workflows/swiss-regression.yml'
   pull_request:
     paths:
       - 'rank/swiss*.php'
+      - 'rank/swiss*.js'
+      - 'rank/swiss*.css'
       - 'scripts/test_swiss_*.php'
       - '.github/workflows/swiss-regression.yml'
   workflow_dispatch:
@@ -35,6 +39,15 @@ jobs:
           php -v
           for file in rank/swiss*.php scripts/test_swiss_*.php; do
             php -l "$file"
+          done
+
+      - name: Validate Swiss JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --version
+          for file in rank/swiss*.js; do
+            node --check "$file"
           done
 
       - name: Run Swiss calculation regression tests
