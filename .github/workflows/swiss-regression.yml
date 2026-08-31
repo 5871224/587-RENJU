@@ -1,0 +1,42 @@
+name: Swiss regression
+
+on:
+  push:
+    paths:
+      - 'rank/swiss*.php'
+      - 'scripts/test_swiss_render.php'
+      - '.github/workflows/swiss-regression.yml'
+  pull_request:
+    paths:
+      - 'rank/swiss*.php'
+      - 'scripts/test_swiss_render.php'
+      - '.github/workflows/swiss-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: swiss-regression-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate Swiss PHP syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -v
+          for file in rank/swiss*.php; do
+            php -l "$file"
+          done
+
+      - name: Run Swiss render regression tests
+        shell: bash
+        run: php scripts/test_swiss_render.php
