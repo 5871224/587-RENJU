@@ -12,6 +12,21 @@ foreach ($file in $phpFiles) {
     }
 }
 
+php rank/tests/swiss-render-regression.php
+if ($LASTEXITCODE -ne 0) {
+    throw 'Swiss render regression checks failed.'
+}
+
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    throw 'Node.js is required for Swiss JavaScript syntax validation.'
+}
+foreach ($file in @('rank/swiss-ui.js', 'rank/swiss-admin-ui.js')) {
+    node --check $file
+    if ($LASTEXITCODE -ne 0) {
+        throw "JavaScript syntax check failed: $file"
+    }
+}
+
 $credentialFiles = @(
     'riftw/login.php',
     'CH/testlogin.php',
@@ -138,4 +153,4 @@ foreach ($required in @('SCRIPT_NAME', 'htmlspecialchars', 'ENT_QUOTES', "`$_POS
     }
 }
 
-Write-Host "Checked $($phpFiles.Count) PHP files; public source security controls are present."
+Write-Host "Checked $($phpFiles.Count) PHP files; Swiss regression and public source security controls are present."
