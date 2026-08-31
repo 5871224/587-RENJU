@@ -178,7 +178,8 @@ function swissRenderAdminTournamentSection(PDO $db, array $data): string {
         'title_override'=>(string)($data['_title_override'] ?? ''),
     ];
     $opt['after_meta_html'] = swissRenderHistory($data, $opt) . swissRenderPromotions($data, $opt);
-    return '<section class="swiss-tournament-section" id="tour-' . $tour . '">' . swissRenderTournament($db, $tour, $opt) . '</section>';
+    $data = swissPrepareTournamentRenderData($db, $data);
+    return '<section class="swiss-tournament-section" id="tour-' . $tour . '">' . swissRenderTournamentData($data, $opt) . '</section>';
 }
 
 function swissGroupInfo(PDO $db, int $tour): array {
