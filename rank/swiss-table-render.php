@@ -19,6 +19,37 @@ function swissPlayerLink(array $p, string $prefix): string {
     return '<a href="' . swissH($prefix . 'player.php?PLAYER=' . rawurlencode((string)$p['id'])) . '">' . swissH($p['name']) . '</a>';
 }
 
+function swissScoreClass($score): string {
+    $value = (float)$score;
+    if ($value > 1.0) return 'score-win';
+    if ($value < 1.0) return 'score-loss';
+    return 'score-draw';
+}
+
+function swissGameInteractionKey(int $playerId, int $opponentId, int $round, bool $missing = false): string {
+    if ($missing) return 'missing-' . $playerId . '-' . $round;
+    if ($opponentId > 0) return 'game-' . min($playerId, $opponentId) . '-' . max($playerId, $opponentId) . '-' . $round;
+    return 'special-' . $playerId . '-' . $round;
+}
+
+/**
+ * Formal renderer/UI contract for swiss-ui.js.
+ * Score and opponent cells from the same game must always receive the same attributes.
+ */
+function swissGameCellAttrs(int $playerId, int $opponentId, int $round, bool $missing = false): string {
+    $key = swissGameInteractionKey($playerId, $opponentId, $round, $missing);
+    return ' data-game-key="' . swissH($key) . '" data-player="' . $playerId . '" data-opponent="' . ($opponentId > 0 ? $opponentId : '') . '"';
+}
+
+function swissSummaryCellAttrs(array $opponentIds): string {
+    $ids = [];
+    foreach ($opponentIds as $id) {
+        $id = (int)$id;
+        if ($id > 0) $ids[$id] = true;
+    }
+    return ' data-opponents="' . swissH(implode(',', array_keys($ids))) . '"';
+}
+
 function swissRenjuGameKey(int $tour, int $round, int $p1, int $p2): string {
     if ($tour <= 0 || $round <= 0 || $p1 <= 0 || $p2 <= 0) return '';
     return $tour . ':' . $round . ':' . min($p1, $p2) . ':' . max($p1, $p2);
@@ -163,128 +194,186 @@ function swissRenderPromotions(array $data, array $opt): string {
 
 function swissRenderStandard(array $data, array $opt): string {
     if (!$data['display']) return '<div class="swiss-empty">這場比賽沒有可顯示的戰績資料。</div>';
-    $players=$data['players']; $prefix=(string)($opt['player_prefix']??'');
-    $gameMap=$data['_renju_game_map']??[]; $tour=(int)$data['tournament']['賽號'];
-    $labels=['輔一','輔二','輔三','輔四','輔五','輔六','輔七'];
-    $html='<div class="swiss-scroll"><table class="swiss-rank"><thead><tr><th>名次</th><th>等級分</th><th>姓名</th><th>段級</th>';
-    foreach ($data['roundNos'] as $r) $html.='<th class="round-head">R'.swissH($r).'</th><th class="opponent-head">對手</th>';
-    $html.='<th class="total-head">總分</th>';
-    for($i=0;$i<$data['tieDepth'];$i++) $html.='<th class="help-head" tabindex="0" data-tooltip="'.swissH(swissTooltip('t'.($i+1))).'">'.swissH($labels[$i]).'</th>';
-    $html.='<th class="help-head" tabindex="0" data-tooltip="'.swissH(swissTooltip('promotion')).'">升段分</th></tr></thead><tbody>';
-    foreach($data['display'] as $p){
-        $playerId=(int)$p['id'];
-        $opponentIds=[];
-        foreach($p['games'] as $roundGame){
-            if(isset($roundGame['opp']) && $roundGame['opp']!==null && isset($players[$roundGame['opp']])) $opponentIds[(int)$roundGame['opp']]=true;
-        }
-        $opponentList=implode(',',array_keys($opponentIds));
+    $players = $data['players'];
+    $prefix = (string)($opt['player_prefix'] ?? '');
+    $gameMap = $data['_renju_game_map'] ?? [];
+    $tour = (int)$data['tournament']['賽號'];
+    $labels = ['輔一','輔二','輔三','輔四','輔五','輔六','輔七'];
 
-        $html.='<tr><td class="place">'.swissH($p['virtual_draw']).'</td>';
-        if($p['rating']===null||$p['rating']==='') $html.='<td class="rating"></td>'; else $html.='<td class="rating" style="color:'.swissH(swissRatingColor($p['rating'])).'">'.swissH((int)round((float)$p['rating'])).'</td>';
-        $html.='<td class="name" data-player-id="'.$playerId.'">'.swissPlayerLink($p,$prefix).'</td><td>'.swissH($p['rank']).'</td>';
-        foreach($data['roundNos'] as $r){
-            if(!isset($p['games'][$r])){
-                $interactionKey='missing-'.$playerId.'-'.(int)$r;
-                $attrs=' data-game-key="'.swissH($interactionKey).'" data-player="'.$playerId.'" data-opponent=""';
-                $html.='<td class="round-score score-loss swiss-game-cell"'.$attrs.'>0</td><td class="opponent swiss-game-cell"'.$attrs.'>棄賽</td>';
+    $html = '<div class="swiss-scroll"><table class="swiss-rank"><thead><tr><th>名次</th><th>等級分</th><th>姓名</th><th>段級</th>';
+    foreach ($data['roundNos'] as $r) $html .= '<th class="round-head">R' . swissH($r) . '</th><th class="opponent-head">對手</th>';
+    $html .= '<th class="total-head">總分</th>';
+    for ($i = 0; $i < $data['tieDepth']; $i++) {
+        $html .= '<th class="help-head" tabindex="0" data-tooltip="' . swissH(swissTooltip('t' . ($i + 1))) . '">' . swissH($labels[$i]) . '</th>';
+    }
+    $html .= '<th class="help-head" tabindex="0" data-tooltip="' . swissH(swissTooltip('promotion')) . '">升段分</th></tr></thead><tbody>';
+
+    foreach ($data['display'] as $p) {
+        $playerId = (int)$p['id'];
+        $opponentIds = [];
+        foreach ($p['games'] as $roundGame) {
+            if (isset($roundGame['opp']) && $roundGame['opp'] !== null && isset($players[$roundGame['opp']])) {
+                $opponentIds[] = (int)$roundGame['opp'];
+            }
+        }
+
+        $html .= '<tr><td class="place">' . swissH($p['virtual_draw']) . '</td>';
+        if ($p['rating'] === null || $p['rating'] === '') {
+            $html .= '<td class="rating"></td>';
+        } else {
+            $html .= '<td class="rating" style="color:' . swissH(swissRatingColor($p['rating'])) . '">' . swissH((int)round((float)$p['rating'])) . '</td>';
+        }
+        $html .= '<td class="name" data-player-id="' . $playerId . '">' . swissPlayerLink($p, $prefix) . '</td><td>' . swissH($p['rank']) . '</td>';
+
+        foreach ($data['roundNos'] as $r) {
+            $round = (int)$r;
+            if (!isset($p['games'][$r])) {
+                $attrs = swissGameCellAttrs($playerId, 0, $round, true);
+                $html .= '<td class="round-score score-loss swiss-game-cell"' . $attrs . '>0</td><td class="opponent swiss-game-cell"' . $attrs . '>棄賽</td>';
                 continue;
             }
-            $g=$p['games'][$r];$score=(float)$g['score'];$cls=$score>1?'score-win':($score<1?'score-loss':'score-draw');
-            $oppId=($g['opp']===null)?0:(int)$g['opp'];
-            $interactionKey=$oppId>0 ? ('game-'.min($playerId,$oppId).'-'.max($playerId,$oppId).'-'.(int)$r) : ('special-'.$playerId.'-'.(int)$r);
-            $attrs=' data-game-key="'.swissH($interactionKey).'" data-player="'.$playerId.'" data-opponent="'.($oppId>0?$oppId:'').'"';
-            $gameKey=$oppId>0?swissRenjuGameKey($tour,(int)$r,$playerId,$oppId):'';
-            $gameId=$gameKey!==''?($gameMap[$gameKey]??''):'';
-            $html.='<td class="round-score '.$cls.' swiss-game-cell"'.$attrs.'>'.swissRenjuScoreLink(swissFmt($score),$gameId).'</td>';
-            if(!empty($g['status']))$html.='<td class="opponent swiss-game-cell"'.$attrs.'>'.swissH($g['status']).'</td>';else{$oppCls=!empty($g['opening'])?'opponent opening swiss-game-cell':'opponent swiss-game-cell';$html.='<td class="'.$oppCls.'"'.$attrs.'>'.swissH($players[$g['opp']]['virtual_draw']).'</td>';}
+
+            $g = $p['games'][$r];
+            $score = (float)$g['score'];
+            $oppId = $g['opp'] === null ? 0 : (int)$g['opp'];
+            $attrs = swissGameCellAttrs($playerId, $oppId, $round);
+            $gameKey = $oppId > 0 ? swissRenjuGameKey($tour, $round, $playerId, $oppId) : '';
+            $gameId = $gameKey !== '' ? ($gameMap[$gameKey] ?? '') : '';
+
+            $html .= '<td class="round-score ' . swissScoreClass($score) . ' swiss-game-cell"' . $attrs . '>' . swissRenjuScoreLink(swissFmt($score), $gameId) . '</td>';
+            if (!empty($g['status'])) {
+                $html .= '<td class="opponent swiss-game-cell"' . $attrs . '>' . swissH($g['status']) . '</td>';
+            } else {
+                $oppCls = !empty($g['opening']) ? 'opponent opening swiss-game-cell' : 'opponent swiss-game-cell';
+                $html .= '<td class="' . $oppCls . '"' . $attrs . '>' . swissH($players[$g['opp']]['virtual_draw']) . '</td>';
+            }
         }
-        $summaryAttrs=' data-opponents="'.swissH($opponentList).'"';
-        $html.='<td class="total swiss-summary-cell"'.$summaryAttrs.'>'.swissH(swissFmt($p['total'])).'</td>';
-        for($i=1;$i<=$data['tieDepth'];$i++)$html.='<td class="swiss-summary-cell"'.$summaryAttrs.'>'.swissH(swissFmt($p['t'.$i])).'</td>';
-        $html.='<td class="swiss-summary-cell"'.$summaryAttrs.'>'.swissH(swissFmt($p['promotion'])).'</td></tr>';
+
+        $summaryAttrs = swissSummaryCellAttrs($opponentIds);
+        $html .= '<td class="total swiss-summary-cell"' . $summaryAttrs . '>' . swissH(swissFmt($p['total'])) . '</td>';
+        for ($i = 1; $i <= $data['tieDepth']; $i++) {
+            $html .= '<td class="swiss-summary-cell"' . $summaryAttrs . '>' . swissH(swissFmt($p['t' . $i])) . '</td>';
+        }
+        $html .= '<td class="swiss-summary-cell"' . $summaryAttrs . '>' . swissH(swissFmt($p['promotion'])) . '</td></tr>';
     }
-    return $html.'</tbody></table></div>';
+    return $html . '</tbody></table></div>';
 }
 
 function swissRenderCross(array $data, array $opt): string {
     if (!$data['display']) return '<div class="swiss-empty">這場比賽沒有可顯示的戰績資料。</div>';
-    $prefix=(string)($opt['player_prefix']??''); $matrix=$data['matrix']; $display=$data['display'];
-    $gameMap=$data['_renju_game_map']??[]; $tour=(int)$data['tournament']['賽號'];
-    $html='<div class="swiss-scroll"><table class="swiss-cross"><thead><tr><th>名次</th><th>等級分</th><th>姓名</th><th>段級</th>';
-    foreach($display as $opp)$html.='<th class="cross-player">'.swissH($opp['name']).'</th>';
-    $html.='<th class="total-head">總分</th></tr></thead><tbody>';
-    foreach($display as $p){
-        $html.='<tr><td class="place">'.swissH($p['virtual_draw']).'</td>';
-        $html.=($p['rating']===null||$p['rating']==='')?'<td class="rating"></td>':'<td class="rating" style="color:'.swissH(swissRatingColor($p['rating'])).'">'.swissH((int)round((float)$p['rating'])).'</td>';
-        $html.='<td class="name">'.swissPlayerLink($p,$prefix).'</td><td>'.swissH($p['rank']).'</td>';
-        foreach($display as $opp){
-            if((int)$p['id']===(int)$opp['id']){$html.='<td class="cross-self" aria-label="自己對自己"></td>';continue;}
-            $pair=min((int)$p['id'],(int)$opp['id']).'-'.max((int)$p['id'],(int)$opp['id']);
-            $html.='<td class="cross-result" data-pair="'.swissH($pair).'">';
-            $cells=$matrix[$p['id']][$opp['id']]??[];
-            $parts=[];
-            foreach($cells as $cell){
-                $cls=!empty($cell['opening'])?'opening-score':'reply-score';
-                $gameKey=swissRenjuGameKey($tour,(int)($cell['round']??0),(int)$p['id'],(int)$opp['id']);
-                $gameId=$gameKey!==''?($gameMap[$gameKey]??''):'';
-                $parts[]='<span class="'.$cls.'">'.swissRenjuScoreLink(swissFmt($cell['score']),$gameId).'</span>';
+    $prefix = (string)($opt['player_prefix'] ?? '');
+    $matrix = $data['matrix'];
+    $display = $data['display'];
+    $gameMap = $data['_renju_game_map'] ?? [];
+    $tour = (int)$data['tournament']['賽號'];
+
+    $html = '<div class="swiss-scroll"><table class="swiss-cross"><thead><tr><th>名次</th><th>等級分</th><th>姓名</th><th>段級</th>';
+    foreach ($display as $opp) $html .= '<th class="cross-player">' . swissH($opp['name']) . '</th>';
+    $html .= '<th class="total-head">總分</th></tr></thead><tbody>';
+
+    foreach ($display as $p) {
+        $html .= '<tr><td class="place">' . swissH($p['virtual_draw']) . '</td>';
+        $html .= ($p['rating'] === null || $p['rating'] === '')
+            ? '<td class="rating"></td>'
+            : '<td class="rating" style="color:' . swissH(swissRatingColor($p['rating'])) . '">' . swissH((int)round((float)$p['rating'])) . '</td>';
+        $html .= '<td class="name">' . swissPlayerLink($p, $prefix) . '</td><td>' . swissH($p['rank']) . '</td>';
+
+        foreach ($display as $opp) {
+            if ((int)$p['id'] === (int)$opp['id']) {
+                $html .= '<td class="cross-self" aria-label="自己對自己"></td>';
+                continue;
             }
-            $html.=implode('<span class="cross-sep">／</span>',$parts).'</td>';
+            $pair = min((int)$p['id'], (int)$opp['id']) . '-' . max((int)$p['id'], (int)$opp['id']);
+            $html .= '<td class="cross-result" data-pair="' . swissH($pair) . '">';
+            $cells = $matrix[$p['id']][$opp['id']] ?? [];
+            $parts = [];
+            foreach ($cells as $cell) {
+                $cls = !empty($cell['opening']) ? 'opening-score' : 'reply-score';
+                $gameKey = swissRenjuGameKey($tour, (int)($cell['round'] ?? 0), (int)$p['id'], (int)$opp['id']);
+                $gameId = $gameKey !== '' ? ($gameMap[$gameKey] ?? '') : '';
+                $parts[] = '<span class="' . $cls . '">' . swissRenjuScoreLink(swissFmt($cell['score']), $gameId) . '</span>';
+            }
+            $html .= implode('<span class="cross-sep">／</span>', $parts) . '</td>';
         }
-        $html.='<td class="total">'.swissH(swissFmt($p['total'])).'</td></tr>';
+        $html .= '<td class="total">' . swissH(swissFmt($p['total'])) . '</td></tr>';
     }
-    return $html.'</tbody></table></div>';
+    return $html . '</tbody></table></div>';
 }
 
-function swissRenderGameList(array $games, array $opt, array $gameMap=[]): string {
-    if(!$games)return '<div class="swiss-empty">沒有可顯示的對局明細。</div>';
-    $prefix=(string)($opt['player_prefix']??'');
-    $html='<div class="swiss-scroll"><table class="game-list"><thead><tr><th>輪次</th><th>等級分</th><th>棋手</th><th>結果</th><th>棋手</th><th>等級分</th></tr></thead><tbody>';
-    foreach($games as $g){
-        $s1=(float)$g['勝負'];$s2=2-$s1;$html.='<tr><td>'.swissH($g['輪次']).'</td>';
-        $html.=($g['P1分']===null||$g['P1分']==='')?'<td></td>':'<td class="rating" style="color:'.swissH(swissRatingColor($g['P1分'])).'">'.swissH((int)round((float)$g['P1分'])).'</td>';
-        $name1=$g['選手1']?:$g['P1'];$name2=$g['選手2']?:$g['P2'];
-        $gameKey=swissRenjuGameKey((int)($g['比賽']??0),(int)($g['輪次']??0),(int)($g['P1']??0),(int)($g['P2']??0));
-        $gameId=$gameKey!==''?($gameMap[$gameKey]??''):'';
-        $result=swissRenjuScoreLink(swissFmt($s1).'：'.swissFmt($s2),$gameId);
-        $html.='<td class="player '.($s1>1?'score-win':($s1<1?'score-loss':'score-draw')).'"><a href="'.swissH($prefix.'player.php?PLAYER='.(int)$g['P1']).'">'.swissH($name1).'</a></td><td class="game-result">'.$result.'</td><td class="player '.($s2>1?'score-win':($s2<1?'score-loss':'score-draw')).'"><a href="'.swissH($prefix.'player.php?PLAYER='.(int)$g['P2']).'">'.swissH($name2).'</a></td>';
-        $html.=($g['P2分']===null||$g['P2分']==='')?'<td></td>':'<td class="rating" style="color:'.swissH(swissRatingColor($g['P2分'])).'">'.swissH((int)round((float)$g['P2分'])).'</td>';
-        $html.='</tr>';
+function swissRenderGameList(array $games, array $opt, array $gameMap = []): string {
+    if (!$games) return '<div class="swiss-empty">沒有可顯示的對局明細。</div>';
+    $prefix = (string)($opt['player_prefix'] ?? '');
+    $html = '<div class="swiss-scroll"><table class="game-list"><thead><tr><th>輪次</th><th>等級分</th><th>棋手</th><th>結果</th><th>棋手</th><th>等級分</th></tr></thead><tbody>';
+
+    foreach ($games as $g) {
+        $s1 = (float)$g['勝負'];
+        $s2 = 2 - $s1;
+        $html .= '<tr><td>' . swissH($g['輪次']) . '</td>';
+        $html .= ($g['P1分'] === null || $g['P1分'] === '')
+            ? '<td></td>'
+            : '<td class="rating" style="color:' . swissH(swissRatingColor($g['P1分'])) . '">' . swissH((int)round((float)$g['P1分'])) . '</td>';
+
+        $name1 = $g['選手1'] ?: $g['P1'];
+        $name2 = $g['選手2'] ?: $g['P2'];
+        $gameKey = swissRenjuGameKey((int)($g['比賽'] ?? 0), (int)($g['輪次'] ?? 0), (int)($g['P1'] ?? 0), (int)($g['P2'] ?? 0));
+        $gameId = $gameKey !== '' ? ($gameMap[$gameKey] ?? '') : '';
+        $result = swissRenjuScoreLink(swissFmt($s1) . '：' . swissFmt($s2), $gameId);
+
+        $html .= '<td class="player ' . swissScoreClass($s1) . '"><a href="' . swissH($prefix . 'player.php?PLAYER=' . (int)$g['P1']) . '">' . swissH($name1) . '</a></td>';
+        $html .= '<td class="game-result">' . $result . '</td>';
+        $html .= '<td class="player ' . swissScoreClass($s2) . '"><a href="' . swissH($prefix . 'player.php?PLAYER=' . (int)$g['P2']) . '">' . swissH($name2) . '</a></td>';
+        $html .= ($g['P2分'] === null || $g['P2分'] === '')
+            ? '<td></td>'
+            : '<td class="rating" style="color:' . swissH(swissRatingColor($g['P2分'])) . '">' . swissH((int)round((float)$g['P2分'])) . '</td>';
+        $html .= '</tr>';
     }
-    return $html.'</tbody></table></div>';
+    return $html . '</tbody></table></div>';
 }
 
-function swissRenderTournament(PDO $db, int $tour, array $options=[]): string {
-    $opt=array_merge([
-        'admin'=>false,'show_title'=>true,'show_meta'=>true,'show_section_headings'=>true,
-        'player_prefix'=>'','action_prefix'=>'','include_history'=>true,'include_promotions'=>true,
-        'title_override'=>'','after_meta_html'=>'',
-    ],$options);
-    $data=swissBuildTournamentData($db,$tour);
-    $linkSource=array_merge($data['games']??[],$data['detailGames']??[]);
-    $data['_renju_game_map']=swissLoadRenjuGameMap($db,$linkSource);
-    $t=$data['tournament'];$html='<div class="swiss-component" data-tour="'.(int)$tour.'">';
-    if($opt['show_title']){
-        $title=trim((string)$opt['title_override']);
-        if($title==='')$title=(string)$t['賽名'];
-        $html.='<h2 class="swiss-title">'.swissH($title).'</h2>';
+function swissRenderTournament(PDO $db, int $tour, array $options = []): string {
+    $opt = array_merge([
+        'admin' => false,
+        'show_title' => true,
+        'show_meta' => true,
+        'show_section_headings' => true,
+        'player_prefix' => '',
+        'action_prefix' => '',
+        'include_history' => true,
+        'include_promotions' => true,
+        'title_override' => '',
+        'after_meta_html' => '',
+    ], $options);
+
+    $data = swissBuildTournamentData($db, $tour);
+    $linkSource = array_merge($data['games'] ?? [], $data['detailGames'] ?? []);
+    $data['_renju_game_map'] = swissLoadRenjuGameMap($db, $linkSource);
+    $t = $data['tournament'];
+    $html = '<div class="swiss-component" data-tour="' . (int)$tour . '">';
+
+    if ($opt['show_title']) {
+        $title = trim((string)$opt['title_override']);
+        if ($title === '') $title = (string)$t['賽名'];
+        $html .= '<h2 class="swiss-title">' . swissH($title) . '</h2>';
     }
-    if($opt['show_meta']){
-        $date=trim((string)$t['開始']);if(!empty($t['結束'])&&$t['結束']!==$t['開始'])$date.=' ~ '.$t['結束'];
-        $html.='<div class="swiss-meta">賽號 '.(int)$tour.($date!==''?'　'.swissH($date):'').($data['format']!==''?'　｜　'.swissH($data['format']):'').'</div>';
+    if ($opt['show_meta']) {
+        $date = trim((string)$t['開始']);
+        if (!empty($t['結束']) && $t['結束'] !== $t['開始']) $date .= ' ~ ' . $t['結束'];
+        $html .= '<div class="swiss-meta">賽號 ' . (int)$tour . ($date !== '' ? '　' . swissH($date) : '') . ($data['format'] !== '' ? '　｜　' . swissH($data['format']) : '') . '</div>';
     }
-    $html.=(string)$opt['after_meta_html'];
-    if($opt['include_history'])$html.=swissRenderHistory($data,$opt);
-    if($opt['include_promotions'])$html.=swissRenderPromotions($data,$opt);
-    if($data['standard']){
-        if($opt['show_section_headings'])$html.='<h3 class="table-heading">戰績表</h3>';
-        $html.=swissRenderStandard($data,$opt);
-    }elseif($data['cross']){
-        if($opt['show_section_headings'])$html.='<h3 class="table-heading">交叉表</h3>';
-        $html.=swissRenderCross($data,$opt);
-    }else{
-        if($opt['show_section_headings'])$html.='<h3 class="table-heading">對局明細</h3>';
-        $html.=swissRenderGameList($data['detailGames'],$opt,$data['_renju_game_map']);
+
+    $html .= (string)$opt['after_meta_html'];
+    if ($opt['include_history']) $html .= swissRenderHistory($data, $opt);
+    if ($opt['include_promotions']) $html .= swissRenderPromotions($data, $opt);
+
+    if ($data['standard']) {
+        if ($opt['show_section_headings']) $html .= '<h3 class="table-heading">戰績表</h3>';
+        $html .= swissRenderStandard($data, $opt);
+    } elseif ($data['cross']) {
+        if ($opt['show_section_headings']) $html .= '<h3 class="table-heading">交叉表</h3>';
+        $html .= swissRenderCross($data, $opt);
+    } else {
+        if ($opt['show_section_headings']) $html .= '<h3 class="table-heading">對局明細</h3>';
+        $html .= swissRenderGameList($data['detailGames'], $opt, $data['_renju_game_map']);
     }
-    return $html.'</div>';
+    return $html . '</div>';
 }
