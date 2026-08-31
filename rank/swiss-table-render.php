@@ -330,8 +330,19 @@ function swissRenderGameList(array $games, array $opt, array $gameMap = []): str
     return $html . '</tbody></table></div>';
 }
 
-function swissRenderTournament(PDO $db, int $tour, array $options = []): string {
-    $opt = array_merge([
+/**
+ * Attach render-only data that still requires database access.
+ * The ranking/tie-break dataset itself is not rebuilt here.
+ */
+function swissPrepareTournamentRenderData(PDO $db, array $data): array {
+    if (array_key_exists('_renju_game_map', $data)) return $data;
+    $linkSource = array_merge($data['games'] ?? [], $data['detailGames'] ?? []);
+    $data['_renju_game_map'] = swissLoadRenjuGameMap($db, $linkSource);
+    return $data;
+}
+
+function swissTournamentRenderOptions(array $options = []): array {
+    return array_merge([
         'admin' => false,
         'show_title' => true,
         'show_meta' => true,
@@ -343,12 +354,16 @@ function swissRenderTournament(PDO $db, int $tour, array $options = []): string 
         'title_override' => '',
         'after_meta_html' => '',
     ], $options);
+}
 
-    $data = swissBuildTournamentData($db, $tour);
-    $linkSource = array_merge($data['games'] ?? [], $data['detailGames'] ?? []);
-    $data['_renju_game_map'] = swissLoadRenjuGameMap($db, $linkSource);
+/**
+ * Pure renderer: consumes an already-built tournament dataset and performs no DB reads.
+ */
+function swissRenderTournamentData(array $data, array $options = []): string {
+    $opt = swissTournamentRenderOptions($options);
     $t = $data['tournament'];
-    $html = '<div class="swiss-component" data-tour="' . (int)$tour . '">';
+    $tour = (int)$t['賽號'];
+    $html = '<div class="swiss-component" data-tour="' . $tour . '">';
 
     if ($opt['show_title']) {
         $title = trim((string)$opt['title_override']);
@@ -358,7 +373,7 @@ function swissRenderTournament(PDO $db, int $tour, array $options = []): string 
     if ($opt['show_meta']) {
         $date = trim((string)$t['開始']);
         if (!empty($t['結束']) && $t['結束'] !== $t['開始']) $date .= ' ~ ' . $t['結束'];
-        $html .= '<div class="swiss-meta">賽號 ' . (int)$tour . ($date !== '' ? '　' . swissH($date) : '') . ($data['format'] !== '' ? '　｜　' . swissH($data['format']) : '') . '</div>';
+        $html .= '<div class="swiss-meta">賽號 ' . $tour . ($date !== '' ? '　' . swissH($date) : '') . ($data['format'] !== '' ? '　｜　' . swissH($data['format']) : '') . '</div>';
     }
 
     $html .= (string)$opt['after_meta_html'];
@@ -373,7 +388,16 @@ function swissRenderTournament(PDO $db, int $tour, array $options = []): string 
         $html .= swissRenderCross($data, $opt);
     } else {
         if ($opt['show_section_headings']) $html .= '<h3 class="table-heading">對局明細</h3>';
-        $html .= swissRenderGameList($data['detailGames'], $opt, $data['_renju_game_map']);
+        $html .= swissRenderGameList($data['detailGames'], $opt, $data['_renju_game_map'] ?? []);
     }
     return $html . '</div>';
+}
+
+/**
+ * Backward-compatible public entry point for pages that only know a tournament id.
+ */
+function swissRenderTournament(PDO $db, int $tour, array $options = []): string {
+    $data = swissBuildTournamentData($db, $tour);
+    $data = swissPrepareTournamentRenderData($db, $data);
+    return swissRenderTournamentData($data, $options);
 }
