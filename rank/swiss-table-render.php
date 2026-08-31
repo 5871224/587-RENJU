@@ -184,13 +184,15 @@ function swissRenderStandard(array $data, array $opt): string {
         $html.='<td class="name" data-player-id="'.$playerId.'">'.swissPlayerLink($p,$prefix).'</td><td>'.swissH($p['rank']).'</td>';
         foreach($data['roundNos'] as $r){
             if(!isset($p['games'][$r])){
-                $attrs=' data-player="'.$playerId.'" data-opponent=""';
+                $interactionKey='missing-'.$playerId.'-'.(int)$r;
+                $attrs=' data-game-key="'.swissH($interactionKey).'" data-player="'.$playerId.'" data-opponent=""';
                 $html.='<td class="round-score score-loss swiss-game-cell"'.$attrs.'>0</td><td class="opponent swiss-game-cell"'.$attrs.'>棄賽</td>';
                 continue;
             }
             $g=$p['games'][$r];$score=(float)$g['score'];$cls=$score>1?'score-win':($score<1?'score-loss':'score-draw');
             $oppId=($g['opp']===null)?0:(int)$g['opp'];
-            $attrs=' data-player="'.$playerId.'" data-opponent="'.($oppId>0?$oppId:'').'"';
+            $interactionKey=$oppId>0 ? ('game-'.min($playerId,$oppId).'-'.max($playerId,$oppId).'-'.(int)$r) : ('special-'.$playerId.'-'.(int)$r);
+            $attrs=' data-game-key="'.swissH($interactionKey).'" data-player="'.$playerId.'" data-opponent="'.($oppId>0?$oppId:'').'"';
             $gameKey=$oppId>0?swissRenjuGameKey($tour,(int)$r,$playerId,$oppId):'';
             $gameId=$gameKey!==''?($gameMap[$gameKey]??''):'';
             $html.='<td class="round-score '.$cls.' swiss-game-cell"'.$attrs.'>'.swissRenjuScoreLink(swissFmt($score),$gameId).'</td>';
