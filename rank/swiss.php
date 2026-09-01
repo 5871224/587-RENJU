@@ -86,7 +86,7 @@ if ($tour > 0) {
 <title>瑞士制戰績表</title>
 <link rel="stylesheet" href="../renju.css?v=20260828a">
 <link rel="stylesheet" href="admin.css?v=20260828a">
-<link rel="stylesheet" href="swiss.css?v=20260831b">
+<link rel="stylesheet" href="swiss.css?v=20260901c">
 <link rel="stylesheet" href="swiss-admin-ui.css?v=20260828a">
 </head>
 <body>
@@ -157,7 +157,7 @@ if ($tour <= 0) {
 ?>
 </main>
 </div>
-<script src="swiss-ui.js?v=20260831b"></script>
+<script src="swiss-ui.js?v=20260901c"></script>
 <script src="swiss-admin-ui.js?v=20260828a"></script>
 </body>
 </html>
