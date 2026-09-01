@@ -4,6 +4,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link href="../../renju.css" rel="stylesheet" type="text/css">
+	<link href="../rank/swiss.css?v=20260901a" rel="stylesheet" type="text/css">
 	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 	<script type="text/javascript">
 		$(document).ready(function() {
@@ -27,6 +28,7 @@
 	}
 
 	require_once 'login.php';
+	require_once dirname(__DIR__) . '/rank/swiss-table-render.php';
 
 	$statement = $MYSQL->query("SELECT 賽標,戰績 FROM TOURNAMENT WHERE 賽號=" . $TT);
 	$R = $statement->fetchAll();
@@ -72,5 +74,24 @@ ORDER BY TT.賽號 ASC");
 		echo file_get_contents("../game/" . $R[0]['戰績'] . ".htm");
 		echo "</div>";
 	}
+
+	// 直接共用 Swiss 的計算與 renderer，不使用 iframe；公開頁只顯示段級與戰績表，不顯示歷程或管理按鈕。
+	try {
+		$swissData = swissBuildTournamentData($MYSQL, (int)$TT);
+		$swissData = swissPrepareTournamentRenderData($MYSQL, $swissData);
+		echo swissRenderTournamentData($swissData, [
+			'admin' => false,
+			'show_title' => false,
+			'show_meta' => false,
+			'show_section_headings' => true,
+			'player_prefix' => '',
+			'include_history' => false,
+			'include_promotions' => true,
+			'promotion_heading' => '段級',
+		]);
+	} catch (Throwable $e) {
+		echo '<div class="swiss-empty">戰績表讀取失敗。</div>';
+	}
 	?>
+	<script src="../rank/swiss-ui.js?v=20260901a"></script>
 </body>
