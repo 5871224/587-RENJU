@@ -29,6 +29,7 @@
 
 	require_once 'login.php';
 	require_once dirname(__DIR__) . '/rank/swiss-table-render.php';
+	require_once dirname(__DIR__) . '/rank/swiss-group.php';
 
 	$statement = $MYSQL->query("SELECT 賽標,戰績 FROM TOURNAMENT WHERE 賽號=" . $TT);
 	$R = $statement->fetchAll();
@@ -75,7 +76,7 @@ ORDER BY TT.賽號 ASC");
 		echo "</div>";
 	}
 
-	// tourb.php?TOUR=賽號只用來定位賽標；下方和 swiss.php 一樣，把相同賽標的比賽全部列出。
+	// tourb.php?TOUR=賽號只用來定位賽標。一般賽制同賽標逐場顯示；挑戰賽則依賽標合併成一個區塊。
 	try {
 		$label = trim((string)($R[0]['賽標'] ?? ''));
 		if ($label === '') {
@@ -86,8 +87,23 @@ ORDER BY TT.賽號 ASC");
 			$swissTours = array_map('intval', $swissTourStmt->fetchAll(PDO::FETCH_COLUMN));
 		}
 
+		$swissGroupData = [];
 		foreach ($swissTours as $swissTour) {
-			$swissData = swissBuildTournamentData($MYSQL, $swissTour);
+			try {
+				$swissGroupData[] = swissBuildTournamentData($MYSQL, $swissTour);
+			} catch (Throwable $e) {
+				$swissGroupData[] = ['error' => $e->getMessage(), 'tour' => $swissTour];
+			}
+		}
+
+		[$visibleSwissData] = swissVisibleGroupData($swissGroupData, $label);
+
+		foreach ($visibleSwissData as $swissData) {
+			if (isset($swissData['error'])) {
+				echo '<div class="swiss-empty">賽號 ' . (int)($swissData['tour'] ?? 0) . ' 戰績表讀取失敗。</div>';
+				continue;
+			}
+
 			$swissData = swissPrepareTournamentRenderData($MYSQL, $swissData);
 			echo swissRenderTournamentData($swissData, [
 				'admin' => false,
@@ -98,6 +114,7 @@ ORDER BY TT.賽號 ASC");
 				'include_history' => false,
 				'include_promotions' => true,
 				'promotion_heading' => '段級',
+				'title_override' => (string)($swissData['_title_override'] ?? ''),
 			]);
 		}
 	} catch (Throwable $e) {
