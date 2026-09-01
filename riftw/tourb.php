@@ -75,20 +75,31 @@ ORDER BY TT.賽號 ASC");
 		echo "</div>";
 	}
 
-	// 直接共用 Swiss 的計算與 renderer，不使用 iframe；公開頁只顯示段級與戰績表，不顯示歷程或管理按鈕。
+	// tourb.php?TOUR=賽號只用來定位賽標；下方和 swiss.php 一樣，把相同賽標的比賽全部列出。
 	try {
-		$swissData = swissBuildTournamentData($MYSQL, (int)$TT);
-		$swissData = swissPrepareTournamentRenderData($MYSQL, $swissData);
-		echo swissRenderTournamentData($swissData, [
-			'admin' => false,
-			'show_title' => false,
-			'show_meta' => false,
-			'show_section_headings' => true,
-			'player_prefix' => '',
-			'include_history' => false,
-			'include_promotions' => true,
-			'promotion_heading' => '段級',
-		]);
+		$label = trim((string)($R[0]['賽標'] ?? ''));
+		if ($label === '') {
+			$swissTours = [(int)$TT];
+		} else {
+			$swissTourStmt = $MYSQL->prepare('SELECT `賽號` FROM `TOURNAMENT` WHERE `賽標`=? ORDER BY `賽號` ASC');
+			$swissTourStmt->execute([$label]);
+			$swissTours = array_map('intval', $swissTourStmt->fetchAll(PDO::FETCH_COLUMN));
+		}
+
+		foreach ($swissTours as $swissTour) {
+			$swissData = swissBuildTournamentData($MYSQL, $swissTour);
+			$swissData = swissPrepareTournamentRenderData($MYSQL, $swissData);
+			echo swissRenderTournamentData($swissData, [
+				'admin' => false,
+				'show_title' => true,
+				'show_meta' => true,
+				'show_section_headings' => true,
+				'player_prefix' => '',
+				'include_history' => false,
+				'include_promotions' => true,
+				'promotion_heading' => '段級',
+			]);
+		}
 	} catch (Throwable $e) {
 		echo '<div class="swiss-empty">戰績表讀取失敗。</div>';
 	}
