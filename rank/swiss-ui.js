@@ -46,13 +46,19 @@
 
   function clearPairs(){
     document.querySelectorAll('.cross-result.pair-focus').forEach(function(el){el.classList.remove('pair-focus');});
+    document.querySelectorAll('.swiss-cross .name.pair-name-focus').forEach(function(el){el.classList.remove('pair-name-focus');});
   }
 
   function focusPair(el){
     clearPairs();
     var pair=el.getAttribute('data-pair');
     if(!pair)return;
-    document.querySelectorAll('.cross-result[data-pair="'+pair+'"]').forEach(function(x){x.classList.add('pair-focus');});
+    document.querySelectorAll('.cross-result[data-pair="'+pair+'"]').forEach(function(x){
+      x.classList.add('pair-focus');
+      var row=x.closest('tr');
+      var name=row&&row.querySelector('.name');
+      if(name)name.classList.add('pair-name-focus');
+    });
   }
 
   function clearSwissFocus(){
