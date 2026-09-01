@@ -5,6 +5,72 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link href="../../renju.css" rel="stylesheet" type="text/css">
 	<link href="../rank/swiss.css?v=20260901c" rel="stylesheet" type="text/css">
+	<style>
+		/* tourb.php 的寬表格各自橫向捲動，避免在手機上把整個頁面撐寬。 */
+		.tourb-page {
+			width: 100%;
+			min-width: 0;
+			max-width: 100%;
+			overflow-x: hidden;
+		}
+		.tourb-scroll,
+		.tourb-legacy {
+			width: 100%;
+			min-width: 0;
+			max-width: 100%;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+		}
+		.tourb-scroll {
+			margin-bottom: 16px;
+		}
+		.tourb-scroll > table.rank {
+			width: max-content;
+			min-width: 100%;
+			max-width: none;
+		}
+		.tourb-legacy {
+			margin: 12px 0 18px;
+		}
+		.tourb-legacy table {
+			max-width: none;
+		}
+		.tourb-swiss,
+		.tourb-swiss .swiss-component,
+		.tourb-swiss .swiss-scroll {
+			min-width: 0;
+			max-width: 100%;
+		}
+
+		@media (max-width: 768px) {
+			body {
+				overflow-x: hidden;
+			}
+			.tourb-page > h2 {
+				margin-top: 12px;
+				margin-bottom: 10px;
+				line-height: 1.35;
+			}
+			.tourb-scroll > table.rank {
+				font-size: 13px;
+			}
+			.tourb-scroll > table.rank th,
+			.tourb-scroll > table.rank td {
+				padding: 6px 8px;
+			}
+			.tourb-swiss .swiss-title {
+				font-size: 18px;
+				line-height: 1.35;
+			}
+			.tourb-swiss .swiss-meta {
+				white-space: normal;
+				line-height: 1.5;
+			}
+			.tourb-swiss .swiss-subhead {
+				flex-wrap: wrap;
+			}
+		}
+	</style>
 	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 	<script type="text/javascript">
 		$(document).ready(function() {
@@ -19,6 +85,7 @@
 
 <body>
 	<div id="myDiv"></div>
+	<main class="tourb-page">
 
 	<?php
 	if (isset($_GET['TOUR'])) {
@@ -48,6 +115,7 @@ ON TT.賽號=R.比賽
 GROUP BY TT.賽號,TT.開始,TT.結束,TT.賽名,TT.賽標,TT.局數,TT.棋譜,TT.戰績表
 ORDER BY TT.賽號 ASC");
 
+	echo "<div class='tourb-scroll'>";
 	echo "<TABLE class='rank'>";
 	echo "<TR><TH>序號</TH><TH>開始</TH><TH>結束</TH><TH>比賽</TH><TH>人數</TH><TH>局數</TH><TH>棋譜</TH><TH>戰績表</TH></TR>";
 
@@ -69,14 +137,16 @@ ORDER BY TT.賽號 ASC");
 	}
 	$DATA = $DATA . "</TABLE>";
 	echo $DATA;
+	echo "</div>";
 
 	if ($R[0]['戰績'] > 0) {
-		echo "<div>";
+		echo "<div class='tourb-legacy'>";
 		echo file_get_contents("../game/" . $R[0]['戰績'] . ".htm");
 		echo "</div>";
 	}
 
 	// tourb.php?TOUR=賽號只用來定位賽標。一般賽制同賽標逐場顯示；挑戰賽則依賽標合併成一個區塊。
+	echo '<div class="tourb-swiss">';
 	try {
 		$label = trim((string)($R[0]['賽標'] ?? ''));
 		if ($label === '') {
@@ -120,6 +190,8 @@ ORDER BY TT.賽號 ASC");
 	} catch (Throwable $e) {
 		echo '<div class="swiss-empty">戰績表讀取失敗。</div>';
 	}
+	echo '</div>';
 	?>
+	</main>
 	<script src="../rank/swiss-ui.js?v=20260901c"></script>
 </body>
