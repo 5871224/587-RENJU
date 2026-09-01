@@ -78,15 +78,13 @@
 .swiss-mini tbody tr:last-child td,
 .game-list tbody tr:last-child td { border-bottom: 0; }
 
-/* 戰績表與交叉表不做整列 hover；語意底色由儲存格本身決定。 */
-.swiss-rank tbody tr:hover,
-.swiss-cross tbody tr:hover {
+/* 戰績表不做整列 hover；交叉表完全不套用整列 hover，避免覆蓋固定斜線與儲存格語意底色。 */
+.swiss-rank tbody tr:hover {
     background: transparent;
     box-shadow: none;
     filter: none;
 }
-.swiss-rank tbody tr:hover > td,
-.swiss-cross tbody tr:hover > td {
+.swiss-rank tbody tr:hover > td {
     background: #fff;
     box-shadow: none;
     filter: none;
@@ -106,25 +104,21 @@
 .swiss-rank td.score-win,
 .swiss-cross td.score-win,
 .game-list td.score-win,
-.swiss-rank tbody tr:hover > td.score-win,
-.swiss-cross tbody tr:hover > td.score-win { background: #e7f7d5; }
+.swiss-rank tbody tr:hover > td.score-win { background: #e7f7d5; }
 
 .swiss-rank td.score-draw,
 .swiss-cross td.score-draw,
 .game-list td.score-draw,
-.swiss-rank tbody tr:hover > td.score-draw,
-.swiss-cross tbody tr:hover > td.score-draw { background: #fff4c7; }
+.swiss-rank tbody tr:hover > td.score-draw { background: #fff4c7; }
 
 .swiss-rank td.score-loss,
 .swiss-cross td.score-loss,
 .game-list td.score-loss,
-.swiss-rank tbody tr:hover > td.score-loss,
-.swiss-cross tbody tr:hover > td.score-loss { background: #fbe4e4; }
+.swiss-rank tbody tr:hover > td.score-loss { background: #fbe4e4; }
 
 .swiss-rank .total,
 .swiss-cross .total,
-.swiss-rank tbody tr:hover > td.total,
-.swiss-cross tbody tr:hover > td.total {
+.swiss-rank tbody tr:hover > td.total {
     background: #e6f0ff;
     color: #1565c0;
     font-size: 16px;
@@ -154,10 +148,18 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.cross-self,
-.swiss-cross tbody tr:hover > td.cross-self {
+/* 自己對自己的格子永遠顯示斜線，不再依賴 hover 背景。 */
+.swiss-cross td.cross-self {
+    position: relative;
     min-width: 44px;
-    background: linear-gradient(to top right, #f3f4f6 48%, #b7bec7 49%, #b7bec7 51%, #f3f4f6 52%);
+    background: #f3f4f6;
+}
+.swiss-cross td.cross-self::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(to top right, transparent 48%, #b7bec7 49%, #b7bec7 51%, transparent 52%);
 }
 .cross-result {
     position: relative;
@@ -165,6 +167,13 @@
     cursor: pointer;
 }
 .cross-result.pair-focus {
+    z-index: 1;
+    outline: 2px solid #f59e0b;
+    outline-offset: -2px;
+}
+/* 交叉表對局 hover 時，自己的姓名與對手姓名一起以橘框標示。 */
+.swiss-cross td.name.pair-name-focus {
+    position: relative;
     z-index: 1;
     outline: 2px solid #f59e0b;
     outline-offset: -2px;
