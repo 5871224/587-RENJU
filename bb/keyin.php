@@ -9,7 +9,7 @@ require_once __DIR__ . '/keyin-auth.php';
 	<link rel=stylesheet href="bb.css">
 	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 	<script src="html2canvas.min.js"></script>
-	<script src="keyin.js"></script>
+	<script src="keyin.js?v=20260909-1827"></script>
 	<meta property="og:title" content="《Renju Gomoku》">
 	<meta property="og:image" content="renju.png">
 </HEAD>
@@ -162,6 +162,24 @@ require_once __DIR__ . '/keyin-auth.php';
 			<script>
 				var type = <?php echo json_encode($_GET['type'] ?? null, JSON_UNESCAPED_UNICODE); ?>;
 				var level = <?php echo json_encode($_GET['level'] ?? null, JSON_UNESCAPED_UNICODE); ?>;
+
+				$(document).ajaxError(function(event, jqxhr, settings) {
+					if (!settings || !settings.url || settings.url.indexOf('keyinsql.php') === -1) {
+						return;
+					}
+					var message = (jqxhr.responseText || '').trim();
+					if (!message) {
+						message = 'HTTP ' + jqxhr.status + '，伺服器未回傳錯誤內容';
+					} else {
+						message = 'HTTP ' + jqxhr.status + '：' + message;
+					}
+					setTimeout(function() {
+						if ($('#sqlresult').length) {
+							$('#sqlresult').empty().append($('<span>').css('color', 'red').text(message));
+							$('#sqlcount').text('');
+						}
+					}, 0);
+				});
 
 	
 				$(".readme").click(function() {
