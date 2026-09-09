@@ -130,8 +130,8 @@ jobs:
           done
 
           write_code="$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 30 -X POST --data 'action=update' "$base/bb/keyinsql.php" || true)"
-          echo "/bb/keyinsql.php write probe -> $write_code"
-          if [ "$write_code" != '403' ]; then
+          echo "/bb/keyinsql.php unauthenticated write probe -> $write_code"
+          if [ "$write_code" != '401' ]; then
             failed=1
           fi
 
