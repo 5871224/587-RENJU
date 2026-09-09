@@ -2,6 +2,7 @@
 require_once __DIR__ . '/keyin-auth.php';
 require_once dirname(__DIR__) . '/db.php';
 
+// Authenticated keyin administrators may query, update, and insert puzzle rows.
 // Puzzle tables VC4 / X33 / X43 / X44 / 1M43 live in renjuorg_TEST.
 // Keep this connection local to keyinsql.php so unrelated bb pages are unaffected.
 $MYSQL = connectDatabase('renjuorg_TEST', 'utf8');
