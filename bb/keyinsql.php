@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__ . '/keyin-auth.php';
-require_once __DIR__ . '/testlogin.php';
+require_once dirname(__DIR__) . '/db.php';
+
+// Puzzle tables VC4 / X33 / X43 / X44 / 1M43 live in renjuorg_TEST.
+// Keep this connection local to keyinsql.php so unrelated bb pages are unaffected.
+$MYSQL = connectDatabase('renjuorg_TEST', 'utf8');
 
 header('Cache-Control: no-store');
 
