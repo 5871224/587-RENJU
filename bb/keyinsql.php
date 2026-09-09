@@ -1,5 +1,6 @@
 <?php
-require_once 'testlogin.php';
+require_once __DIR__ . '/keyin-auth.php';
+require_once __DIR__ . '/testlogin.php';
 
 header('Cache-Control: no-store');
 
@@ -23,18 +24,45 @@ if (!in_array($type, $allowedTables, true)) {
     exit;
 }
 
-// Legacy free-form WHERE accepted raw SQL. Keep the public endpoint read-only
-// and reject all free-form conditions until the editor is moved to the
-// private administration repository.
-if ($where !== '') {
+if (strlen($where) > 2000) {
     http_response_code(400);
     header('Content-Type: text/plain; charset=UTF-8');
-    echo 'Free-form SQL filters are disabled.';
+    echo 'SQL filter is too long.';
     exit;
 }
 
-$sql = "SELECT no,puzzle,level,FLOOR((CHAR_LENGTH(puzzle)-6)/4) AS stones FROM `{$type}` ORDER BY no";
-$statement = $MYSQL->query($sql);
+// keyin.php is now an authenticated administration tool. Keep the legacy
+// WHERE workflow, but reject statement separators, comments, subqueries and
+// other constructs that could escape a simple filter condition.
+if ($where !== '') {
+    if (preg_match('/(?:;|--|#|\/\*|\*\/|\x00)/', $where)) {
+        http_response_code(400);
+        header('Content-Type: text/plain; charset=UTF-8');
+        echo 'Unsafe SQL filter.';
+        exit;
+    }
+
+    $blockedKeywords = '/\b(?:SELECT|UNION|INSERT|UPDATE|DELETE|REPLACE|DROP|ALTER|CREATE|TRUNCATE|CALL|GRANT|REVOKE|SET|SHOW|DESCRIBE|EXPLAIN|USE|LOCK|UNLOCK|INTO|OUTFILE|DUMPFILE|LOAD_FILE|SLEEP|BENCHMARK|INFORMATION_SCHEMA|PERFORMANCE_SCHEMA)\b/i';
+    if (preg_match($blockedKeywords, $where)) {
+        http_response_code(400);
+        header('Content-Type: text/plain; charset=UTF-8');
+        echo 'Unsafe SQL filter.';
+        exit;
+    }
+}
+
+$whereSql = $where === '' ? '' : " WHERE {$where}";
+$sql = "SELECT no,puzzle,level,FLOOR((CHAR_LENGTH(puzzle)-6)/4) AS stones FROM `{$type}`{$whereSql} ORDER BY no";
+
+try {
+    $statement = $MYSQL->query($sql);
+} catch (Throwable $e) {
+    error_log('bb/keyinsql.php query failed: ' . $e->getMessage());
+    http_response_code(400);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'Invalid SQL filter.';
+    exit;
+}
 
 header('Content-Type: application/json; charset=UTF-8');
 $arr = [];
