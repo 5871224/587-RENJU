@@ -56,17 +56,22 @@ if ($where !== '') {
     }
 }
 
-$whereSql = $where === '' ? '' : " WHERE {$where}";
-
-// Build the four fields shown by keyin.php first, then filter the derived
-// rows. This makes the displayed `stones` value a real queryable column, so
-// filters such as `stones = 5`, `level = 3 AND stones >= 7`, etc. work.
-$sql = "SELECT no,puzzle,level,stones\n"
-    . "FROM (\n"
-    . "    SELECT no,puzzle,level,FLOOR((CHAR_LENGTH(puzzle)-6)/4) AS stones\n"
-    . "    FROM `{$type}`\n"
-    . ") AS puzzle_rows{$whereSql}\n"
-    . "ORDER BY no";
+// For an empty WHERE, use the original direct SELECT path. This is the most
+// compatible and cheapest way to return all rows. Only use a derived table
+// when the filter explicitly references the calculated `stones` column.
+$baseSelect = "SELECT no,puzzle,level,FLOOR((CHAR_LENGTH(puzzle)-6)/4) AS stones FROM `{$type}`";
+if ($where === '') {
+    $sql = $baseSelect . ' ORDER BY no';
+} elseif (preg_match('/\bstones\b/i', $where)) {
+    $sql = "SELECT no,puzzle,level,stones\n"
+        . "FROM (\n"
+        . "    {$baseSelect}\n"
+        . ") AS puzzle_rows\n"
+        . "WHERE {$where}\n"
+        . "ORDER BY no";
+} else {
+    $sql = $baseSelect . " WHERE {$where} ORDER BY no";
+}
 
 try {
     $statement = $MYSQL->query($sql);
@@ -88,4 +93,15 @@ if ($statement) {
     }
 }
 
-echo json_encode($arr, JSON_UNESCAPED_UNICODE);
+// Old puzzle rows may contain legacy byte sequences. One malformed row must
+// not make an otherwise valid full-table query return an empty/non-JSON body.
+$json = json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+if ($json === false) {
+    error_log('bb/keyinsql.php JSON encode failed: ' . json_last_error_msg());
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'Failed to encode query result.';
+    exit;
+}
+
+echo $json;
