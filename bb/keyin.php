@@ -1,4 +1,7 @@
-﻿<!DOCTYPE HTML>
+<?php
+require_once __DIR__ . '/keyin-auth.php';
+?>
+<!DOCTYPE HTML>
 <html>
 <HEAD>
 	<meta charset="UTF-8" />
@@ -12,6 +15,7 @@
 </HEAD>
 <body style='border: none; margin:auto; padding=0'>
 
+			<div style="text-align:right; padding:4px 8px 0;"><a href="?logout=1" style="font-size:.85rem;">登出</a></div>
 			<div class="board587"></div>
 
 			<br style="clear: both;" /><input class='readme' type='button' value='說明' check='0'>
@@ -156,8 +160,8 @@
 
 		
 			<script>
-				var type = <?php echo json_encode($_GET[type]) ?>;
-				var level = <?php echo json_encode($_GET[level]) ?>;
+				var type = <?php echo json_encode($_GET['type'] ?? null, JSON_UNESCAPED_UNICODE); ?>;
+				var level = <?php echo json_encode($_GET['level'] ?? null, JSON_UNESCAPED_UNICODE); ?>;
 
 	
 				$(".readme").click(function() {
