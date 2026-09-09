@@ -31,9 +31,14 @@ if (strlen($where) > 2000) {
     exit;
 }
 
-// keyin.php is now an authenticated administration tool. Keep the legacy
-// WHERE workflow, but reject statement separators, comments, subqueries and
-// other constructs that could escape a simple filter condition.
+// The UI labels this field as "SQL查詢 WHERE". Accept both the historic
+// condition-only form (level=3) and the natural "WHERE level=3" form.
+$where = preg_replace('/^\s*WHERE\s+/i', '', $where) ?? $where;
+$where = trim($where);
+
+// keyin.php is an authenticated administration tool. Preserve the useful
+// legacy WHERE workflow, but reject statement separators, comments,
+// subqueries, and other constructs that could escape a read-only filter.
 if ($where !== '') {
     if (preg_match('/(?:;|--|#|\/\*|\*\/|\x00)/', $where)) {
         http_response_code(400);
@@ -52,15 +57,24 @@ if ($where !== '') {
 }
 
 $whereSql = $where === '' ? '' : " WHERE {$where}";
-$sql = "SELECT no,puzzle,level,FLOOR((CHAR_LENGTH(puzzle)-6)/4) AS stones FROM `{$type}`{$whereSql} ORDER BY no";
+
+// Build the four fields shown by keyin.php first, then filter the derived
+// rows. This makes the displayed `stones` value a real queryable column, so
+// filters such as `stones = 5`, `level = 3 AND stones >= 7`, etc. work.
+$sql = "SELECT no,puzzle,level,stones\n"
+    . "FROM (\n"
+    . "    SELECT no,puzzle,level,FLOOR((CHAR_LENGTH(puzzle)-6)/4) AS stones\n"
+    . "    FROM `{$type}`\n"
+    . ") AS puzzle_rows{$whereSql}\n"
+    . "ORDER BY no";
 
 try {
     $statement = $MYSQL->query($sql);
 } catch (Throwable $e) {
-    error_log('bb/keyinsql.php query failed: ' . $e->getMessage());
+    error_log('bb/keyinsql.php query failed: ' . $e->getMessage() . ' | filter=' . $where);
     http_response_code(400);
     header('Content-Type: text/plain; charset=UTF-8');
-    echo 'Invalid SQL filter.';
+    echo 'Invalid SQL filter: ' . $e->getMessage();
     exit;
 }
 
