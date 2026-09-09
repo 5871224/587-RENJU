@@ -69,8 +69,10 @@ foreach ($file in $removedEndpoints) {
 }
 
 $keyinSource = Get-Content -Raw 'bb/keyinsql.php'
-if ($keyinSource -notmatch 'Editing is disabled on the public website') {
-    throw 'bb/keyinsql.php must keep public write operations disabled until the private admin migration is complete.'
+foreach ($required in @("require_once __DIR__ . '/keyin-auth.php'", "connectDatabase('renjuorg_TEST'", "`$action === 'update'", "`$action === 'insert'", '->prepare(')) {
+    if ($keyinSource -notmatch [regex]::Escape($required)) {
+        throw "bb/keyinsql.php is missing authenticated prepared-write control: $required"
+    }
 }
 if ($keyinSource -notmatch "\['VC4',\s*'X33',\s*'X43',\s*'X44',\s*'1M43'\]") {
     throw 'bb/keyinsql.php must keep its fixed puzzle table whitelist.'
