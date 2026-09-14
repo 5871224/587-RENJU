@@ -40,52 +40,16 @@
 			});
 		}
 	</script>
-	<style>
-		.rule-selector-container {
-			margin: 20px 0;
-			padding: 15px;
-			background: #e8f5e9;
-			border-radius: 8px;
-			text-align: center;
-			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-		}
-
-		.rule-selector {
-			padding: 10px 15px;
-			font-size: 16px;
-			font-family: "Microsoft JhengHei", sans-serif;
-			border: 2px solid #66bb6a;
-			border-radius: 5px;
-			background-color: white;
-			color: #333;
-			cursor: pointer;
-			width: 100%;
-			max-width: 300px;
-			outline: none;
-		}
-
-		.rule-selector:focus {
-			border-color: #009933;
-			box-shadow: 0 0 5px rgba(0, 153, 51, 0.2);
-		}
-
-		label[for="rule-select"] {
-			display: block;
-			margin-bottom: 8px;
-			font-weight: bold;
-			color: #009933;
-		}
-	</style>
 </head>
 
 <body>
 	<div id="myDiv"></div>
-	<div style="padding: 10px;">
+	<div>
 		<h1>規則</h1>
 		<hr>
 
-		<div class="rule-selector-container">
-			<label for="rule-select">選擇規則分類：</label>
+		<div class="rule-selector-container site-panel site-panel--center">
+			<label for="rule-select" class="form-label">選擇規則分類：</label>
 			<select id="rule-select" class="rule-selector" onchange="loadContent(this.value)">
 				<option value="rule/rulehome.htm">行棋規則</option>
 				<option value="rule/renju-rule.htm">禁手開局規則</option>
