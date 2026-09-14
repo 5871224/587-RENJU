@@ -5,72 +5,6 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link href="../../renju.css" rel="stylesheet" type="text/css">
 	<link href="../rank/swiss.css?v=20260901c" rel="stylesheet" type="text/css">
-	<style>
-		/* tourb.php 的寬表格各自橫向捲動，避免在手機上把整個頁面撐寬。 */
-		.tourb-page {
-			width: 100%;
-			min-width: 0;
-			max-width: 100%;
-			overflow-x: hidden;
-		}
-		.tourb-scroll,
-		.tourb-legacy {
-			width: 100%;
-			min-width: 0;
-			max-width: 100%;
-			overflow-x: auto;
-			-webkit-overflow-scrolling: touch;
-		}
-		.tourb-scroll {
-			margin-bottom: 16px;
-		}
-		.tourb-scroll > table.rank {
-			width: max-content;
-			min-width: 100%;
-			max-width: none;
-		}
-		.tourb-legacy {
-			margin: 12px 0 18px;
-		}
-		.tourb-legacy table {
-			max-width: none;
-		}
-		.tourb-swiss,
-		.tourb-swiss .swiss-component,
-		.tourb-swiss .swiss-scroll {
-			min-width: 0;
-			max-width: 100%;
-		}
-
-		@media (max-width: 768px) {
-			body {
-				overflow-x: hidden;
-			}
-			.tourb-page > h2 {
-				margin-top: 12px;
-				margin-bottom: 10px;
-				line-height: 1.35;
-			}
-			.tourb-scroll > table.rank {
-				font-size: 13px;
-			}
-			.tourb-scroll > table.rank th,
-			.tourb-scroll > table.rank td {
-				padding: 6px 8px;
-			}
-			.tourb-swiss .swiss-title {
-				font-size: 18px;
-				line-height: 1.35;
-			}
-			.tourb-swiss .swiss-meta {
-				white-space: normal;
-				line-height: 1.5;
-			}
-			.tourb-swiss .swiss-subhead {
-				flex-wrap: wrap;
-			}
-		}
-	</style>
 	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 	<script type="text/javascript">
 		$(document).ready(function() {
@@ -83,7 +17,7 @@
 	</script>
 </head>
 
-<body>
+<body class="tourb-body">
 	<div id="myDiv"></div>
 	<main class="tourb-page">
 
