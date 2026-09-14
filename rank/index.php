@@ -45,6 +45,47 @@ function listUrl(string $view, string $q = '', string $searchField = '', array $
     }
     return '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
 }
+function adminColumnLabel(string $table, string $column): string {
+    if ($table !== 'SITE_NOTICE') return $column;
+    static $labels = [
+        'id' => '編號',
+        'notice_date' => '日期',
+        'type' => '類型',
+        'title' => '訊息內容',
+        'url' => '連結網址',
+        'tour_id' => '關聯賽號',
+        'is_visible' => '是否顯示',
+        'is_pinned' => '是否置頂',
+        'sort_order' => '排序',
+    ];
+    return $labels[$column] ?? $column;
+}
+function siteNoticeFieldOptions(string $column): ?array {
+    static $options = [
+        'type' => [
+            'UPDATE' => '網站更新',
+            'TOURNAMENT' => '比賽資訊',
+            'NEWS' => '一般消息',
+        ],
+        'is_visible' => [
+            '1' => '顯示',
+            '0' => '隱藏',
+        ],
+        'is_pinned' => [
+            '0' => '一般',
+            '1' => '置頂',
+        ],
+    ];
+    return $options[$column] ?? null;
+}
+function adminCellValue(string $table, string $column, $value): string {
+    if ($table === 'SITE_NOTICE') {
+        $options = siteNoticeFieldOptions($column);
+        $key = (string)$value;
+        if ($options !== null && array_key_exists($key, $options)) return $options[$key];
+    }
+    return (string)$value;
+}
 function ensureSiteNoticeTable(PDO $db): void {
     $db->exec(<<<'SQL'
 CREATE TABLE IF NOT EXISTS `SITE_NOTICE` (
@@ -480,7 +521,7 @@ $totalRecords = array_sum($counts);
                     <input type="hidden" name="view" value="<?= h($view) ?>">
                     <select name="field_search" aria-label="搜尋欄位">
                         <option value="">全部欄位</option>
-                        <?php foreach ($columns as $column): ?><option value="<?= h($column) ?>" <?= $searchField === $column ? 'selected' : '' ?>><?= h($column) ?></option><?php endforeach; ?>
+                        <?php foreach ($columns as $column): ?><option value="<?= h($column) ?>" <?= $searchField === $column ? 'selected' : '' ?>><?= h(adminColumnLabel($current['table'], $column)) ?></option><?php endforeach; ?>
                     </select>
                     <input type="search" name="q" value="<?= h($q) ?>" placeholder="輸入關鍵字…">
                     <button class="btn" type="submit">搜尋</button>
@@ -499,10 +540,24 @@ $totalRecords = array_sum($counts);
                 $type = inputTypeForColumn((string)($meta['Type'] ?? ''));
                 $step = $type === 'number' ? ' step="any"' : '';
                 $isChronologicalSequence = $column === '序號' && in_array($current['table'], ['DEN', 'SUMMARY'], true);
+                $isSiteNoticeAutoId = $current['table'] === 'SITE_NOTICE' && $column === 'id' && str_contains((string)($meta['Extra'] ?? ''), 'auto_increment');
                 $default = $isChronologicalSequence ? '' : (array_key_exists($column, $newDefaults) ? $newDefaults[$column] : ($meta['Default'] ?? ''));
                 if ($default === null) $default = '';
+                $fieldOptions = $current['table'] === 'SITE_NOTICE' ? siteNoticeFieldOptions($column) : null;
             ?>
-                <div class="edit-field"><label><?= h($column) ?><?= in_array($column, $primaryKeys, true) ? '（主鍵）' : '' ?><?= $isChronologicalSequence ? '（依日期自動）' : ($column === '序號' && array_key_exists('序號', $newDefaults) ? '（自動下一號）' : '') ?></label><input type="<?= h($type) ?>"<?= $step ?> name="field[<?= h($column) ?>]" value="<?= h($default) ?>"<?= $isChronologicalSequence ? ' readonly' : '' ?>></div>
+                <div class="edit-field"><label><?= h(adminColumnLabel($current['table'], $column)) ?><?= $isSiteNoticeAutoId ? '（自動產生）' : (in_array($column, $primaryKeys, true) ? '（主鍵）' : '') ?><?= $isChronologicalSequence ? '（依日期自動）' : ($column === '序號' && array_key_exists('序號', $newDefaults) ? '（自動下一號）' : '') ?></label>
+                <?php if ($isSiteNoticeAutoId): ?>
+                    <input type="text" value="自動跳號" readonly>
+                <?php elseif ($fieldOptions !== null): ?>
+                    <select name="field[<?= h($column) ?>]">
+                    <?php foreach ($fieldOptions as $optionValue => $optionLabel): ?>
+                        <option value="<?= h($optionValue) ?>" <?= (string)$default === (string)$optionValue ? 'selected' : '' ?>><?= h($optionLabel) ?></option>
+                    <?php endforeach; ?>
+                    </select>
+                <?php else: ?>
+                    <input type="<?= h($type) ?>"<?= $step ?> name="field[<?= h($column) ?>]" value="<?= h($default) ?>"<?= $isChronologicalSequence ? ' readonly' : '' ?>>
+                <?php endif; ?>
+                </div>
             <?php endforeach; ?>
             </div>
             <div class="edit-actions"><button class="btn primary" type="submit" onclick="return confirm('確定要新增這筆資料嗎？')">新增資料</button><a class="btn" href="<?= h(listUrl($view, $q, $searchField)) ?>">取消</a></div>
@@ -519,9 +574,21 @@ $totalRecords = array_sum($counts);
                 $type = inputTypeForColumn((string)($meta['Type'] ?? ''));
                 $step = $type === 'number' ? ' step="any"' : '';
                 $value = $editRow[$column] ?? '';
+                $isSiteNoticeId = $current['table'] === 'SITE_NOTICE' && $column === 'id';
+                $fieldOptions = $current['table'] === 'SITE_NOTICE' ? siteNoticeFieldOptions($column) : null;
                 if ($type === 'datetime-local' && $value) $value = str_replace(' ', 'T', substr((string)$value, 0, 16));
             ?>
-                <div class="edit-field"><label><?= h($column) ?><?= in_array($column, $primaryKeys, true) ? '（主鍵）' : '' ?></label><input type="<?= h($type) ?>"<?= $step ?> name="field[<?= h($column) ?>]" value="<?= h($value) ?>"></div>
+                <div class="edit-field"><label><?= h(adminColumnLabel($current['table'], $column)) ?><?= in_array($column, $primaryKeys, true) ? '（主鍵）' : '' ?></label>
+                <?php if ($fieldOptions !== null): ?>
+                    <select name="field[<?= h($column) ?>]">
+                    <?php foreach ($fieldOptions as $optionValue => $optionLabel): ?>
+                        <option value="<?= h($optionValue) ?>" <?= (string)$value === (string)$optionValue ? 'selected' : '' ?>><?= h($optionLabel) ?></option>
+                    <?php endforeach; ?>
+                    </select>
+                <?php else: ?>
+                    <input type="<?= h($type) ?>"<?= $step ?> name="field[<?= h($column) ?>]" value="<?= h($value) ?>"<?= $isSiteNoticeId ? ' readonly' : '' ?>>
+                <?php endif; ?>
+                </div>
             <?php endforeach; ?>
             </div>
             <div class="edit-actions"><button class="btn primary" type="submit" onclick="return confirm('確定要更新這筆資料嗎？')">儲存修改</button><a class="btn" href="<?= h(listUrl($view, $q, $searchField)) ?>">取消</a></div>
@@ -529,9 +596,9 @@ $totalRecords = array_sum($counts);
         <?php endif; ?>
 
         <?php if ($rows && $columns): ?>
-        <div class="table-wrap"><table class="data"><thead><tr><?php foreach ($columns as $column): ?><th><?= h($column) ?></th><?php endforeach; ?><th>操作</th></tr></thead><tbody>
+        <div class="table-wrap"><table class="data"><thead><tr><?php foreach ($columns as $column): ?><th><?= h(adminColumnLabel($current['table'], $column)) ?></th><?php endforeach; ?><th>操作</th></tr></thead><tbody>
         <?php foreach ($rows as $row): $rowKey = encodeRowKey($row, $primaryKeys); ?>
-            <tr><?php foreach ($columns as $column): ?><td><?= h($row[$column] ?? '') ?></td><?php endforeach; ?><td class="actions-cell">
+            <tr><?php foreach ($columns as $column): ?><td><?= h(adminCellValue($current['table'], $column, $row[$column] ?? '')) ?></td><?php endforeach; ?><td class="actions-cell">
                 <a class="action-link" href="<?= h(listUrl($view, $q, $searchField, ['edit' => $rowKey])) ?>">修改</a>
                 <form class="delete-form" method="post" onsubmit="return confirm('確定要刪除這筆資料嗎？此動作無法復原。')"><input type="hidden" name="action" value="delete"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><input type="hidden" name="original" value="<?= h($rowKey) ?>"><button class="delete-link" type="submit">刪除</button></form>
                 <?php if ($current['table'] === 'PLAYER' && isset($row['代號'])): ?><a class="action-link" href="player.php?PLAYER=<?= rawurlencode((string)$row['代號']) ?>">棋士頁</a><?php endif; ?>
