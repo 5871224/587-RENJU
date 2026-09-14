@@ -107,6 +107,23 @@ button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: no
 .tourb-legacy table { max-width: none; }
 .tourb-swiss, .tourb-swiss .swiss-component, .tourb-swiss .swiss-scroll { min-width: 0; max-width: 100%; }
 
+/* 排名頁與日期選擇器 */
+.ranking-page .rank-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.ranking-page #datepicker { min-height: 36px; padding: 6px 10px; font-size: 0.9rem; }
+.ranking-page .rating-score { color: var(--rating-color, var(--renju-text)); font-weight: 600; }
+.ranking-page .ui-widget, .ranking-page .ui-widget input, .ranking-page .ui-widget select, .ranking-page .ui-widget button { font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; }
+.ranking-page .ui-datepicker { padding: 8px; background: var(--renju-surface); border: 1px solid var(--renju-border); border-radius: 10px; box-shadow: 0 10px 26px rgba(53, 87, 77, 0.16); color: var(--renju-text); }
+.ranking-page .ui-datepicker .ui-datepicker-header { padding: 7px 4px; background: var(--renju-primary); border: 0; border-radius: 7px; color: #FCF7EF; }
+.ranking-page .ui-datepicker .ui-datepicker-title { color: #FCF7EF; }
+.ranking-page .ui-datepicker .ui-datepicker-title select { min-height: 30px; padding: 3px 5px; border: 1px solid rgba(252, 247, 239, 0.55); border-radius: 5px; background: #F8F1E6; color: var(--renju-text); }
+.ranking-page .ui-datepicker .ui-datepicker-prev, .ranking-page .ui-datepicker .ui-datepicker-next { top: 6px; border-radius: 6px; cursor: pointer; }
+.ranking-page .ui-datepicker .ui-datepicker-prev-hover, .ranking-page .ui-datepicker .ui-datepicker-next-hover { background: rgba(252, 247, 239, 0.2); border-color: transparent; }
+.ranking-page .ui-datepicker th { color: var(--renju-primary-dark); font-weight: 700; }
+.ranking-page .ui-datepicker td a, .ranking-page .ui-datepicker td span { padding: 6px; border: 0; border-radius: 6px; background: transparent; color: var(--renju-text); text-align: center; }
+.ranking-page .ui-datepicker td a:hover { background: var(--renju-primary-soft); color: var(--renju-primary-dark); text-decoration: none; }
+.ranking-page .ui-datepicker .ui-state-highlight { background: #F3E3C8; color: #81582F; }
+.ranking-page .ui-datepicker .ui-state-active { background: var(--renju-primary-dark); color: #FCF7EF; font-weight: 700; }
+
 /* 共用工具類別 */
 .text-center { text-align: center !important; }
 .text-left { text-align: left !important; }
@@ -144,4 +161,6 @@ button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: no
 	.tourb-swiss .swiss-title { font-size: 18px; line-height: 1.35; }
 	.tourb-swiss .swiss-meta { white-space: normal; line-height: 1.5; }
 	.tourb-swiss .swiss-subhead { flex-wrap: wrap; }
+	.ranking-page .rank-heading { align-items: stretch; }
+	.ranking-page #datepicker { width: auto; }
 }
