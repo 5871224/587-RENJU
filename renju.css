@@ -1,16 +1,16 @@
 :root {
-	--renju-primary: #637BA3;
-	--renju-primary-dark: #4F6488;
-	--renju-primary-soft: #E2E6EF;
-	--renju-page: #E7E4DF;
-	--renju-surface: #EEEAE2;
-	--renju-nav: #DFE2EA;
+	--renju-primary: #7E97BF;
+	--renju-primary-dark: #617AA4;
+	--renju-primary-soft: #EEF2F8;
+	--renju-page: #F1EEE8;
+	--renju-surface: #F6F3ED;
+	--renju-nav: #E9EDF5;
 	--renju-accent: #C9A15C;
-	--renju-text: #2E3A4F;
-	--renju-text-muted: #687183;
-	--renju-border: #C8CBD2;
-	--renju-link: #526C98;
-	--renju-link-hover: #354E78;
+	--renju-text: #34445E;
+	--renju-text-muted: #748097;
+	--renju-border: #D4DAE4;
+	--renju-link: #5E79A8;
+	--renju-link-hover: #435F90;
 }
 
 html {
@@ -49,7 +49,7 @@ h2 {
 	color: var(--renju-primary);
 }
 
-/* 共用頂部導覽：方案 16 淺靛藍＋沙金 */
+/* 共用頂部導覽：方案 16 淺靛藍＋沙金亮色版 */
 #menu {
 	position: fixed;
 	z-index: 9999;
@@ -57,9 +57,9 @@ h2 {
 	left: 0;
 	right: 0;
 	height: 58px;
-	background: rgba(223, 226, 234, 0.97);
-	border-bottom: 1px solid rgba(79, 100, 136, 0.22);
-	box-shadow: 0 5px 18px rgba(46, 58, 79, 0.10);
+	background: rgba(233, 237, 245, 0.97);
+	border-bottom: 1px solid rgba(97, 122, 164, 0.18);
+	box-shadow: 0 5px 18px rgba(52, 68, 94, 0.08);
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
 	font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
@@ -123,8 +123,8 @@ h2 {
 #menu .menu-group:focus-within > .menu-parent,
 #menu .menu-group.menu-open > .menu-parent {
 	background: var(--renju-primary);
-	color: #F4F2ED;
-	box-shadow: 0 2px 8px rgba(79, 100, 136, 0.18);
+	color: #F8F5EF;
+	box-shadow: 0 2px 8px rgba(97, 122, 164, 0.15);
 }
 
 #menu .menu-group:hover .menu-arrow,
@@ -143,7 +143,7 @@ h2 {
 	background: var(--renju-surface);
 	border: 1px solid var(--renju-border);
 	border-radius: 10px;
-	box-shadow: 0 12px 28px rgba(46, 58, 79, 0.16);
+	box-shadow: 0 12px 28px rgba(52, 68, 94, 0.12);
 	opacity: 0;
 	visibility: hidden;
 	pointer-events: none;
@@ -204,7 +204,7 @@ table.rank {
 	background: var(--renju-surface);
 	border: 1px solid var(--renju-border);
 	border-radius: 10px;
-	box-shadow: 0 3px 12px rgba(46, 58, 79, 0.09);
+	box-shadow: 0 3px 12px rgba(52, 68, 94, 0.07);
 	overflow: hidden;
 	line-height: 1.45;
 }
@@ -213,11 +213,11 @@ table.tb th,
 table.rank th {
 	padding: 9px 12px;
 	background: var(--renju-primary);
-	color: #F4F2ED;
+	color: #F8F5EF;
 	font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
 	font-weight: 700;
 	text-align: center;
-	border-right: 1px solid rgba(244, 242, 237, 0.22);
+	border-right: 1px solid rgba(248, 245, 239, 0.24);
 	border-bottom: 1px solid var(--renju-primary-dark);
 	white-space: nowrap;
 }
@@ -229,8 +229,8 @@ table.rank td {
 	color: var(--renju-text);
 	font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
 	font-weight: 400;
-	border-right: 1px solid #D5D3CF;
-	border-bottom: 1px solid #D5D3CF;
+	border-right: 1px solid #E0DED8;
+	border-bottom: 1px solid #E0DED8;
 	transition: background-color 0.15s ease;
 }
 
@@ -252,7 +252,7 @@ table.rank td:last-child {
 
 table.tb tbody tr:nth-child(even) td,
 table.rank tbody tr:nth-child(even) td {
-	background: #E7E7E8;
+	background: #EEF0F3;
 }
 
 table.tb tbody tr:hover td,
@@ -288,7 +288,7 @@ table.tb a:hover,
 table.rank a:hover {
 	color: var(--renju-link-hover);
 	background: transparent;
-	text-decoration-color: #8797B4;
+	text-decoration-color: #9BAAC4;
 }
 
 table.tb a:focus-visible,
