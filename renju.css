@@ -49,6 +49,24 @@ h2 {
 	color: var(--renju-primary);
 }
 
+h3 {
+	font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+	font-size: 1.15rem;
+	font-weight: 700;
+	color: var(--renju-primary-dark);
+}
+
+p {
+	margin-top: 0;
+	margin-bottom: 1em;
+}
+
+hr {
+	border: 0;
+	border-top: 1px solid var(--renju-border);
+	margin: 1.25rem 0;
+}
+
 /* 共用頂部導覽：方案 17 青瓷綠＋米杏 */
 #menu {
 	position: fixed;
@@ -275,6 +293,12 @@ a:hover {
 	text-decoration-thickness: 1px;
 }
 
+a:focus-visible {
+	outline: 2px solid var(--renju-primary);
+	outline-offset: 2px;
+	border-radius: 3px;
+}
+
 table.tb a,
 table.rank a,
 table.tb a:visited,
@@ -296,6 +320,187 @@ table.rank a:focus-visible {
 	outline: 2px solid var(--renju-primary);
 	outline-offset: 2px;
 	border-radius: 3px;
+}
+
+/* 共用表單 */
+input,
+select,
+textarea,
+button {
+	font-family: inherit;
+	font-size: 1rem;
+}
+
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="url"],
+input[type="tel"],
+input[type="number"],
+input[type="password"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="time"],
+select,
+textarea {
+	max-width: 100%;
+	padding: 9px 12px;
+	border: 1px solid var(--renju-border);
+	border-radius: 8px;
+	background: var(--renju-surface);
+	color: var(--renju-text);
+	outline: none;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+textarea {
+	resize: vertical;
+	line-height: 1.5;
+}
+
+input[type="text"]:focus,
+input[type="search"]:focus,
+input[type="email"]:focus,
+input[type="url"]:focus,
+input[type="tel"]:focus,
+input[type="number"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+input[type="datetime-local"]:focus,
+input[type="month"]:focus,
+input[type="time"]:focus,
+select:focus,
+textarea:focus {
+	border-color: var(--renju-primary);
+	box-shadow: 0 0 0 3px rgba(105, 160, 146, 0.16);
+	background: #F8F1E6;
+}
+
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+	min-height: 40px;
+	padding: 8px 15px;
+	border: 1px solid var(--renju-primary-dark);
+	border-radius: 8px;
+	background: var(--renju-primary);
+	color: #FCF7EF;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
+}
+
+button:hover,
+input[type="button"]:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover {
+	background: var(--renju-primary-dark);
+	border-color: var(--renju-primary-dark);
+}
+
+button:active,
+input[type="button"]:active,
+input[type="submit"]:active,
+input[type="reset"]:active {
+	transform: translateY(1px);
+}
+
+button:focus-visible,
+input[type="button"]:focus-visible,
+input[type="submit"]:focus-visible,
+input[type="reset"]:focus-visible {
+	outline: 2px solid var(--renju-accent);
+	outline-offset: 2px;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+	cursor: not-allowed;
+	opacity: 0.58;
+}
+
+/* 共用內容區塊 */
+.site-panel {
+	margin: 20px 0;
+	padding: 16px;
+	background: var(--renju-surface);
+	border: 1px solid var(--renju-border);
+	border-radius: 10px;
+	box-shadow: 0 3px 12px rgba(53, 87, 77, 0.07);
+}
+
+.site-panel--center {
+	text-align: center;
+}
+
+.form-label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 700;
+	color: var(--renju-primary-dark);
+}
+
+.rule-selector {
+	width: 100%;
+	max-width: 300px;
+	cursor: pointer;
+}
+
+.news-list {
+	display: grid;
+	gap: 7px;
+	margin: 18px 0 22px;
+}
+
+.news-link,
+.news-link:visited {
+	display: block;
+	width: fit-content;
+	max-width: 100%;
+	font-weight: 600;
+	color: var(--renju-link);
+}
+
+.news-link--featured,
+.news-link--featured:visited {
+	color: #A9663E;
+	font-weight: 700;
+}
+
+.news-link--featured:hover {
+	color: #8C4F2F;
+}
+
+.site-updates {
+	width: 100%;
+	height: 108px;
+	min-height: 108px;
+}
+
+.content-image {
+	display: block;
+	max-width: 100%;
+	height: auto;
+}
+
+.text-center {
+	text-align: center !important;
+}
+
+.text-left {
+	text-align: left !important;
+}
+
+.text-muted {
+	color: var(--renju-text-muted) !important;
+}
+
+.w-full {
+	width: 100% !important;
 }
 
 @media (max-width: 768px) {
@@ -366,5 +571,29 @@ table.rank a:focus-visible {
 	table.rank th,
 	table.rank td {
 		padding: 7px 9px;
+	}
+
+	.site-panel {
+		padding: 13px;
+	}
+
+	input[type="text"],
+	input[type="search"],
+	input[type="email"],
+	input[type="url"],
+	input[type="tel"],
+	input[type="number"],
+	input[type="password"],
+	input[type="date"],
+	input[type="datetime-local"],
+	input[type="month"],
+	input[type="time"],
+	select,
+	textarea,
+	button,
+	input[type="button"],
+	input[type="submit"],
+	input[type="reset"] {
+		font-size: 16px;
 	}
 }
