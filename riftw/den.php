@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 
 <head>
 	<meta charset="UTF-8">
@@ -55,7 +55,7 @@ ORDER BY D.段數 DESC,D.序號");
 			$G = $row['原因'];
 		}
 		$P = $P + 1;
-		$DATA = $DATA . "<TR><TD>" . $P . "</TD><TD><a href='player.php?PLAYER=" . $row['代號'] . "'>" . $row['姓名'] . "</a></TD><TD align='left'>" . $G . "</TD><TD>" . $row['日期'] . "</TD></TR>";
+		$DATA = $DATA . "<TR><TD>" . $P . "</TD><TD><a href='player.php?PLAYER=" . $row['代號'] . "'>" . $row['姓名'] . "</a></TD><TD class='text-left'>" . $G . "</TD><TD>" . $row['日期'] . "</TD></TR>";
 		$D = $row['段位'];
 	}
 	$DATA = "<TR><TD><B>" . $P . " 位</B></TD><TD><B>【" . $D . "】</B></TD><TD colspan='2'></TD></TR>" . $DATA;
