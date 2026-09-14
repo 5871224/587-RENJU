@@ -1,0 +1,66 @@
+name: Audit BD API move once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-bd-api-move-once.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-website
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Inspect current BD and VCF API layout
+        shell: python
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
+        run: |
+          import ftplib, io, os, posixpath, re
+
+          def clean(v): return (v or '').strip('\r\n ').strip()
+          ftp=ftplib.FTP_TLS(); ftp.connect(clean(os.environ['FTP_SERVER']),21,timeout=60)
+          ftp.login(clean(os.environ['FTP_USERNAME']),clean(os.environ['FTP_PASSWORD'])); ftp.prot_p()
+          root=clean(os.environ.get('FTP_SERVER_DIR','')).replace('\\','/')
+          if root.startswith('/'): ftp.cwd('/')
+          for part in root.strip('/').split('/'):
+              if part: ftp.cwd(part)
+          root=ftp.pwd()
+          print('ROOT',root)
+
+          def list_dir(path):
+              try:
+                  rows=list(ftp.mlsd(path))
+              except Exception as exc:
+                  print('LIST_FAIL',path,exc); return
+              print('DIR',path)
+              for name,facts in sorted(rows,key=lambda x:x[0].lower()):
+                  if name not in ('.','..'):
+                      print(' ',facts.get('type','?'),name,facts.get('size',''))
+
+          list_dir(root+'/BD')
+          list_dir(root+'/vcf')
+
+          def read_text(path):
+              data=bytearray(); ftp.retrbinary('RETR '+path,data.extend); return data.decode('utf-8','replace')
+
+          patterns=re.compile(r'(config\.local|redirect|callback|client_id|google|origin|vcf/|BD/|__DIR__)',re.I)
+          for rel in ('vcf/yxdb.php','vcf/google-login.php'):
+              text=read_text(root+'/'+rel)
+              print('\nMATCHES',rel)
+              for i,line in enumerate(text.splitlines(),1):
+                  if patterns.search(line):
+                      safe=re.sub(r"(['\"])([A-Za-z0-9_-]{24,})\1",r"\1***\1",line)
+                      print(f'{i}: {safe[:500]}')
+
+          ftp.quit()
