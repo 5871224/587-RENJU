@@ -135,7 +135,7 @@ h2 {
 
 #menu .submenu {
 	position: absolute;
-	top: calc(100% + 8px);
+	top: 100%;
 	left: 50%;
 	width: max-content;
 	min-width: 180px;
@@ -147,7 +147,7 @@ h2 {
 	opacity: 0;
 	visibility: hidden;
 	pointer-events: none;
-	transform: translate(-50%, -6px);
+	transform: translate(-50%, -4px);
 	transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
 }
 
