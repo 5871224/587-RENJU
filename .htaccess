@@ -2,6 +2,10 @@ Options -Indexes
 
 RewriteEngine On
 
+# Legacy KO1 test site has moved to the dedicated ko1 subdomain.
+# Keep this redirect at the site root so /ko1test/ can be removed completely.
+RewriteRule ^ko1test(?:/.*)?$ https://ko1.renju.org.tw/ [R=301,L,NE,QSD]
+
 # Public ranking/archive pages only accept the parameter shapes they actually use.
 # This is defense in depth for legacy pages while their SQL is gradually modernized.
 RewriteCond %{REQUEST_URI} ^/riftw/(rank|record)\.php$ [NC]
