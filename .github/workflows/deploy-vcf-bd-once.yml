@@ -1,0 +1,127 @@
+name: Deploy VCF to BD once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deploy-vcf-bd-once.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-website
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Prepare current VCF Pages site
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --depth 1 https://github.com/5871224/VCF.git vcf
+          cd vcf
+
+          mkdir -p \
+            .cache/rapfi-wasm \
+            .cache/vcf-pattern-engine \
+            .cache/vcf-bitboard-engine \
+            .cache/vcf-yxdb-index
+
+          base='https://5871224.github.io/VCF/rapfi/engine'
+          curl -fL --retry 3 "$base/rapfi-single-simd128.js"   -o .cache/rapfi-wasm/rapfi-single-simd128.js
+          curl -fL --retry 3 "$base/rapfi-single-simd128.wasm" -o .cache/rapfi-wasm/rapfi-single-simd128.wasm
+          curl -fL --retry 3 "$base/rapfi-single-simd128.data" -o .cache/rapfi-wasm/rapfi-single-simd128.data
+          curl -fL --retry 3 "$base/vcf-pattern-engine.js"     -o .cache/vcf-pattern-engine/vcf-pattern-engine.js
+          curl -fL --retry 3 "$base/vcf-pattern-engine.wasm"   -o .cache/vcf-pattern-engine/vcf-pattern-engine.wasm
+          curl -fL --retry 3 "$base/vcf-bitboard-engine.js"    -o .cache/vcf-bitboard-engine/vcf-bitboard-engine.js
+          curl -fL --retry 3 "$base/vcf-bitboard-engine.wasm"  -o .cache/vcf-bitboard-engine/vcf-bitboard-engine.wasm
+          curl -fL --retry 3 "$base/vcf-yxdb-index.js"         -o .cache/vcf-yxdb-index/vcf-yxdb-index.js
+          curl -fL --retry 3 "$base/vcf-yxdb-index.wasm"       -o .cache/vcf-yxdb-index/vcf-yxdb-index.wasm
+
+          node --check rapfi/vcf-bitboard-main.js
+          node --check rapfi/rapfi-bitboard-dashboard.js
+          node --check rapfi/vcf-shortest-vcf-ui.js
+          node tests/workbench-architecture.test.js
+          python tools/prepare-pages-site.py
+          test -s _site/index.html
+          test -s _site/rapfi/engine/vcf-bitboard-engine.wasm
+          test -s _site/rapfi/engine/rapfi-single-simd128.data
+
+      - name: Upload VCF site to BD with FTPS
+        shell: python
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
+        run: |
+          import ftplib, os, posixpath
+          from pathlib import Path
+
+          def clean(value):
+              return (value or '').strip('\r\n ').strip()
+
+          server = clean(os.environ['FTP_SERVER'])
+          username = clean(os.environ['FTP_USERNAME'])
+          password = clean(os.environ['FTP_PASSWORD'])
+          server_dir = clean(os.environ.get('FTP_SERVER_DIR', ''))
+          local_root = Path('vcf/_site')
+          if not (local_root / 'index.html').is_file():
+              raise SystemExit('VCF _site is missing index.html')
+
+          ftp = ftplib.FTP_TLS()
+          ftp.connect(server, 21, timeout=60)
+          ftp.login(username, password)
+          ftp.prot_p()
+
+          def ensure_dir(path):
+              path = (path or '').replace('\\', '/').strip()
+              if not path or path == '.':
+                  return
+              if path.startswith('/'):
+                  ftp.cwd('/')
+              for part in path.strip('/').split('/'):
+                  if not part:
+                      continue
+                  try:
+                      ftp.cwd(part)
+                  except ftplib.error_perm:
+                      ftp.mkd(part)
+                      ftp.cwd(part)
+
+          ensure_dir(server_dir)
+          base_dir = ftp.pwd()
+          ensure_dir('BD')
+          target_dir = ftp.pwd()
+
+          files = sorted(p for p in local_root.rglob('*') if p.is_file())
+          print(f'Uploading {len(files)} files to {target_dir}')
+          for path in files:
+              rel = path.relative_to(local_root).as_posix()
+              ftp.cwd(target_dir)
+              parent = posixpath.dirname(rel)
+              if parent:
+                  ensure_dir(parent)
+              with path.open('rb') as fh:
+                  ftp.storbinary(f'STOR {posixpath.basename(rel)}', fh)
+
+          ftp.quit()
+          print('VCF upload complete')
+
+      - name: Verify BD public site
+        shell: bash
+        run: |
+          set -euxo pipefail
+          body="$(mktemp)"
+          code="$(curl -k -sS -L -o "$body" -w '%{http_code}' --max-time 45 'https://587.renju.org.tw/BD/?deploy_check=20260914')"
+          echo "BD HTTP status: $code"
+          test "$code" = '200'
+          grep -q 'vcf-bitboard-main.js' "$body"
+          grep -q 'vcf-shortest-vcf-ui.js' "$body"
+          rm -f "$body"
+          curl -k -fLsS --max-time 45 'https://587.renju.org.tw/BD/rapfi/engine/vcf-bitboard-engine.wasm?deploy_check=20260914' -o /tmp/vcf-bitboard-engine.wasm
+          test -s /tmp/vcf-bitboard-engine.wasm
