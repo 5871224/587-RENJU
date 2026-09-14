@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link href="../../renju.css" rel="stylesheet" type="text/css">
   <link href="js/jquery-ui.min.css" rel="stylesheet">
+  <link href="../../renju.css" rel="stylesheet" type="text/css">
 
   <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
   <script src="js/jquery-ui.min.js"></script>
@@ -35,7 +35,7 @@
   </script>
 </head>
 
-<body>
+<body class="ranking-page">
   <div id="myDiv"></div>
 
   <?php
@@ -77,7 +77,7 @@
 
   function ratingCell($rating) {
     $rounded = (int)round((float)$rating);
-    return "<TD style='color:" . ratingColor($rating) . ";font-weight:600'>" . $rounded . "</TD>";
+    return "<TD class='rating-score' style='--rating-color:" . ratingColor($rating) . "'>" . $rounded . "</TD>";
   }
 
   // 勝、和、負、局數直接由 GAME 正式對局計算。
@@ -117,7 +117,7 @@ AND IFNULL(S.對局數,0)>=15
 AND T.G>IFNULL((SELECT MAX(賽號) FROM `TOURNAMENT` WHERE 結束<='" . $Y5 . "'),0)
 ORDER BY R.績分 DESC");
 
-  echo "<H2>台灣排名 <input type='button' id='datepicker' value='" . $YY . "'></H2><a href='rankrule.php'>計算方式</a><BR />";
+  echo "<H2 class='rank-heading'>台灣排名 <input type='button' id='datepicker' value='" . $YY . "' aria-label='選擇排名日期'></H2><a href='rankrule.php'>計算方式</a><BR />";
   echo "<TABLE class='rank'><colgroup><col width='50'><col width='100'><col width='60'><col width='50'><col width='50'><col width='50'><col width='60'><col width='80'></colgroup>";
   echo "<TR><TH>排名</TH><TH>選手</TH><TH>績分</TH><TH>勝</TH><TH>和</TH><TH>負</TH><TH>局數</TH><TH>段級位</TH></TR>";
   $S = 1;
