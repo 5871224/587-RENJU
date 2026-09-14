@@ -1,0 +1,222 @@
+name: Sync VCF Pages to BD
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync-vcf-bd.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-website
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Check whether BD needs the latest successful VCF Pages build
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          status_file="$(mktemp)"
+          curl -fsSL --retry 3 \
+            'https://raw.githubusercontent.com/5871224/VCF/deployment-status/status.json' \
+            -o "$status_file"
+
+          pages_status="$(jq -r '.status // empty' "$status_file")"
+          pages_sha="$(jq -r '.head_sha // empty' "$status_file")"
+          pages_run_id="$(jq -r '.run_id // empty' "$status_file")"
+          if [ "$pages_status" != 'success' ] || ! [[ "$pages_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Latest VCF Pages deployment is not a valid successful build." >&2
+            cat "$status_file" >&2
+            exit 1
+          fi
+
+          deployed_sha=''
+          remote_status="$(mktemp)"
+          if curl -k -fsSL --retry 2 \
+              -H 'Cache-Control: no-cache' \
+              "https://587.renju.org.tw/BD/vcf-deploy-status.json?check=${pages_sha}" \
+              -o "$remote_status"; then
+            deployed_sha="$(jq -r '.head_sha // empty' "$remote_status" 2>/dev/null || true)"
+          fi
+
+          echo "pages_sha=$pages_sha" >> "$GITHUB_OUTPUT"
+          echo "pages_run_id=$pages_run_id" >> "$GITHUB_OUTPUT"
+          if [ "$deployed_sha" = "$pages_sha" ]; then
+            echo "needs_sync=false" >> "$GITHUB_OUTPUT"
+            echo "BD already matches successful VCF Pages build $pages_sha"
+          else
+            echo "needs_sync=true" >> "$GITHUB_OUTPUT"
+            echo "BD needs sync: deployed=${deployed_sha:-none}, pages=$pages_sha"
+          fi
+
+      - name: Prepare the exact successful VCF Pages source
+        if: steps.version.outputs.needs_sync == 'true'
+        shell: bash
+        env:
+          VCF_SHA: ${{ steps.version.outputs.pages_sha }}
+        run: |
+          set -euxo pipefail
+          mkdir vcf
+          cd vcf
+          git init
+          git remote add origin https://github.com/5871224/VCF.git
+          git fetch --depth 1 origin "$VCF_SHA"
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$VCF_SHA"
+
+          mkdir -p \
+            .cache/rapfi-wasm \
+            .cache/vcf-pattern-engine \
+            .cache/vcf-bitboard-engine \
+            .cache/vcf-yxdb-index
+
+          base='https://5871224.github.io/VCF/rapfi/engine'
+          curl -fL --retry 3 "$base/rapfi-single-simd128.js?v=$VCF_SHA"   -o .cache/rapfi-wasm/rapfi-single-simd128.js
+          curl -fL --retry 3 "$base/rapfi-single-simd128.wasm?v=$VCF_SHA" -o .cache/rapfi-wasm/rapfi-single-simd128.wasm
+          curl -fL --retry 3 "$base/rapfi-single-simd128.data?v=$VCF_SHA" -o .cache/rapfi-wasm/rapfi-single-simd128.data
+          curl -fL --retry 3 "$base/vcf-pattern-engine.js?v=$VCF_SHA"     -o .cache/vcf-pattern-engine/vcf-pattern-engine.js
+          curl -fL --retry 3 "$base/vcf-pattern-engine.wasm?v=$VCF_SHA"   -o .cache/vcf-pattern-engine/vcf-pattern-engine.wasm
+          curl -fL --retry 3 "$base/vcf-bitboard-engine.js?v=$VCF_SHA"    -o .cache/vcf-bitboard-engine/vcf-bitboard-engine.js
+          curl -fL --retry 3 "$base/vcf-bitboard-engine.wasm?v=$VCF_SHA"  -o .cache/vcf-bitboard-engine/vcf-bitboard-engine.wasm
+          curl -fL --retry 3 "$base/vcf-yxdb-index.js?v=$VCF_SHA"         -o .cache/vcf-yxdb-index/vcf-yxdb-index.js
+          curl -fL --retry 3 "$base/vcf-yxdb-index.wasm?v=$VCF_SHA"       -o .cache/vcf-yxdb-index/vcf-yxdb-index.wasm
+
+          node --check rapfi/vcf-bitboard-main.js
+          node --check rapfi/vcf-bitboard-worker.js
+          node --check rapfi/vcf-shortest-vcf-ui.js
+          node tests/workbench-architecture.test.js
+          python tools/prepare-pages-site.py
+
+          test -s _site/index.html
+          test -s _site/rapfi/vcf-bitboard-main.js
+          test -s _site/rapfi/vcf-bitboard-worker.js
+          test -s _site/rapfi/engine/vcf-bitboard-engine.js
+          test -s _site/rapfi/engine/vcf-bitboard-engine.wasm
+
+      - name: Upload VCF Pages build to BD
+        if: steps.version.outputs.needs_sync == 'true'
+        shell: python
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
+          VCF_SHA: ${{ steps.version.outputs.pages_sha }}
+          VCF_PAGES_RUN_ID: ${{ steps.version.outputs.pages_run_id }}
+        run: |
+          import ftplib, json, os, posixpath
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          def clean(value):
+              return (value or '').strip('\r\n ').strip()
+
+          server = clean(os.environ['FTP_SERVER'])
+          username = clean(os.environ['FTP_USERNAME'])
+          password = clean(os.environ['FTP_PASSWORD'])
+          server_dir = clean(os.environ.get('FTP_SERVER_DIR', ''))
+          vcf_sha = clean(os.environ['VCF_SHA'])
+          pages_run_id = clean(os.environ.get('VCF_PAGES_RUN_ID', ''))
+          local_root = Path('vcf/_site')
+          if not (local_root / 'index.html').is_file():
+              raise SystemExit('VCF _site is missing index.html')
+
+          ftp = ftplib.FTP_TLS()
+          ftp.connect(server, 21, timeout=60)
+          ftp.login(username, password)
+          ftp.prot_p()
+
+          def ensure_dir(path):
+              path = (path or '').replace('\\', '/').strip()
+              if not path or path == '.':
+                  return
+              if path.startswith('/'):
+                  ftp.cwd('/')
+              for part in path.strip('/').split('/'):
+                  if not part:
+                      continue
+                  try:
+                      ftp.cwd(part)
+                  except ftplib.error_perm:
+                      ftp.mkd(part)
+                      ftp.cwd(part)
+
+          ensure_dir(server_dir)
+          ensure_dir('BD')
+          target_dir = ftp.pwd()
+
+          files = sorted(path for path in local_root.rglob('*') if path.is_file())
+          print(f'Uploading {len(files)} VCF files to {target_dir}')
+          for path in files:
+              rel = path.relative_to(local_root).as_posix()
+              ftp.cwd(target_dir)
+              parent = posixpath.dirname(rel)
+              if parent:
+                  ensure_dir(parent)
+              with path.open('rb') as fh:
+                  ftp.storbinary(f'STOR {posixpath.basename(rel)}', fh)
+
+          # Upload the version marker last. If any file upload above fails, BD remains
+          # marked as the previous version and the next scheduled run retries the sync.
+          status = {
+              'status': 'success',
+              'head_sha': vcf_sha,
+              'pages_run_id': int(pages_run_id) if pages_run_id.isdigit() else pages_run_id,
+              'synced_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
+          }
+          marker = Path('/tmp/vcf-deploy-status.json')
+          marker.write_text(json.dumps(status, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          ftp.cwd(target_dir)
+          with marker.open('rb') as fh:
+              ftp.storbinary('STOR vcf-deploy-status.json', fh)
+
+          ftp.quit()
+          print(f'VCF BD sync complete: {vcf_sha}')
+
+      - name: Verify BD matches the successful Pages build
+        if: steps.version.outputs.needs_sync == 'true'
+        shell: bash
+        env:
+          VCF_SHA: ${{ steps.version.outputs.pages_sha }}
+        run: |
+          set -euo pipefail
+          cd vcf
+
+          check_file() {
+            rel="$1"
+            remote="$(mktemp)"
+            curl -k -fLsS --retry 3 \
+              -H 'Cache-Control: no-cache' \
+              "https://587.renju.org.tw/BD/$rel?sync_verify=$VCF_SHA" \
+              -o "$remote"
+            local_sha="$(sha256sum "_site/$rel" | awk '{print $1}')"
+            remote_sha="$(sha256sum "$remote" | awk '{print $1}')"
+            echo "$rel local=$local_sha remote=$remote_sha"
+            test "$local_sha" = "$remote_sha"
+            rm -f "$remote"
+          }
+
+          check_file index.html
+          check_file rapfi/vcf-bitboard-main.js
+          check_file rapfi/vcf-bitboard-worker.js
+          check_file rapfi/engine/vcf-bitboard-engine.js
+          check_file rapfi/engine/vcf-bitboard-engine.wasm
+
+          marker="$(mktemp)"
+          curl -k -fLsS --retry 3 \
+            -H 'Cache-Control: no-cache' \
+            "https://587.renju.org.tw/BD/vcf-deploy-status.json?sync_verify=$VCF_SHA" \
+            -o "$marker"
+          test "$(jq -r '.status' "$marker")" = 'success'
+          test "$(jq -r '.head_sha' "$marker")" = "$VCF_SHA"
+          echo "BD verified at VCF Pages SHA $VCF_SHA"
