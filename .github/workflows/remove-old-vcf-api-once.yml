@@ -1,0 +1,55 @@
+name: Remove old VCF API once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/remove-old-vcf-api-once.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-website
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Remove obsolete root vcf API directory
+        shell: python
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
+        run: |
+          import ftplib, os
+          def clean(v): return (v or '').strip('\r\n ').strip()
+          ftp=ftplib.FTP_TLS(); ftp.connect(clean(os.environ['FTP_SERVER']),21,timeout=60)
+          ftp.login(clean(os.environ['FTP_USERNAME']),clean(os.environ['FTP_PASSWORD'])); ftp.prot_p()
+          base=clean(os.environ.get('FTP_SERVER_DIR','')).replace('\\','/')
+          if base.startswith('/'): ftp.cwd('/')
+          for part in base.strip('/').split('/'):
+              if part: ftp.cwd(part)
+          root=ftp.pwd(); target=root+'/vcf'
+          names=[]
+          for name,facts in list(ftp.mlsd(target)):
+              if name in ('.','..'): continue
+              if (facts or {}).get('type') == 'dir': raise RuntimeError('unexpected directory: '+name)
+              names.append(name)
+          allowed={'yxdb.php','google-login.php'}
+          if set(names) != allowed: raise RuntimeError('unexpected old vcf contents: '+repr(names))
+          for name in names: ftp.delete(target+'/'+name)
+          ftp.rmd(target); ftp.quit()
+
+      - name: Verify old paths are gone and new paths remain
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 30 'https://587.renju.org.tw/vcf/yxdb.php' || true)" = '404'
+          test "$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 30 'https://587.renju.org.tw/vcf/google-login.php' || true)" = '404'
+          test "$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 30 'https://587.renju.org.tw/BD/api/yxdb.php?action=public_config')" = '200'
+          test "$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 30 'https://587.renju.org.tw/BD/api/google-login.php')" = '200'
