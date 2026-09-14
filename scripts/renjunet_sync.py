@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import calendar
 import ftplib
 import hashlib
 import io
@@ -72,13 +73,38 @@ if ($op==='batch') {{ $items=$body['sql']??null; if (!is_array($items)||!$items)
 throw new RuntimeException('invalid operation');
 }} catch(Throwable $e) {{ http_response_code(500); echo json_encode(['error'=>$e->getMessage()],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES); }}
 '''
-        self.ftp=ftplib.FTP_TLS(); self.ftp.connect(self.server,21,timeout=60); self.ftp.login(self.username,self.password); self.ftp.prot_p(); self._cwd(self.server_dir); self.ftp.storbinary("STOR "+self.filename,io.BytesIO(php.encode("utf-8"))); self.url=BASE_URL+"/"+self.filename; return self
+        self.ftp=ftplib.FTP_TLS(); self.ftp.connect(self.server,21,timeout=60); self.ftp.login(self.username,self.password); self.ftp.prot_p(); self._cwd(self.server_dir); self._cleanup_stale_bridges(); self.ftp.storbinary("STOR "+self.filename,io.BytesIO(php.encode("utf-8"))); self.url=BASE_URL+"/"+self.filename; return self
     def _cwd(self,path):
         path=path.replace("\\","/").strip()
         if not path: return
         if path.startswith("/"): self.ftp.cwd("/")
         for part in path.strip("/").split("/"):
             if part: self.ftp.cwd(part)
+    def _cleanup_stale_bridges(self,max_age_seconds=10800):
+        # A bridge is valid for only two hours. Remove older leftovers from aborted runs.
+        try:
+            entries=list(self.ftp.mlsd())
+        except Exception:
+            return
+        now=time.time()
+        for name,facts in entries:
+            if not re.fullmatch(r"rn_sync_[0-9a-fA-F]{20}\.php",name):
+                continue
+            modified=(facts or {}).get("modify","")
+            if not re.fullmatch(r"\d{14}",modified):
+                continue
+            try:
+                modified_at=calendar.timegm(time.strptime(modified,"%Y%m%d%H%M%S"))
+            except Exception:
+                continue
+            if now-modified_at <= max_age_seconds:
+                continue
+            try:
+                self.ftp.delete(name)
+                print("removed stale RenjuNet bridge:",name,flush=True)
+            except Exception as exc:
+                print("warning: could not remove stale RenjuNet bridge:",name,exc,flush=True)
+
     def call(self,op,sql,attempts=6):
         payload=json.dumps({"op":op,"sql":sql},ensure_ascii=False).encode("utf-8"); last=None
         for attempt in range(1,attempts+1):
