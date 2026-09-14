@@ -1,0 +1,173 @@
+name: Cleanup obsolete VCF server paths once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cleanup-vcf-server-once.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: production-website
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Make RenjuNet bridge cleanup self-healing
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('scripts/renjunet_sync.py')
+          text = path.read_text(encoding='utf-8')
+
+          old_import = 'import ftplib\nimport hashlib\n'
+          new_import = 'import calendar\nimport ftplib\nimport hashlib\n'
+          if 'import calendar\n' not in text:
+              if old_import not in text:
+                  raise SystemExit('import anchor not found')
+              text = text.replace(old_import, new_import, 1)
+
+          old_connect = '        self.ftp=ftplib.FTP_TLS(); self.ftp.connect(self.server,21,timeout=60); self.ftp.login(self.username,self.password); self.ftp.prot_p(); self._cwd(self.server_dir); self.ftp.storbinary("STOR "+self.filename,io.BytesIO(php.encode("utf-8"))); self.url=BASE_URL+"/"+self.filename; return self\n'
+          new_connect = '        self.ftp=ftplib.FTP_TLS(); self.ftp.connect(self.server,21,timeout=60); self.ftp.login(self.username,self.password); self.ftp.prot_p(); self._cwd(self.server_dir); self._cleanup_stale_bridges(); self.ftp.storbinary("STOR "+self.filename,io.BytesIO(php.encode("utf-8"))); self.url=BASE_URL+"/"+self.filename; return self\n'
+          if 'self._cleanup_stale_bridges();' not in text:
+              if old_connect not in text:
+                  raise SystemExit('bridge connect anchor not found')
+              text = text.replace(old_connect, new_connect, 1)
+
+          anchor = '''    def call(self,op,sql,attempts=6):\n'''
+          helper = '''    def _cleanup_stale_bridges(self,max_age_seconds=10800):\n        # A bridge is valid for only two hours. Remove older leftovers from aborted runs.\n        try:\n            entries=list(self.ftp.mlsd())\n        except Exception:\n            return\n        now=time.time()\n        for name,facts in entries:\n            if not re.fullmatch(r"rn_sync_[0-9a-fA-F]{20}\\.php",name):\n                continue\n            modified=(facts or {}).get("modify","")\n            if not re.fullmatch(r"\\d{14}",modified):\n                continue\n            try:\n                modified_at=calendar.timegm(time.strptime(modified,"%Y%m%d%H%M%S"))\n            except Exception:\n                continue\n            if now-modified_at <= max_age_seconds:\n                continue\n            try:\n                self.ftp.delete(name)\n                print("removed stale RenjuNet bridge:",name,flush=True)\n            except Exception as exc:\n                print("warning: could not remove stale RenjuNet bridge:",name,exc,flush=True)\n\n'''
+          if 'def _cleanup_stale_bridges(' not in text:
+              if anchor not in text:
+                  raise SystemExit('helper anchor not found')
+              text = text.replace(anchor, helper + anchor, 1)
+
+          path.write_text(text, encoding='utf-8')
+
+      - name: Validate RenjuNet sync script
+        shell: bash
+        run: python -m py_compile scripts/renjunet_sync.py
+
+      - name: Remove obsolete server files with FTPS
+        shell: python
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
+        run: |
+          import ftplib, os, posixpath, re
+          from datetime import datetime, timezone
+
+          def clean(value):
+              return (value or '').strip('\r\n ').strip()
+
+          ftp=ftplib.FTP_TLS()
+          ftp.connect(clean(os.environ['FTP_SERVER']),21,timeout=60)
+          ftp.login(clean(os.environ['FTP_USERNAME']),clean(os.environ['FTP_PASSWORD']))
+          ftp.prot_p()
+
+          server_dir=clean(os.environ.get('FTP_SERVER_DIR','')).replace('\\','/')
+          if server_dir.startswith('/'):
+              ftp.cwd('/')
+          for part in server_dir.strip('/').split('/'):
+              if part:
+                  ftp.cwd(part)
+          root=ftp.pwd()
+          now=datetime.now(timezone.utc)
+
+          # Remove only expired RenjuNet bridge files. They are valid for two hours;
+          # keep a one-hour safety margin for any currently active run.
+          ftp.cwd(root)
+          removed=[]
+          kept=[]
+          for name,facts in list(ftp.mlsd()):
+              if not re.fullmatch(r'rn_sync_[0-9a-fA-F]{20}\.php',name):
+                  continue
+              modify=(facts or {}).get('modify','')
+              try:
+                  modified=datetime.strptime(modify[:14],'%Y%m%d%H%M%S').replace(tzinfo=timezone.utc)
+                  age=(now-modified).total_seconds()
+              except Exception:
+                  kept.append((name,'unknown-age'))
+                  continue
+              if age > 10800:
+                  ftp.delete(name)
+                  removed.append((name,round(age/3600,2)))
+              else:
+                  kept.append((name,round(age/3600,2)))
+          print('removed stale rn_sync:',removed)
+          print('kept recent rn_sync:',kept)
+
+          # /VCF is the June 2026 legacy static frontend. Current frontend is /BD;
+          # lowercase /vcf is intentionally untouched because it hosts live APIs.
+          target=posixpath.join(root.rstrip('/'),'VCF')
+          def rm_tree(path):
+              try:
+                  entries=list(ftp.mlsd(path))
+              except ftplib.error_perm as exc:
+                  if str(exc).startswith('550'):
+                      return False
+                  raise
+              for name,facts in entries:
+                  if name in ('.','..'):
+                      continue
+                  child=posixpath.join(path,name)
+                  if (facts or {}).get('type') == 'dir':
+                      rm_tree(child)
+                      ftp.rmd(child)
+                  else:
+                      ftp.delete(child)
+              return True
+          if rm_tree(target):
+              ftp.rmd(target)
+              print('removed legacy directory:',target)
+          else:
+              print('legacy VCF directory already absent')
+
+          # Confirm lowercase API directory remains intact.
+          ftp.cwd(root)
+          ftp.cwd('vcf')
+          api_names=set(ftp.nlst())
+          for required in ('yxdb.php','google-login.php'):
+              if required not in {posixpath.basename(x.rstrip('/')) for x in api_names}:
+                  raise RuntimeError('required API missing: '+required)
+          ftp.quit()
+
+      - name: Commit automatic stale bridge cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- scripts/renjunet_sync.py; then
+            echo 'No script change needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add scripts/renjunet_sync.py
+          git commit -m 'Clean stale RenjuNet bridge files automatically'
+          git push
+
+      - name: Verify public paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          bd_code="$(curl -k -sS -L -o /dev/null -w '%{http_code}' --max-time 30 'https://587.renju.org.tw/BD/')"
+          old_code="$(curl -k -sS -L -o /dev/null -w '%{http_code}' --max-time 30 'https://587.renju.org.tw/VCF/' || true)"
+          yxdb_code="$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 30 'https://587.renju.org.tw/vcf/yxdb.php' || true)"
+          login_code="$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 30 'https://587.renju.org.tw/vcf/google-login.php' || true)"
+          echo "BD=$bd_code legacy_VCF=$old_code yxdb=$yxdb_code google_login=$login_code"
+          test "$bd_code" = '200'
+          test "$old_code" = '404'
+          test "$yxdb_code" != '404'
+          test "$login_code" != '404'
