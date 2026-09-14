@@ -85,6 +85,28 @@ button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: no
 .site-updates { width: 100%; height: 108px; min-height: 108px; }
 .content-image { display: block; max-width: 100%; height: auto; }
 
+/* 規章與說明頁 */
+.rule-page { max-width: 1180px; }
+.rule-page ol { padding-left: 1.6em; }
+.rule-page li { margin: 0.35em 0; }
+.rule-meta { margin-bottom: 1.3rem; color: var(--renju-text-muted); font-size: 0.95rem; line-height: 1.65; }
+.rule-section { margin: 18px 0; padding: 16px 18px; background: var(--renju-surface); border: 1px solid var(--renju-border); border-left: 4px solid var(--renju-primary); border-radius: 9px; }
+.rule-section > h2, .rule-section > h3 { margin-top: 0; }
+.rule-formula { display: block; margin: 8px 0; padding: 10px 12px; background: var(--renju-primary-soft); border-radius: 7px; font-family: Consolas, "Microsoft JhengHei", sans-serif; overflow-wrap: anywhere; }
+.rule-table { margin: 12px 0 8px; }
+.rule-table th, .rule-table td { text-align: center; vertical-align: middle; }
+
+/* 比賽頁 */
+.international-link, .international-link:visited { color: #A9663E !important; font-weight: 700 !important; }
+.international-link:hover { color: #8C4F2F !important; }
+.tourb-page { width: 100%; min-width: 0; max-width: 100%; overflow-x: hidden; }
+.tourb-scroll, .tourb-legacy { width: 100%; min-width: 0; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tourb-scroll { margin-bottom: 16px; }
+.tourb-scroll > table.rank { width: max-content; min-width: 100%; max-width: none; }
+.tourb-legacy { margin: 12px 0 18px; }
+.tourb-legacy table { max-width: none; }
+.tourb-swiss, .tourb-swiss .swiss-component, .tourb-swiss .swiss-scroll { min-width: 0; max-width: 100%; }
+
 /* 共用工具類別 */
 .text-center { text-align: center !important; }
 .text-left { text-align: left !important; }
@@ -114,4 +136,12 @@ button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: no
 	input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input[type="number"], input[type="password"], input[type="date"], input[type="datetime-local"], input[type="month"], input[type="time"], select, textarea { width: 100%; }
 	.player-page table.rank { font-size: 15px; }
 	.player-page table.rank th, .player-page table.rank td { padding: 5px 4px; }
+	.rule-section { padding: 13px 14px; }
+	.tourb-body { overflow-x: hidden; }
+	.tourb-page > h2 { margin-top: 12px; margin-bottom: 10px; line-height: 1.35; }
+	.tourb-scroll > table.rank { font-size: 13px; }
+	.tourb-scroll > table.rank th, .tourb-scroll > table.rank td { padding: 6px 8px; }
+	.tourb-swiss .swiss-title { font-size: 18px; line-height: 1.35; }
+	.tourb-swiss .swiss-meta { white-space: normal; line-height: 1.5; }
+	.tourb-swiss .swiss-subhead { flex-wrap: wrap; }
 }
