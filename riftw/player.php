@@ -3,13 +3,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="../../renju.css" rel="stylesheet" type="text/css">
-<style>
-@media (max-width: 768px) {
-  body { font-size: 16px; }
-  table.rank { font-size: 15px; }
-  table.rank th, table.rank td { padding: 5px 4px; }
-}
-</style>
 <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
@@ -21,7 +14,7 @@ $(document).ready(function(){
 </script>
 </head>
 
-<body>
+<body class="player-page">
 <div id="myDiv"></div>
 
 <?php
@@ -166,9 +159,9 @@ if(count($summaryRows)>0){
 			$tournamentText = "";
 		}
 		if($hasSummaryTitle){
-			ECHO "<TR><TD style='white-space:nowrap;'>".$summaryDate."</TD><TD>".$tournamentText."</TD><TD style='text-align:left;'>".$summaryText."</TD><TD style='text-align:left;'>".$summaryTitle."</TD></TR>";
+			ECHO "<TR><TD class='nowrap'>".$summaryDate."</TD><TD>".$tournamentText."</TD><TD class='text-left'>".$summaryText."</TD><TD class='text-left'>".$summaryTitle."</TD></TR>";
 		}else{
-			ECHO "<TR><TD style='white-space:nowrap;'>".$summaryDate."</TD><TD>".$tournamentText."</TD><TD style='text-align:left;'>".$summaryText."</TD></TR>";
+			ECHO "<TR><TD class='nowrap'>".$summaryDate."</TD><TD>".$tournamentText."</TD><TD class='text-left'>".$summaryText."</TD></TR>";
 		}
 	}
 	ECHO "</TABLE><BR/>";
@@ -189,8 +182,8 @@ foreach($rankHistory as $rh){
 }
 
 if($R[0]['顯示']==1 && count($chartData) > 0){
-	ECHO "<div style='position:relative; width:100%; max-width:100%; height:clamp(260px,42vw,420px); margin-bottom:20px;'>";
-	ECHO "<canvas id='rankChart' style='width:100% !important; max-width:100%;'></canvas>";
+	ECHO "<div class='chart-container'>";
+	ECHO "<canvas id='rankChart'></canvas>";
 	ECHO "</div>";
 	ECHO "<script>
 	var chartNames = ".json_encode($chartNames).";
@@ -209,7 +202,7 @@ if($R[0]['顯示']==1 && count($chartData) > 0){
 			drawCtx.moveTo(x, chartArea.top);
 			drawCtx.lineTo(x, chartArea.bottom);
 			drawCtx.lineWidth = 1;
-			drawCtx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+			drawCtx.strokeStyle = 'rgba(53, 87, 77, 0.32)';
 			drawCtx.stroke();
 			drawCtx.restore();
 		}
@@ -221,13 +214,13 @@ if($R[0]['顯示']==1 && count($chartData) > 0){
 			datasets: [{
 				label: '績分',
 				data: ".json_encode($chartData).",
-				borderColor: '#009933',
-				backgroundColor: 'rgba(0, 153, 51, 0.1)',
+				borderColor: '#69A092',
+				backgroundColor: 'rgba(105, 160, 146, 0.12)',
 				borderWidth: 2,
 				fill: true,
 				tension: 0.1,
 				pointRadius: 4,
-				pointBackgroundColor: '#009933'
+				pointBackgroundColor: '#69A092'
 			}]
 		},
 		options: {
@@ -290,10 +283,10 @@ $DATA3="";
 
 foreach($statement as $row){
 	$isSpecial = ($row['備註'] !== null && trim((string)$row['備註']) !== '');
-	if ($row['結果']=='勝'){$CL='green';}
-	elseif($row['結果']=='負'){$CL='red';}
-	elseif($row['結果']=='和'){$CL='blue';}
-	else{$CL='#667085';}
+	if ($row['結果']=='勝'){$CL='result-win';}
+	elseif($row['結果']=='負'){$CL='result-loss';}
+	elseif($row['結果']=='和'){$CL='result-draw';}
+	else{$CL='result-note';}
 
 	if ($G!=$row['賽名']){
 		if ($G!=''){
@@ -317,10 +310,10 @@ foreach($statement as $row){
 
 	if ($isSpecial){
 		$note = htmlspecialchars((string)$row['備註'], ENT_QUOTES, 'UTF-8');
-		$DATA3=$DATA3."<TR><TD>".$row['輪次']."</TD><TD>".$note."</TD><TD></TD><TD><font color='".$CL."'>".$note."</font></TD><TD></TD></TR>";
+		$DATA3=$DATA3."<TR><TD>".$row['輪次']."</TD><TD>".$note."</TD><TD></TD><TD><span class='".$CL."'>".$note."</span></TD><TD></TD></TR>";
 	} else {
 		if ($DATA2==""){$POINT="";} else {$POINT=$row['增減'];}
-		$DATA3=$DATA3."<TR><TD>".$row['輪次']."</TD><TD><a href='player.php?PLAYER=".$row['對手']."'>".$row['姓名']."</a></TD><TD>".$row['對手績分']."</TD><TD><font color='".$CL."'>".$row['結果']."</font></TD><TD>".$POINT."</TD></TR>";
+		$DATA3=$DATA3."<TR><TD>".$row['輪次']."</TD><TD><a href='player.php?PLAYER=".$row['對手']."'>".$row['姓名']."</a></TD><TD>".$row['對手績分']."</TD><TD><span class='".$CL."'>".$row['結果']."</span></TD><TD>".$POINT."</TD></TR>";
 		$N+=1;
 		$SUM+=$row['對手績分'];
 		if ($row['結果']=='勝'){$WIN+=1;}
