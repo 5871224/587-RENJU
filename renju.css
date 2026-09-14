@@ -94,6 +94,10 @@ button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: no
 .w-full { width: 100% !important; }
 .chart-container { position: relative; width: 100%; max-width: 100%; height: clamp(260px, 42vw, 420px); margin-bottom: 20px; }
 .chart-container canvas { width: 100% !important; max-width: 100%; }
+.result-win { color: #2F7D5A !important; font-weight: 600; }
+.result-loss { color: var(--renju-danger) !important; font-weight: 600; }
+.result-draw { color: #4F6F91 !important; font-weight: 600; }
+.result-note { color: var(--renju-text-muted) !important; }
 
 @media (max-width: 768px) {
 	body { padding: 66px 12px 24px; }
@@ -108,4 +112,6 @@ button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: no
 	table.tb, table.rank { font-size: 0.95rem; }
 	table.tb th, table.tb td, table.rank th, table.rank td { padding: 7px 9px; }
 	input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input[type="number"], input[type="password"], input[type="date"], input[type="datetime-local"], input[type="month"], input[type="time"], select, textarea { width: 100%; }
+	.player-page table.rank { font-size: 15px; }
+	.player-page table.rank th, .player-page table.rank td { padding: 5px 4px; }
 }
