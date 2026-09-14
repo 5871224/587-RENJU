@@ -45,6 +45,24 @@ function listUrl(string $view, string $q = '', string $searchField = '', array $
     }
     return '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
 }
+function ensureSiteNoticeTable(PDO $db): void {
+    $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS `SITE_NOTICE` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '流水編號',
+  `notice_date` DATE NOT NULL COMMENT '首頁顯示日期',
+  `type` ENUM('UPDATE','TOURNAMENT','NEWS') NOT NULL DEFAULT 'UPDATE' COMMENT '訊息類型',
+  `title` VARCHAR(255) NOT NULL COMMENT '首頁顯示文字',
+  `url` VARCHAR(500) DEFAULT NULL COMMENT '一般訊息連結網址',
+  `tour_id` INT DEFAULT NULL COMMENT '關聯賽事編號',
+  `is_visible` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1=顯示，0=隱藏',
+  `is_pinned` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1=置頂，0=一般',
+  `sort_order` INT NOT NULL DEFAULT 0 COMMENT '同日期自訂排序，數字大者優先',
+  PRIMARY KEY (`id`),
+  KEY `idx_site_notice_list` (`is_visible`,`type`,`is_pinned`,`notice_date`,`sort_order`),
+  KEY `idx_site_notice_tour` (`tour_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='網站首頁更新與比賽訊息'
+SQL);
+}
 
 $views = [
     'players' => ['title' => '棋士', 'table' => 'PLAYER', 'desc' => '棋士基本資料'],
@@ -54,6 +72,7 @@ $views = [
     'den' => ['title' => '段級', 'table' => 'DEN', 'desc' => '升段與段級紀錄'],
     'history' => ['title' => '歷程', 'table' => 'SUMMARY', 'desc' => '棋手重要賽事與歷程紀錄'],
     'meijin' => ['title' => '名人', 'table' => 'MEIJIN', 'desc' => '名人戰歷史資料'],
+    'site-notices' => ['title' => '首頁訊息', 'table' => 'SITE_NOTICE', 'desc' => '首頁更新、比賽訊息與一般消息'],
 ];
 $ratingTools = [
     'review' => ['title' => '台灣排名重算檢查', 'file' => 'rating-review.php', 'desc' => '整合逐場差異、完整性檢查與每位棋士最終差異，所有明細皆可分頁查看'],
@@ -101,6 +120,8 @@ $recentTournaments = [];
 $newDefaults = [];
 
 try {
+    ensureSiteNoticeTable($MYSQL);
+
     if ($view === 'rating-tools' && $_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'rebuild_rank') {
         if ($tool !== 'review') throw new RuntimeException('正式排名只能從台灣排名重算檢查執行。');
         $csrf = (string)($_POST['csrf'] ?? '');
@@ -142,6 +163,13 @@ try {
             $newDefaults['序號'] = (string)((int)$MYSQL->query(
                 'SELECT COALESCE(MAX(' . qi('序號') . '),0)+1 FROM ' . qi($table)
             )->fetchColumn());
+        }
+        if ($isNew && $table === 'SITE_NOTICE') {
+            $newDefaults['notice_date'] = $rankToday;
+            $newDefaults['type'] = 'UPDATE';
+            $newDefaults['is_visible'] = '1';
+            $newDefaults['is_pinned'] = '0';
+            $newDefaults['sort_order'] = '0';
         }
 
         $action = $_SERVER['REQUEST_METHOD'] === 'POST' ? (string)($_POST['action'] ?? '') : '';
@@ -317,7 +345,11 @@ try {
                 $sql .= ' WHERE ' . implode(' OR ', $parts);
             }
         }
-        $sql .= ' ORDER BY 1 DESC';
+        if ($table === 'SITE_NOTICE') {
+            $sql .= ' ORDER BY `is_pinned` DESC, `notice_date` DESC, `sort_order` DESC, `id` DESC';
+        } else {
+            $sql .= ' ORDER BY 1 DESC';
+        }
         $stmt = $MYSQL->prepare($sql);
         $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -360,7 +392,7 @@ $totalRecords = array_sum($counts);
 
 <?php if ($view === 'dashboard'): ?>
     <section class="hero">
-        <div><h1>排名系統</h1><p>直接讀取 MySQL，管理棋士、比賽、對局、排名、段級、歷程與名人資料，並集中使用等級分重算工具。</p></div>
+        <div><h1>排名系統</h1><p>直接讀取 MySQL，管理棋士、比賽、對局、排名、段級、歷程、名人與首頁訊息資料，並集中使用等級分重算工具。</p></div>
         <div class="badge"><?= number_format($totalRecords) ?> 筆資料</div>
     </section>
 
@@ -388,6 +420,7 @@ $totalRecords = array_sum($counts);
                 <a class="quick-link" href="<?= h(listUrl('players')) ?>"><span>棋士資料</span><strong>PLAYER →</strong></a>
                 <a class="quick-link" href="<?= h(listUrl('games')) ?>"><span>對局資料</span><strong>GAME →</strong></a>
                 <a class="quick-link" href="<?= h(listUrl('history')) ?>"><span>歷程資料</span><strong>SUMMARY →</strong></a>
+                <a class="quick-link" href="<?= h(listUrl('site-notices')) ?>"><span>首頁訊息</span><strong>SITE_NOTICE →</strong></a>
                 <a class="quick-link" href="<?= h(listUrl('rating-tools')) ?>"><span>等級分工具</span><strong>重算／檢查 →</strong></a>
                 <a class="quick-link" href="swiss.php"><span>戰績表</span><strong>開啟 →</strong></a>
                 <div class="notice">刪除只會刪除目前資料表的該筆資料，不會自動刪除其他資料表的關聯紀錄。</div>
