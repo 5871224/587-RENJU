@@ -12,7 +12,7 @@
 
   <link rel="shortcut icon" href="p/favicon.ico">
   <link href="renju.css" rel="stylesheet" type="text/css">
-  <link href="home.css?v=20260915b" rel="stylesheet" type="text/css">
+  <link href="home.css?v=20260915c" rel="stylesheet" type="text/css">
   <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
   <script type="text/javascript">
     $(document).ready(function () {
@@ -20,7 +20,7 @@
       $("#myDiv").html(htmlobj.responseText);
     });
   </script>
-  <script src="js/home-info.js?v=20260915b" defer></script>
+  <script src="js/home-info.js?v=20260915c" defer></script>
 </head>
 
 <body>
@@ -33,14 +33,11 @@
 
   <section class="home-info-grid" aria-label="首頁資訊">
     <article class="home-info-card">
-      <h2>比賽資訊</h2>
+      <div class="home-info-heading">
+        <h2>比賽資訊</h2>
+        <button type="button" class="home-info-more" id="competition-info-more" data-fallback-more="false" hidden>查看更多 →</button>
+      </div>
       <table class="home-info-table">
-        <thead>
-          <tr>
-            <th class="home-info-date">日期</th>
-            <th>比賽資訊</th>
-          </tr>
-        </thead>
         <tbody id="competition-info-body">
           <tr class="home-info-featured">
             <td class="home-info-date">2026/09/13</td>
@@ -64,20 +61,14 @@
           </tr>
         </tbody>
       </table>
-      <div class="home-info-actions">
-        <button type="button" class="home-info-more" id="competition-info-more" data-fallback-more="false" hidden>查看更多</button>
-      </div>
     </article>
 
     <article class="home-info-card">
-      <h2>更新資訊</h2>
+      <div class="home-info-heading">
+        <h2>更新資訊</h2>
+        <button type="button" class="home-info-more" id="update-info-more" data-fallback-more="true">查看更多 →</button>
+      </div>
       <table class="home-info-table">
-        <thead>
-          <tr>
-            <th class="home-info-date">日期</th>
-            <th>更新資訊</th>
-          </tr>
-        </thead>
         <tbody id="update-info-body">
           <tr>
             <td class="home-info-date">2026/06/04</td>
@@ -101,9 +92,6 @@
           </tr>
         </tbody>
       </table>
-      <div class="home-info-actions">
-        <button type="button" class="home-info-more" id="update-info-more" data-fallback-more="true">查看更多</button>
-      </div>
     </article>
   </section>
 </body>
