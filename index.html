@@ -12,7 +12,7 @@
 
   <link rel="shortcut icon" href="p/favicon.ico">
   <link href="renju.css" rel="stylesheet" type="text/css">
-  <link href="home.css" rel="stylesheet" type="text/css">
+  <link href="home.css?v=20260915b" rel="stylesheet" type="text/css">
   <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
   <script type="text/javascript">
     $(document).ready(function () {
@@ -20,7 +20,7 @@
       $("#myDiv").html(htmlobj.responseText);
     });
   </script>
-  <script src="js/home-info.js" defer></script>
+  <script src="js/home-info.js?v=20260915b" defer></script>
 </head>
 
 <body>
@@ -65,7 +65,7 @@
         </tbody>
       </table>
       <div class="home-info-actions">
-        <button type="button" class="home-info-more" id="competition-info-more" hidden>查看更多</button>
+        <button type="button" class="home-info-more" id="competition-info-more" data-fallback-more="false" hidden>查看更多</button>
       </div>
     </article>
 
@@ -102,7 +102,7 @@
         </tbody>
       </table>
       <div class="home-info-actions">
-        <button type="button" class="home-info-more" id="update-info-more" hidden>查看更多</button>
+        <button type="button" class="home-info-more" id="update-info-more" data-fallback-more="true">查看更多</button>
       </div>
     </article>
   </section>
