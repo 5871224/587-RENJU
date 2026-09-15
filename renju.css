@@ -1,17 +1,17 @@
 :root {
-	--renju-primary: #69A092;
-	--renju-primary-dark: #4F8275;
-	--renju-primary-soft: #E2EFEA;
-	--renju-page: #FCF7EF;
-	--renju-surface: #F5EEE3;
-	--renju-nav: #E8F1EC;
-	--renju-accent: #C78B5D;
-	--renju-text: #35574D;
-	--renju-text-muted: #6E7F77;
-	--renju-border: #D8DED5;
-	--renju-link: #4E8177;
-	--renju-link-hover: #36675E;
-	--renju-danger: #B24E45;
+	--renju-primary: #5B93BE;
+	--renju-primary-dark: #24577F;
+	--renju-primary-soft: #E3F0F8;
+	--renju-page: #F5F2EC;
+	--renju-surface: #FBF8F2;
+	--renju-nav: #A9CBE1;
+	--renju-accent: #C49A54;
+	--renju-text: #29465F;
+	--renju-text-muted: #71889B;
+	--renju-border: #D8E1E7;
+	--renju-link: #3E7EAE;
+	--renju-link-hover: #24577F;
+	--renju-danger: #B1534C;
 }
 
 html { background: var(--renju-page); }
@@ -28,16 +28,16 @@ h3 { font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; font-size
 p { margin-top: 0; margin-bottom: 1em; }
 hr { border: 0; border-top: 1px solid var(--renju-border); margin: 1.25rem 0; }
 
-/* 共用頂部導覽：方案 17 青瓷綠＋米杏 */
-#menu { position: fixed; z-index: 9999; top: 0; left: 0; right: 0; height: 58px; background: rgba(232, 241, 236, 0.97); border-bottom: 1px solid rgba(79, 130, 117, 0.18); box-shadow: 0 5px 18px rgba(53, 87, 77, 0.08); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; }
+/* 共用頂部導覽：深藍導航＋霧藍米色 */
+#menu { position: fixed; z-index: 9999; top: 0; left: 0; right: 0; height: 58px; background: rgba(169, 203, 225, 0.97); border-bottom: 1px solid rgba(36, 87, 127, 0.22); box-shadow: 0 5px 18px rgba(36, 69, 95, 0.12); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; }
 #menu .menu-main, #menu .submenu { list-style: none; margin: 0; padding: 0; }
 #menu .menu-main { height: 100%; max-width: 760px; margin: 0 auto; padding: 6px 12px; display: flex; align-items: center; justify-content: center; gap: 10px; }
 #menu .menu-group { position: relative; flex: 1 1 0; max-width: 170px; }
-#menu .menu-parent { width: 100%; height: 44px; margin: 0; padding: 0 15px; border: 0; border-radius: 9px; background: transparent; color: var(--renju-text); font: inherit; font-size: 17px; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease; }
+#menu .menu-parent { width: 100%; height: 44px; margin: 0; padding: 0 15px; border: 0; border-radius: 9px; background: transparent; color: #173F60; font: inherit; font-size: 17px; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease; }
 #menu .menu-arrow { width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg) translateY(-2px); transition: transform 0.16s ease; }
-#menu .menu-group:hover > .menu-parent, #menu .menu-group:focus-within > .menu-parent, #menu .menu-group.menu-open > .menu-parent { background: var(--renju-primary); color: #FCF7EF; box-shadow: 0 2px 8px rgba(79, 130, 117, 0.15); }
+#menu .menu-group:hover > .menu-parent, #menu .menu-group:focus-within > .menu-parent, #menu .menu-group.menu-open > .menu-parent { background: var(--renju-primary-dark); color: #FBF8F2; box-shadow: 0 2px 8px rgba(36, 87, 127, 0.2); }
 #menu .menu-group:hover .menu-arrow, #menu .menu-group:focus-within .menu-arrow, #menu .menu-group.menu-open .menu-arrow { transform: rotate(225deg) translate(-1px, -1px); }
-#menu .submenu { position: absolute; top: 100%; left: 50%; width: max-content; min-width: 180px; padding: 7px; background: var(--renju-surface); border: 1px solid var(--renju-border); border-radius: 10px; box-shadow: 0 12px 28px rgba(53, 87, 77, 0.12); opacity: 0; visibility: hidden; pointer-events: none; transform: translate(-50%, -4px); transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease; }
+#menu .submenu { position: absolute; top: 100%; left: 50%; width: max-content; min-width: 180px; padding: 7px; background: var(--renju-surface); border: 1px solid var(--renju-border); border-radius: 10px; box-shadow: 0 12px 28px rgba(36, 69, 95, 0.15); opacity: 0; visibility: hidden; pointer-events: none; transform: translate(-50%, -4px); transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease; }
 #menu .menu-group:hover > .submenu, #menu .menu-group:focus-within > .submenu, #menu .menu-group.menu-open > .submenu { opacity: 1; visibility: visible; pointer-events: auto; transform: translate(-50%, 0); }
 #menu .submenu li { margin: 0; padding: 0; }
 #menu .submenu a, #menu .submenu a:visited { display: block; padding: 10px 14px; border-radius: 7px; color: var(--renju-text); font-size: 15.5px; font-weight: 500; line-height: 1.35; text-align: left; text-decoration: none; white-space: nowrap; transition: background-color 0.14s ease, color 0.14s ease; }
@@ -45,13 +45,13 @@ hr { border: 0; border-top: 1px solid var(--renju-border); margin: 1.25rem 0; }
 #menu .menu-parent:focus-visible { outline: 2px solid var(--renju-accent); outline-offset: 2px; }
 
 /* 共用表格 */
-table.tb, table.rank { width: 100%; max-width: 100%; table-layout: auto; border-collapse: separate; border-spacing: 0; background: var(--renju-surface); border: 1px solid var(--renju-border); border-radius: 10px; box-shadow: 0 3px 12px rgba(53, 87, 77, 0.07); overflow: hidden; line-height: 1.45; }
-table.tb th, table.rank th { padding: 9px 12px; background: var(--renju-primary); color: #FCF7EF; font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; font-weight: 700; text-align: center; border-right: 1px solid rgba(252, 247, 239, 0.24); border-bottom: 1px solid var(--renju-primary-dark); white-space: nowrap; }
-table.tb td, table.rank td { padding: 8px 12px; background: var(--renju-surface); color: var(--renju-text); font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; font-weight: 400; border-right: 1px solid #E4DCCF; border-bottom: 1px solid #E4DCCF; transition: background-color 0.15s ease; }
+table.tb, table.rank { width: 100%; max-width: 100%; table-layout: auto; border-collapse: separate; border-spacing: 0; background: var(--renju-surface); border: 1px solid var(--renju-border); border-radius: 10px; box-shadow: 0 3px 12px rgba(36, 69, 95, 0.08); overflow: hidden; line-height: 1.45; }
+table.tb th, table.rank th { padding: 9px 12px; background: var(--renju-primary); color: #FBF8F2; font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; font-weight: 700; text-align: center; border-right: 1px solid rgba(251, 248, 242, 0.28); border-bottom: 1px solid var(--renju-primary-dark); white-space: nowrap; }
+table.tb td, table.rank td { padding: 8px 12px; background: var(--renju-surface); color: var(--renju-text); font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; font-weight: 400; border-right: 1px solid #E3E1DC; border-bottom: 1px solid #E3E1DC; transition: background-color 0.15s ease; }
 table.rank td { text-align: center; }
 table.tb tr:last-child td, table.rank tr:last-child td { border-bottom: 0; }
 table.tb th:last-child, table.tb td:last-child, table.rank th:last-child, table.rank td:last-child { border-right: 0; }
-table.tb tbody tr:nth-child(even) td, table.rank tbody tr:nth-child(even) td { background: #F0E8DC; }
+table.tb tbody tr:nth-child(even) td, table.rank tbody tr:nth-child(even) td { background: #F0EEE9; }
 table.tb tbody tr:hover td, table.rank tbody tr:hover td { background: var(--renju-primary-soft); }
 
 /* 共用連結 */
@@ -59,29 +59,29 @@ a, a:visited { color: var(--renju-link); text-decoration: none; text-underline-o
 a:hover { color: var(--renju-link-hover); background-color: transparent; text-decoration: underline; text-decoration-thickness: 1px; }
 a:focus-visible { outline: 2px solid var(--renju-primary); outline-offset: 2px; border-radius: 3px; }
 table.tb a, table.rank a, table.tb a:visited, table.rank a:visited { color: var(--renju-link); font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; font-weight: 400; }
-table.tb a:hover, table.rank a:hover { color: var(--renju-link-hover); background: transparent; text-decoration-color: #8DA89F; }
+table.tb a:hover, table.rank a:hover { color: var(--renju-link-hover); background: transparent; text-decoration-color: #9CB8CD; }
 table.tb a:focus-visible, table.rank a:focus-visible { outline: 2px solid var(--renju-primary); outline-offset: 2px; border-radius: 3px; }
 
 /* 共用表單 */
 input, select, textarea, button { font-family: inherit; font-size: 1rem; }
 input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input[type="number"], input[type="password"], input[type="date"], input[type="datetime-local"], input[type="month"], input[type="time"], select, textarea { max-width: 100%; padding: 9px 12px; border: 1px solid var(--renju-border); border-radius: 8px; background: var(--renju-surface); color: var(--renju-text); outline: none; transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease; }
 textarea { resize: vertical; line-height: 1.5; }
-input[type="text"]:focus, input[type="search"]:focus, input[type="email"]:focus, input[type="url"]:focus, input[type="tel"]:focus, input[type="number"]:focus, input[type="password"]:focus, input[type="date"]:focus, input[type="datetime-local"]:focus, input[type="month"]:focus, input[type="time"]:focus, select:focus, textarea:focus { border-color: var(--renju-primary); box-shadow: 0 0 0 3px rgba(105, 160, 146, 0.16); background: #F8F1E6; }
-button, input[type="button"], input[type="submit"], input[type="reset"] { min-height: 40px; padding: 8px 15px; border: 1px solid var(--renju-primary-dark); border-radius: 8px; background: var(--renju-primary); color: #FCF7EF; font-weight: 600; cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease; }
+input[type="text"]:focus, input[type="search"]:focus, input[type="email"]:focus, input[type="url"]:focus, input[type="tel"]:focus, input[type="number"]:focus, input[type="password"]:focus, input[type="date"]:focus, input[type="datetime-local"]:focus, input[type="month"]:focus, input[type="time"]:focus, select:focus, textarea:focus { border-color: var(--renju-primary); box-shadow: 0 0 0 3px rgba(91, 147, 190, 0.18); background: #FFFCF7; }
+button, input[type="button"], input[type="submit"], input[type="reset"] { min-height: 40px; padding: 8px 15px; border: 1px solid var(--renju-primary-dark); border-radius: 8px; background: var(--renju-primary); color: #FBF8F2; font-weight: 600; cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease; }
 button:hover, input[type="button"]:hover, input[type="submit"]:hover, input[type="reset"]:hover { background: var(--renju-primary-dark); border-color: var(--renju-primary-dark); }
 button:active, input[type="button"]:active, input[type="submit"]:active, input[type="reset"]:active { transform: translateY(1px); }
 button:focus-visible, input[type="button"]:focus-visible, input[type="submit"]:focus-visible, input[type="reset"]:focus-visible { outline: 2px solid var(--renju-accent); outline-offset: 2px; }
 button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: not-allowed; opacity: 0.58; }
 
 /* 共用內容元件 */
-.site-panel { margin: 20px 0; padding: 16px; background: var(--renju-surface); border: 1px solid var(--renju-border); border-radius: 10px; box-shadow: 0 3px 12px rgba(53, 87, 77, 0.07); }
+.site-panel { margin: 20px 0; padding: 16px; background: var(--renju-surface); border: 1px solid var(--renju-border); border-radius: 10px; box-shadow: 0 3px 12px rgba(36, 69, 95, 0.08); }
 .site-panel--center { text-align: center; }
 .form-label { display: block; margin-bottom: 8px; font-weight: 700; color: var(--renju-primary-dark); }
 .rule-selector { width: 100%; max-width: 300px; cursor: pointer; }
 .news-list { display: grid; gap: 7px; margin: 18px 0 22px; }
 .news-link, .news-link:visited { display: block; width: fit-content; max-width: 100%; font-weight: 600; color: var(--renju-link); }
-.news-link--featured, .news-link--featured:visited { color: #A9663E; font-weight: 700; }
-.news-link--featured:hover { color: #8C4F2F; }
+.news-link--featured, .news-link--featured:visited { color: #9B6E2F; font-weight: 700; }
+.news-link--featured:hover { color: #7D5422; }
 .site-updates { width: 100%; height: 108px; min-height: 108px; }
 .content-image { display: block; max-width: 100%; height: auto; }
 
@@ -97,8 +97,8 @@ button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: no
 .rule-table th, .rule-table td { text-align: center; vertical-align: middle; }
 
 /* 比賽頁 */
-.international-link, .international-link:visited { color: #A9663E !important; font-weight: 700 !important; }
-.international-link:hover { color: #8C4F2F !important; }
+.international-link, .international-link:visited { color: #9B6E2F !important; font-weight: 700 !important; }
+.international-link:hover { color: #7D5422 !important; }
 .tourb-page { width: 100%; min-width: 0; max-width: 100%; overflow-x: hidden; }
 .tourb-scroll, .tourb-legacy { width: 100%; min-width: 0; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .tourb-scroll { margin-bottom: 16px; }
@@ -112,17 +112,17 @@ button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: no
 .ranking-page #datepicker { min-height: 36px; padding: 6px 10px; font-size: 0.9rem; }
 .ranking-page .rating-score { color: var(--rating-color, var(--renju-text)); font-weight: 600; }
 .ranking-page .ui-widget, .ranking-page .ui-widget input, .ranking-page .ui-widget select, .ranking-page .ui-widget button { font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; }
-.ranking-page .ui-datepicker { padding: 8px; background: var(--renju-surface); border: 1px solid var(--renju-border); border-radius: 10px; box-shadow: 0 10px 26px rgba(53, 87, 77, 0.16); color: var(--renju-text); }
-.ranking-page .ui-datepicker .ui-datepicker-header { padding: 7px 4px; background: var(--renju-primary); border: 0; border-radius: 7px; color: #FCF7EF; }
-.ranking-page .ui-datepicker .ui-datepicker-title { color: #FCF7EF; }
-.ranking-page .ui-datepicker .ui-datepicker-title select { min-height: 30px; padding: 3px 5px; border: 1px solid rgba(252, 247, 239, 0.55); border-radius: 5px; background: #F8F1E6; color: var(--renju-text); }
+.ranking-page .ui-datepicker { padding: 8px; background: var(--renju-surface); border: 1px solid var(--renju-border); border-radius: 10px; box-shadow: 0 10px 26px rgba(36, 69, 95, 0.18); color: var(--renju-text); }
+.ranking-page .ui-datepicker .ui-datepicker-header { padding: 7px 4px; background: var(--renju-primary); border: 0; border-radius: 7px; color: #FBF8F2; }
+.ranking-page .ui-datepicker .ui-datepicker-title { color: #FBF8F2; }
+.ranking-page .ui-datepicker .ui-datepicker-title select { min-height: 30px; padding: 3px 5px; border: 1px solid rgba(251, 248, 242, 0.62); border-radius: 5px; background: #FFFCF7; color: var(--renju-text); }
 .ranking-page .ui-datepicker .ui-datepicker-prev, .ranking-page .ui-datepicker .ui-datepicker-next { top: 6px; border-radius: 6px; cursor: pointer; }
-.ranking-page .ui-datepicker .ui-datepicker-prev-hover, .ranking-page .ui-datepicker .ui-datepicker-next-hover { background: rgba(252, 247, 239, 0.2); border-color: transparent; }
+.ranking-page .ui-datepicker .ui-datepicker-prev-hover, .ranking-page .ui-datepicker .ui-datepicker-next-hover { background: rgba(251, 248, 242, 0.23); border-color: transparent; }
 .ranking-page .ui-datepicker th { color: var(--renju-primary-dark); font-weight: 700; }
 .ranking-page .ui-datepicker td a, .ranking-page .ui-datepicker td span { padding: 6px; border: 0; border-radius: 6px; background: transparent; color: var(--renju-text); text-align: center; }
 .ranking-page .ui-datepicker td a:hover { background: var(--renju-primary-soft); color: var(--renju-primary-dark); text-decoration: none; }
-.ranking-page .ui-datepicker .ui-state-highlight { background: #F3E3C8; color: #81582F; }
-.ranking-page .ui-datepicker .ui-state-active { background: var(--renju-primary-dark); color: #FCF7EF; font-weight: 700; }
+.ranking-page .ui-datepicker .ui-state-highlight { background: #F1DFC0; color: #7A5726; }
+.ranking-page .ui-datepicker .ui-state-active { background: var(--renju-primary-dark); color: #FBF8F2; font-weight: 700; }
 
 /* 共用工具類別 */
 .text-center { text-align: center !important; }
