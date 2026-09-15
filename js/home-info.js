@@ -108,8 +108,8 @@
   function updateButtons() {
     elements.competitionMore.hidden = !hasMore('competition');
     elements.updateMore.hidden = !hasMore('updates');
-    elements.competitionMore.textContent = state.expanded.competition ? '收合' : '查看更多';
-    elements.updateMore.textContent = state.expanded.updates ? '收合' : '查看更多';
+    elements.competitionMore.textContent = state.expanded.competition ? '收合 ↑' : '查看更多 →';
+    elements.updateMore.textContent = state.expanded.updates ? '收合 ↑' : '查看更多 →';
   }
 
   function renderType(type) {
