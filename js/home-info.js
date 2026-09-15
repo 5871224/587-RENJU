@@ -6,7 +6,7 @@
   const state = {
     competition: [],
     updates: [],
-    totals: { competition: 0, updates: 0 },
+    totals: { competition: null, updates: null },
     expanded: { competition: false, updates: false },
   };
 
@@ -98,9 +98,16 @@
     });
   }
 
+  function hasMore(type) {
+    const total = state.totals[type];
+    if (Number.isFinite(total)) return total > INITIAL_LIMIT;
+    const button = type === 'competition' ? elements.competitionMore : elements.updateMore;
+    return button.dataset.fallbackMore === 'true';
+  }
+
   function updateButtons() {
-    elements.competitionMore.hidden = state.totals.competition <= INITIAL_LIMIT;
-    elements.updateMore.hidden = state.totals.updates <= INITIAL_LIMIT;
+    elements.competitionMore.hidden = !hasMore('competition');
+    elements.updateMore.hidden = !hasMore('updates');
     elements.competitionMore.textContent = state.expanded.competition ? '收合' : '查看更多';
     elements.updateMore.textContent = state.expanded.updates ? '收合' : '查看更多';
   }
@@ -115,7 +122,7 @@
   }
 
   async function fetchInfo(limit) {
-    const response = await fetch(`home-info.php?limit=${limit}`, {
+    const response = await fetch(`home-info.php?limit=${limit}&_=${Date.now()}`, {
       headers: { Accept: 'application/json' },
       cache: 'no-store',
     });
@@ -127,18 +134,27 @@
     return data;
   }
 
+  function applyData(data) {
+    state.competition = data.competition;
+    state.updates = data.updates;
+    state.totals.competition = Number.isFinite(Number(data.totals?.competition))
+      ? Number(data.totals.competition)
+      : data.competition.length;
+    state.totals.updates = Number.isFinite(Number(data.totals?.updates))
+      ? Number(data.totals.updates)
+      : data.updates.length;
+  }
+
   async function loadInitial() {
     try {
       const data = await fetchInfo(INITIAL_LIMIT);
-      state.competition = data.competition;
-      state.updates = data.updates;
-      state.totals.competition = Number(data.totals?.competition || data.competition.length);
-      state.totals.updates = Number(data.totals?.updates || data.updates.length);
+      applyData(data);
       renderCompetition(state.competition);
       renderUpdates(state.updates);
       updateButtons();
     } catch (error) {
       console.error('首頁資訊載入失敗，保留頁面備援內容。', error);
+      updateButtons();
     }
   }
 
@@ -149,28 +165,23 @@
       return;
     }
 
-    const total = state.totals[type];
-    if (state[type].length < total) {
-      const button = type === 'competition' ? elements.competitionMore : elements.updateMore;
-      button.disabled = true;
-      button.textContent = '載入中…';
-      try {
-        const data = await fetchInfo(EXPANDED_LIMIT);
-        state.competition = data.competition;
-        state.updates = data.updates;
-        state.totals.competition = Number(data.totals?.competition || data.competition.length);
-        state.totals.updates = Number(data.totals?.updates || data.updates.length);
-      } catch (error) {
-        console.error('查看更多載入失敗。', error);
-        updateButtons();
-        button.disabled = false;
-        return;
-      }
+    const button = type === 'competition' ? elements.competitionMore : elements.updateMore;
+    button.disabled = true;
+    button.textContent = '載入中…';
+
+    try {
+      const data = await fetchInfo(EXPANDED_LIMIT);
+      applyData(data);
+      state.expanded[type] = true;
+      renderType(type);
+    } catch (error) {
+      console.error('查看更多載入失敗。', error);
       button.disabled = false;
+      button.textContent = '載入失敗，點此重試';
+      return;
     }
 
-    state.expanded[type] = true;
-    renderType(type);
+    button.disabled = false;
   }
 
   document.addEventListener('DOMContentLoaded', () => {
