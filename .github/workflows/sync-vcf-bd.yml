@@ -59,6 +59,13 @@ jobs:
             echo "BD1 needs sync: deployed=${deployed_sha:-none}, pages=$pages_sha"
           fi
 
+      - name: Restore Emscripten SDK cache for BD1 YXDB build
+        if: steps.version.outputs.needs_sync == 'true'
+        uses: actions/cache@v4
+        with:
+          path: .emsdk
+          key: bd1-emsdk-${{ runner.os }}-3.1.74-v1
+
       - name: Prepare the exact successful VCF Pages source
         if: steps.version.outputs.needs_sync == 'true'
         shell: bash
@@ -88,8 +95,24 @@ jobs:
           curl -fL --retry 3 "$base/vcf-pattern-engine.wasm?v=$VCF_SHA"   -o .cache/vcf-pattern-engine/vcf-pattern-engine.wasm
           curl -fL --retry 3 "$base/vcf-bitboard-engine.js?v=$VCF_SHA"    -o .cache/vcf-bitboard-engine/vcf-bitboard-engine.js
           curl -fL --retry 3 "$base/vcf-bitboard-engine.wasm?v=$VCF_SHA"  -o .cache/vcf-bitboard-engine/vcf-bitboard-engine.wasm
-          curl -fL --retry 3 "$base/vcf-yxdb-index.js?v=$VCF_SHA"         -o .cache/vcf-yxdb-index/vcf-yxdb-index.js
-          curl -fL --retry 3 "$base/vcf-yxdb-index.wasm?v=$VCF_SHA"       -o .cache/vcf-yxdb-index/vcf-yxdb-index.wasm
+
+          emsdk_dir="$GITHUB_WORKSPACE/.emsdk"
+          if [ ! -x "$emsdk_dir/upstream/emscripten/em++" ]; then
+            rm -rf "$emsdk_dir"
+            git clone --depth 1 --branch 3.1.74 https://github.com/emscripten-core/emsdk.git "$emsdk_dir"
+            "$emsdk_dir/emsdk" install 3.1.74
+            "$emsdk_dir/emsdk" activate 3.1.74
+          fi
+          source "$emsdk_dir/emsdk_env.sh"
+          g++ rapfi/vcf-yxdb-index.cpp -O3 -flto -DNDEBUG -std=c++17 -DVCF_YXDB_INDEX_TEST_MAIN -o /tmp/vcf-yxdb-index-test
+          /tmp/vcf-yxdb-index-test
+          em++ rapfi/vcf-yxdb-index.cpp \
+            -O3 -flto -DNDEBUG -std=c++17 --no-entry \
+            -s WASM=1 -s MODULARIZE=1 -s EXPORT_NAME=VCFYxdbIndexModule \
+            -s ENVIRONMENT='web,worker,node' -s FILESYSTEM=0 -s ALLOW_MEMORY_GROWTH=1 \
+            -s "EXPORTED_FUNCTIONS=['_vcfYxdbLoadFrame','_vcfYxdbQueryKey','_vcfYxdbQueryBoard','_vcfYxdbResultTextPtr','_vcfYxdbResultTextLength','_vcfYxdbQueryKeyPtr','_vcfYxdbQueryKeyLength','_vcfYxdbRecordCount','_vcfYxdbRawSize','_vcfYxdbIndexSlots','_vcfYxdbLastError','_malloc','_free']" \
+            -s "EXPORTED_RUNTIME_METHODS=['cwrap']" \
+            -o .cache/vcf-yxdb-index/vcf-yxdb-index.js
 
           node --check rapfi/vcf-bitboard-main.js
           node --check rapfi/vcf-bitboard-worker.js
