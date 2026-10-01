@@ -1,5 +1,7 @@
 name: Deploy VCF main to BD1
 
+# VCF main is the only deployment source; GitHub Pages is not used.
+
 on:
   workflow_dispatch:
   schedule:
