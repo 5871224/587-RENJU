@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: production-website
+  group: vcf-bd1-sync
   cancel-in-progress: false
 
 jobs:
