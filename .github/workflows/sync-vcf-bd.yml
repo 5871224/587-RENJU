@@ -85,6 +85,7 @@ jobs:
             .cache/rapfi-wasm \
             .cache/vcf-pattern-engine \
             .cache/vcf-bitboard-engine \
+            .cache/vcf-rapfi-db \
             .cache/vcf-yxdb-index
 
           base='https://5871224.github.io/VCF/rapfi/engine'
@@ -95,6 +96,8 @@ jobs:
           curl -fL --retry 3 "$base/vcf-pattern-engine.wasm?v=$VCF_SHA"   -o .cache/vcf-pattern-engine/vcf-pattern-engine.wasm
           curl -fL --retry 3 "$base/vcf-bitboard-engine.js?v=$VCF_SHA"    -o .cache/vcf-bitboard-engine/vcf-bitboard-engine.js
           curl -fL --retry 3 "$base/vcf-bitboard-engine.wasm?v=$VCF_SHA"  -o .cache/vcf-bitboard-engine/vcf-bitboard-engine.wasm
+          curl -fL --retry 3 "$base/vcf-rapfi-db.js?v=$VCF_SHA"           -o .cache/vcf-rapfi-db/vcf-rapfi-db.js
+          curl -fL --retry 3 "$base/vcf-rapfi-db.wasm?v=$VCF_SHA"         -o .cache/vcf-rapfi-db/vcf-rapfi-db.wasm
 
           emsdk_dir="$GITHUB_WORKSPACE/.emsdk"
           if [ ! -x "$emsdk_dir/upstream/emscripten/em++" ]; then
