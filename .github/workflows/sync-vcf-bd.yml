@@ -4,12 +4,11 @@ name: Deploy VCF main to BD1
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '*/5 * * * *'
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/sync-vcf-bd.yml'
+    inputs:
+      vcf_sha:
+        description: Exact VCF commit SHA to deploy; leave blank only for manual latest-main deployment
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -28,14 +27,19 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Check latest VCF main revision
+      - name: Resolve requested VCF revision
         id: version
         shell: bash
+        env:
+          REQUESTED_VCF_SHA: ${{ inputs.vcf_sha }}
         run: |
           set -euo pipefail
-          vcf_sha="$(git ls-remote https://github.com/5871224/VCF.git refs/heads/main | awk '{print $1}')"
+          vcf_sha="${REQUESTED_VCF_SHA:-}"
+          if [ -z "$vcf_sha" ]; then
+            vcf_sha="$(git ls-remote https://github.com/5871224/VCF.git refs/heads/main | awk '{print $1}')"
+          fi
           if ! [[ "$vcf_sha" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "Unable to resolve VCF main revision." >&2
+            echo "Invalid VCF revision: $vcf_sha" >&2
             exit 1
           fi
 
@@ -51,10 +55,10 @@ jobs:
           echo "vcf_sha=$vcf_sha" >> "$GITHUB_OUTPUT"
           if [ "$deployed_sha" = "$vcf_sha" ]; then
             echo "needs_sync=false" >> "$GITHUB_OUTPUT"
-            echo "BD1 already matches VCF main $vcf_sha"
+            echo "BD1 already matches VCF revision $vcf_sha"
           else
             echo "needs_sync=true" >> "$GITHUB_OUTPUT"
-            echo "BD1 needs sync: deployed=${deployed_sha:-none}, main=$vcf_sha"
+            echo "BD1 needs sync: deployed=${deployed_sha:-none}, requested=$vcf_sha"
           fi
 
       - name: Fetch exact VCF source
