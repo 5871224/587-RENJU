@@ -205,6 +205,10 @@ try {
                 'SELECT COALESCE(MAX(' . qi('序號') . '),0)+1 FROM ' . qi($table)
             )->fetchColumn());
         }
+        if ($isNew && $table === 'PLAYER' && isset($columnMeta['姓名'])) {
+            $prefillName = trim((string)($_GET['name'] ?? ''));
+            if ($prefillName !== '') $newDefaults['姓名'] = mb_substr($prefillName, 0, 255, 'UTF-8');
+        }
         if ($isNew && $table === 'SITE_NOTICE') {
             $newDefaults['notice_date'] = $rankToday;
             $newDefaults['type'] = 'UPDATE';
