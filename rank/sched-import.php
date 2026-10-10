@@ -488,6 +488,8 @@ if (isset($_SESSION['rank_sched_import_flash'])) {
 <script src="sched-import.js?v=3" defer></script>
 </head>
 <body>
+<div class="app">
+<?php $rankTopbarActive = 'tournaments'; require __DIR__ . '/topbar.php'; ?>
 <main class="sri-main">
 <header class="sri-head">
   <div><h1>匯入 Sched 比賽</h1><p>先核對棋士與對局，確認後才會寫入 TOURNAMENT 和 GAME。</p></div>
@@ -611,4 +613,5 @@ foreach ($games as $game):
 </form>
 <?php endif; ?>
 </main>
+</div>
 </body></html>
