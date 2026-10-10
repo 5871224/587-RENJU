@@ -20,7 +20,7 @@ if ($LASTEXITCODE -ne 0) {
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
     throw 'Node.js is required for Swiss JavaScript syntax validation.'
 }
-foreach ($file in @('rank/swiss-ui.js', 'rank/swiss-admin-ui.js')) {
+foreach ($file in @('rank/swiss-ui.js', 'rank/swiss-admin-ui.js', 'rank/sched-import.js')) {
     node --check $file
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax check failed: $file"
