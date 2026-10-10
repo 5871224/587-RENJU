@@ -11,24 +11,12 @@
   const searchButton = document.getElementById('sri-search-tours');
   const targetSelect = document.getElementById('sri-existing-tour');
   const searchStatus = document.getElementById('sri-tour-search-status');
-  const selectedSummary = document.getElementById('sri-selected-summary');
   if (!radios.length || !createFields || !existingFields || !targetSelect) return;
 
   let currentResults = [];
   let lookupController = null;
   const initialTarget = existingFields.dataset.selected || '';
   const isExisting = () => radios.some(radio => radio.checked && radio.value === 'existing');
-
-  function showSelected() {
-    const tour = currentResults.find(row => String(row['賽號']) === targetSelect.value);
-    selectedSummary.hidden = !tour;
-    selectedSummary.textContent = tour
-      ? '已選擇賽號 ' + tour['賽號'] + '｜' + tour['賽名'] + '｜' +
-        (tour['開始'] || '未設定') + ' ～ ' + (tour['結束'] || '未設定') +
-        '｜' + tour['賽制'] + '｜等級 ' + tour['等級'] +
-        '｜既有 GAME ' + tour.game_count + ' 筆'
-      : '';
-  }
 
   function syncMode() {
     const existing = isExisting();
@@ -45,7 +33,6 @@
     const date = dateInput.value;
     currentResults = [];
     targetSelect.replaceChildren(new Option('請先搜尋並選擇比賽', ''));
-    showSelected();
     if (!name && !date) {
       searchStatus.textContent = '請至少輸入比賽日期或名稱，也可以直接輸入賽號。';
       return;
@@ -79,8 +66,7 @@
         ? '找到 ' + currentResults.length + ' 場比賽' +
           (currentResults.length === 80 ? '（最多顯示 80 場，建議縮小搜尋條件）' : '，請選擇要匯入的賽號') + '。'
         : '找不到符合條件的比賽，請清除日期或改用部分名稱搜尋。';
-      showSelected();
-    } catch (error) {
+      } catch (error) {
       if (error.name !== 'AbortError') searchStatus.textContent = '無法查詢：' + error.message;
     } finally {
       if (lookupController === activeRequest) {
@@ -92,7 +78,6 @@
 
   radios.forEach(radio => radio.addEventListener('change', syncMode));
   searchButton.addEventListener('click', searchTours);
-  targetSelect.addEventListener('change', showSelected);
   nameInput.addEventListener('keydown', event => {
     if (event.key === 'Enter') {
       event.preventDefault();
@@ -106,10 +91,6 @@
       targetSelect.focus();
       return;
     }
-    const description = isExisting()
-      ? '確定將來源對局新增至現有排名賽號 ' + targetSelect.value + ' 嗎？原有比賽資料與對局不會修改。'
-      : '確定建立新比賽並匯入全部對局嗎？';
-    if (!window.confirm(description)) event.preventDefault();
   });
   syncMode();
 })();
