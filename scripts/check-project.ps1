@@ -95,6 +95,7 @@ foreach ($required in @('$rankAdminConfigured', "rank_admin_user'] ?? ''", "rank
 
 $rankProtectedPages = @(
     'rank/index.php',
+    'rank/sched-import.php',
     'rank/rating-review.php',
     'rank/rating-latest.php',
     'rank/rating-elo-audit.php',
