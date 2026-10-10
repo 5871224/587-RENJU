@@ -504,6 +504,7 @@ $totalRecords = array_sum($counts);
             <div class="panel-tools">
                 <a class="btn primary" href="<?= h(listUrl($view, $q, $searchField, ['new' => 1])) ?>">＋ 新增</a>
                 <?php if ($view === 'tournaments'): ?>
+                <a class="btn" href="sched-import.php?id=65">從 Sched 匯入比賽</a>
                 <a class="btn" href="player-transfer.php">轉移棋手</a>
                 <details class="shift-tool">
                     <summary class="btn">空出賽號</summary>
