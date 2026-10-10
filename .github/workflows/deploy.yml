@@ -54,6 +54,8 @@ jobs:
           forced_files=(
               'bb/keyinsql.php',
               'rank/index.php',
+               'rank/sched-import.php',
+               'rank/sched-import.css',
               'rank/lib/rating.php',
               'rank/rating-review.php',
               'rank/rating-latest.php',
