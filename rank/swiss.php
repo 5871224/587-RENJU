@@ -91,21 +91,7 @@ if ($tour > 0) {
 </head>
 <body>
 <div class="app">
-<header class="topbar">
-    <div class="brand">台灣連珠排名管理<small>RENJU RANK ADMIN</small></div>
-    <nav class="nav">
-        <a href="./">首頁</a>
-        <a href="./?view=players">棋士</a>
-        <a href="./?view=tournaments">比賽</a>
-        <a href="./?view=games">對局</a>
-        <a href="./?view=ranking">排名</a>
-        <a href="./?view=den">段級</a>
-        <a href="./?view=history">歷程</a>
-        <a href="./?view=meijin">名人</a>
-        <a href="./?view=rating-tools">等級分工具</a>
-        <a class="swiss active" href="swiss.php">瑞士制戰績</a>
-    </nav>
-</header>
+<?php $rankTopbarActive = 'swiss'; require __DIR__ . '/topbar.php'; ?>
 
 <main class="main">
 <div class="swiss-search-row">
