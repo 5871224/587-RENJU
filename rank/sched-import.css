@@ -34,8 +34,8 @@ body{margin:0;background:#eef3f8;color:#172033;font-family:Arial,"Microsoft Jhen
 .sri-issue{color:#a15b09;font-weight:700;display:block}
 .sri-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
 .sri-form-grid label{display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:700}
-.sri-form-grid label:nth-child(2){grid-column:span 2}
-@media(max-width:680px){.sri-main{padding:16px 12px 40px}.sri-head{align-items:flex-start;flex-direction:column}.sri-panel{padding:16px}.sri-form-grid{grid-template-columns:1fr}.sri-form-grid label:nth-child(2){grid-column:auto}}
+.sri-form-grid .sri-field-wide{grid-column:span 2}
+@media(max-width:680px){.sri-main{padding:16px 12px 40px}.sri-head{align-items:flex-start;flex-direction:column}.sri-panel{padding:16px}.sri-form-grid{grid-template-columns:1fr}.sri-form-grid .sri-field-wide{grid-column:auto}}
 
 .sri-game-preview{margin-top:14px;border-top:1px solid #e5eaf0;padding-top:12px}
 .sri-game-preview summary{cursor:pointer;color:#1769aa;font-weight:700;margin-bottom:12px}
