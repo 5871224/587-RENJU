@@ -13,6 +13,20 @@
   const searchStatus = document.getElementById('sri-tour-search-status');
   if (!radios.length || !createFields || !existingFields || !targetSelect) return;
 
+  // 預設戰績代碼隨開始日期更新；使用者手動修改後不覆蓋。
+  const startDate = document.getElementById('sri-start-date');
+  const scoreLink = document.getElementById('sri-score-link');
+  if (startDate && scoreLink) {
+    const compactDate = value => /^\d{4}-\d{2}-\d{2}$/.test(value)
+      ? value.substring(2).replaceAll('-', '') : '';
+    let prior = compactDate(startDate.value);
+    startDate.addEventListener('change', () => {
+      const next = compactDate(startDate.value);
+      if (scoreLink.value === prior) scoreLink.value = next;
+      prior = next;
+    });
+  }
+
   let currentResults = [];
   let lookupController = null;
   const initialTarget = existingFields.dataset.selected || '';
