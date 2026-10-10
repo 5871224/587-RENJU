@@ -32,8 +32,6 @@ body{margin:0;background:#eef3f8;color:#172033;font-family:Arial,"Microsoft Jhen
 .sri-table input[type=number]{width:160px}
 .sri-ok{color:#18723a}
 .sri-issue{color:#a15b09;font-weight:700;display:block}
-.sri-checkbox{display:flex;align-items:flex-start;gap:8px;font-size:14px;line-height:1.65;margin:16px 0;cursor:pointer}
-.sri-checkbox input{margin-top:4px;flex-shrink:0}
 .sri-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
 .sri-form-grid label{display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:700}
 .sri-form-grid label:nth-child(2){grid-column:span 2}
@@ -53,5 +51,4 @@ body{margin:0;background:#eef3f8;color:#172033;font-family:Arial,"Microsoft Jhen
 .sri-tour-search button{min-height:40px}
 .sri-tour-select-label{display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:700}
 .sri-tour-select-label select{width:100%;max-width:none}
-.sri-selected-summary{margin-top:10px;padding:12px 14px;border:1px solid #cbddeb;background:#f1f7fc;border-radius:8px;line-height:1.65;font-size:14px}
 .sri-panel [hidden]{display:none!important}
