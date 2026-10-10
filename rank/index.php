@@ -419,17 +419,7 @@ $totalRecords = array_sum($counts);
 </head>
 <body>
 <div class="app">
-<header class="topbar">
-    <div class="brand">台灣連珠排名管理<small>RENJU RANK ADMIN</small></div>
-    <nav class="nav">
-        <a class="<?= $view === 'dashboard' ? 'active' : '' ?>" href="./">首頁</a>
-        <?php foreach ($views as $key => $meta): ?>
-            <a class="<?= $view === $key ? 'active' : '' ?>" href="<?= h(listUrl($key)) ?>"><?= h($meta['title']) ?></a>
-        <?php endforeach; ?>
-        <a class="<?= $view === 'rating-tools' ? 'active' : '' ?>" href="<?= h(listUrl('rating-tools')) ?>">等級分工具</a>
-        <a class="swiss" href="swiss.php">瑞士制戰績</a>
-    </nav>
-</header>
+<?php $rankTopbarActive = $view; require __DIR__ . '/topbar.php'; ?>
 
 <main class="main">
 <?php if ($error !== ''): ?><div class="error">操作失敗：<?= h($error) ?></div><?php endif; ?>
