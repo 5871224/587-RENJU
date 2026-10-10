@@ -344,6 +344,23 @@ if (isset($_SESSION['rank_sched_import_flash'])) {
 <?php if ($gameErrors): ?><div class="sri-alert sri-error"><strong>無法匯入，請先處理：</strong><ul><?php foreach ($gameErrors as $detail): ?><li><?= sriH($detail) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
 <?php if ($warnings): ?><div class="sri-alert sri-warning"><strong>提醒：</strong><ul><?php foreach ($warnings as $detail): ?><li><?= sriH($detail) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
 <p class="sri-muted">正式對局依先手方寫入 P1，勝負換算為排名系統的 2 分制。輪空寫為特殊紀錄；未完成與無法轉換的成績會阻止匯入。此步驟不會修改來源資料。</p>
+<details class="sri-game-preview">
+<summary>查看將匯入的 <?= count($games) ?> 筆對局</summary>
+<div class="sri-table-scroll"><table class="sri-table"><thead><tr><th>輪次</th><th>先手／特殊</th><th>後手／輪空棋士</th><th>勝負（P1 得分）</th><th>備註</th></tr></thead><tbody>
+<?php
+$sourceNames = [];
+foreach ($snapshot['players'] as $person) $sourceNames[(int)$person['id']] = (string)$person['name'];
+foreach ($games as $game):
+?>
+<tr><td><?= (int)$game['round'] ?></td>
+<td><?= $game['a'] ? sriH($sourceNames[(int)$game['a']] ?? '未知棋士') : '輪空' ?></td>
+<td><?= sriH($sourceNames[(int)$game['b']] ?? '未知棋士') ?></td>
+<td><?= sriH($game['result']) ?></td>
+<td><?= sriH($game['memo']) ?></td></tr>
+<?php endforeach; ?>
+</tbody></table></div>
+</details>
+
 </section>
 <form method="post" class="sri-import">
 <input type="hidden" name="action" value="import">
