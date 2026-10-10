@@ -13,6 +13,8 @@ body{margin:0;background:#eef3f8;color:#172033;font-family:Arial,"Microsoft Jhen
 .sri-inline a,.sri-table a,.sri-alert a{color:#1369a8;text-decoration:none}
 .sri-table a{margin-right:12px;white-space:nowrap}
 .sri-inline a:hover,.sri-table a:hover,.sri-alert a:hover{text-decoration:underline}
+.sri-source-details{display:inline-flex;align-items:center;flex-wrap:wrap;gap:5px 14px;min-width:0;font-size:14px;line-height:1.6;color:#3c526a}
+.sri-source-details strong{color:#172033;font-weight:700;overflow-wrap:anywhere}
 .sri-panel input:not([type=checkbox]),.sri-panel select{min-height:40px;border-radius:7px;border:1px solid #c7d4e2;padding:7px 10px;font:inherit;background:#fff;max-width:100%}
 .sri-panel input:focus,.sri-panel select:focus{outline:2px solid #4f9ede;outline-offset:1px}
 .sri-panel .btn:disabled{opacity:.5;cursor:not-allowed}
