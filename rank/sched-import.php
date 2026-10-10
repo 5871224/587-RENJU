@@ -409,8 +409,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['lookup'] ?? '') === 'tournam
 if (empty($_SESSION['rank_sched_import_csrf'])) $_SESSION['rank_sched_import_csrf'] = bin2hex(random_bytes(32));
 $csrf = (string)$_SESSION['rank_sched_import_csrf'];
 $isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
-$sourceId = filter_var($isPost ? ($_POST['source_id'] ?? null) : ($_GET['id'] ?? 65), FILTER_VALIDATE_INT);
-if (!$sourceId || $sourceId < 1) $sourceId = 65;
+$rawSourceId = $isPost ? ($_POST['source_id'] ?? null) : ($_GET['id'] ?? null);
+$sourceId = 0;
 $error = ''; $success = ''; $snapshot = null; $rankPlayers = []; $match = [];
 $games = []; $gameErrors = []; $warnings = []; $existing = null;
 $sourceDatabase = ''; $defaultTitle = ''; $defaultName = ''; $start = ''; $end = '';
@@ -418,7 +418,18 @@ $ruleOptions = []; $formatOptions = [];
 $postedMap = is_array($_POST['map'] ?? null) ? $_POST['map'] : [];
 try {
     [$srcPdo, $srcPrefix, $sourceDatabase] = sriSource($MYSQL);
-    $snapshot = sriLoad($srcPdo, $srcPrefix, (int)$sourceId);
+    if ($rawSourceId === null) {
+        if ($isPost) throw new RuntimeException('缺少 Sched 來源比賽編號，請重新讀取比賽。');
+        // 初次進入（未指定 ?id=）時，從來源資料表找最新建立的組別。
+        $sourceId = (int)$srcPdo->query('SELECT COALESCE(MAX(id),0) FROM ' . $srcPrefix . 'tournaments')->fetchColumn();
+        if ($sourceId < 1) throw new RuntimeException('Sched 尚未建立任何比賽。');
+    } else {
+        // 手動選擇的編號與匯入 POST 都必須忠實使用，不可暗中改成最新比賽。
+        $checkedSourceId = filter_var($rawSourceId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($checkedSourceId === false) throw new RuntimeException('請輸入正確的 Sched 比賽編號。');
+        $sourceId = (int)$checkedSourceId;
+    }
+    $snapshot = sriLoad($srcPdo, $srcPrefix, $sourceId);
     $fingerprint = sriFingerprint($snapshot);
     [$games, $gameErrors, $warnings] = sriGames($snapshot);
     $rankPlayers = sriRankPlayers($MYSQL);
@@ -484,7 +495,7 @@ if (isset($_SESSION['rank_sched_import_flash'])) {
 <title>Sched 比賽匯入｜台灣連珠排名管理</title>
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
-<link rel="stylesheet" href="sched-import.css?v=4">
+<link rel="stylesheet" href="sched-import.css?v=5">
 <script src="sched-import.js?v=3" defer></script>
 </head>
 <body>
@@ -501,9 +512,15 @@ if (isset($_SESSION['rank_sched_import_flash'])) {
   <h2>1. 選擇 Sched 比賽</h2>
   <form method="get" class="sri-inline">
     <label for="source-id">Sched 比賽編號</label>
-    <input type="number" id="source-id" name="id" min="1" required value="<?= (int)$sourceId ?>">
+    <input type="number" id="source-id" name="id" min="1" required value="<?= $sourceId > 0 ? (int)$sourceId : '' ?>">
     <button class="btn primary" type="submit">讀取並核對</button>
-    <a href="<?= sriH('/Sched/game.html?id=' . (int)$sourceId) ?>" target="_blank" rel="noopener noreferrer">查看來源戰績 ↗</a>
+    <?php if ($snapshot): ?>
+      <span class="sri-source-details" aria-live="polite">
+        <span>比賽名稱：<strong><?= sriH($eventName) ?></strong></span>
+        <span>組別：<strong><?= sriH($groupName !== '' ? $groupName : '未設定') ?></strong></span>
+      </span>
+      <a href="<?= sriH('/Sched/game.html?id=' . (int)$sourceId) ?>" target="_blank" rel="noopener noreferrer">查看來源戰績 ↗</a>
+    <?php endif; ?>
   </form>
 </section>
 <?php if ($snapshot): ?>
