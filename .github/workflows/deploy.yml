@@ -56,6 +56,7 @@ jobs:
               'rank/index.php',
                'rank/sched-import.php',
                'rank/sched-import.css',
+               'rank/sched-import.js',
               'rank/lib/rating.php',
               'rank/rating-review.php',
               'rank/rating-latest.php',
