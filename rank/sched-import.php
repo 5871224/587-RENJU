@@ -169,7 +169,7 @@ function sriInsert(PDO $db, string $table, array $values): void {
     // 與 rank 現有資料維護共用的 SHOW COLUMNS 自適應 INSERT，不修改既有 schema。
     swissInsertAdaptive($db, $table, $values);
 }
-function sriValidateMap(array $sourcePlayers, array $rankPlayers, array $map, bool $acceptAlias): array {
+function sriValidateMap(array $sourcePlayers, array $rankPlayers, array $map): array {
     $rankById = [];
     foreach ($rankPlayers as $rank) $rankById[(int)$rank['代號']] = (string)$rank['姓名'];
     $result = []; $used = [];
@@ -180,9 +180,6 @@ function sriValidateMap(array $sourcePlayers, array $rankPlayers, array $map, bo
             throw new RuntimeException('請先確認「' . $source['name'] . '」的棋士代號，未建立的棋士請先新增。');
         }
         if (isset($used[$rid])) throw new RuntimeException('兩名 Sched 棋士不可對應同一位排名棋士：' . $rankById[$rid]);
-        if (sriName((string)$source['name']) !== sriName($rankById[$rid]) && !$acceptAlias) {
-            throw new RuntimeException('棋士姓名不同，請勾選確認人工對應後再匯入：' . $source['name'] . ' → ' . $rankById[$rid]);
-        }
         $used[$rid] = true; $result[$sid] = $rid;
     }
     return $result;
@@ -370,10 +367,9 @@ try {
         if (!hash_equals($csrf, (string)($_POST['csrf'] ?? ''))) throw new RuntimeException('表單驗證失效，請重新整理再試。');
         if (!hash_equals($fingerprint, (string)($_POST['fingerprint'] ?? ''))) throw new RuntimeException('Sched 比賽內容已變更，請重新檢查最新對局再匯入。');
         if ($existing !== null) throw new RuntimeException('此 Sched 比賽已匯入賽號 ' . $existing['rank_tournament_id'] . '。');
-        if (empty($_POST['confirmed'])) throw new RuntimeException('請勾選已確認棋士與對局內容。');
         if ($gameErrors) throw new RuntimeException('Sched 仍有未完成或無法轉換的對局，請先修正後重新檢查。');
         if ((string)$src['game_type'] !== '五子') throw new RuntimeException('此組別不是五子棋，不可匯入連珠排名系統。');
-        $map = sriValidateMap($snapshot['players'], $rankPlayers, $postedMap, !empty($_POST['accept_alias']));
+        $map = sriValidateMap($snapshot['players'], $rankPlayers, $postedMap);
         $mode = (string)($_POST['target_mode'] ?? 'new');
         $chosenNo = (int)($mode === 'existing' ? ($_POST['existing_tour_no'] ?? 0) : ($_POST['tour_no'] ?? 0));
         $chosenName = trim((string)($_POST['tour_name'] ?? ''));
@@ -404,8 +400,8 @@ if (isset($_SESSION['rank_sched_import_flash'])) {
 <title>Sched 比賽匯入｜台灣連珠排名管理</title>
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
-<link rel="stylesheet" href="sched-import.css?v=2">
-<script src="sched-import.js?v=1" defer></script>
+<link rel="stylesheet" href="sched-import.css?v=3">
+<script src="sched-import.js?v=2" defer></script>
 </head>
 <body>
 <main class="sri-main">
@@ -489,10 +485,9 @@ foreach ($games as $game):
 </tr>
 <?php endforeach; ?>
 </tbody></table></div>
-<label class="sri-checkbox"><input type="checkbox" name="accept_alias" value="1"> 我已核對所有人工指定的棋士；如來源與 PLAYER 姓名不同，確認兩者是同一人</label>
 </section>
 <section class="sri-panel">
-<h2>4. 確認比賽資料並匯入</h2>
+<h2>4. 匯入比賽</h2>
 <div class="sri-target-options" role="group" aria-label="匯入方式">
   <label><input type="radio" name="target_mode" value="new" <?= ($_POST['target_mode'] ?? 'new') !== 'existing' ? 'checked' : '' ?>> 新增比賽</label>
   <label><input type="radio" name="target_mode" value="existing" <?= ($_POST['target_mode'] ?? '') === 'existing' ? 'checked' : '' ?>> 匯入至現有比賽</label>
@@ -505,10 +500,8 @@ foreach ($games as $game):
     <label>結束日期 <input type="date" name="end_date" value="<?= sriH($_POST['end_date'] ?? $end) ?>" required></label>
     <label>比賽等級 <select name="level"><?php for ($i = 0; $i <= 6; $i++): ?><option value="<?= $i ?>" <?= (string)($_POST['level'] ?? '0') === (string)$i ? 'selected' : '' ?>><?= $i ?><?= $i === 0 ? '（不計等級分）' : '' ?></option><?php endfor; ?></select></label>
   </div>
-  <p class="sri-muted">新增時使用以上賽號、日期與等級；等級 0 不計等級分。</p>
 </div>
 <div id="sri-existing-fields" hidden data-selected="<?= sriH($_POST['existing_tour_no'] ?? '') ?>">
-  <p class="sri-muted">可依日期或比賽名稱查詢（也可輸入賽號）。搜尋不會修改棋士及其他欄位。</p>
   <div class="sri-tour-search">
     <label>比賽日期 <input type="date" id="sri-tour-date" value="<?= sriH($start) ?>"></label>
     <label>名稱或賽號 <input type="search" id="sri-tour-name" placeholder="輸入比賽名稱或賽號"></label>
@@ -520,12 +513,8 @@ foreach ($games as $game):
     </select>
   </label>
   <p id="sri-tour-search-status" class="sri-muted" role="status" aria-live="polite"></p>
-  <div id="sri-selected-summary" class="sri-selected-summary" hidden></div>
-  <p class="sri-muted">現有比賽的名稱、日期、賽制及等級保持不變，僅新增對局；若已有相同輪次、相同棋士的對局或輪空，會整批取消，不覆蓋原資料。</p>
 </div>
-<p class="sri-muted">匯入不會自動重算 RANK、DEN 或 SUMMARY，也不會從 Sched 猜測歷史 Elo。</p>
-<label class="sri-checkbox"><input type="checkbox" name="confirmed" value="1" required> 我已確認棋士身分、比賽日期、賽號與對局內容無誤</label>
-<button type="submit" class="btn primary" id="sri-submit" <?= $existing || $gameErrors || $source['game_type'] !== '五子' ? 'disabled' : '' ?>>確認匯入 TOURNAMENT 與 GAME</button>
+<button type="submit" class="btn primary" id="sri-submit" <?= $existing || $gameErrors || $source['game_type'] !== '五子' ? 'disabled' : '' ?>>匯入比賽與對局</button>
 </section>
 </form>
 <?php endif; ?>
