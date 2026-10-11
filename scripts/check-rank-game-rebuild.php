@@ -12,7 +12,8 @@ $starts=rrGameStartRatings($calculation);
 assertRankGame(count($starts)===2,'正確建立所有棋士的比賽起始分資料');
 assertRankGame($starts['309:524']['rating']===2156.19003,'起始分保留原始精度，不誤用結束分');
 assertRankGame($starts['309:100']['rating']===1850.5,'同賽事不同棋士各有自己的起始分');
-assertRankGame(rrRebuildQuote('GAME_REBUILD_NEW')===''.chr(96).'GAME_REBUILD_NEW'.chr(96),'備份與暫存資料表名稱正確引用');
+$quotedGame=chr(96).'GAME_REBUILD_NEW'.chr(96);
+assertRankGame(rrRebuildQuote('GAME_REBUILD_NEW')===$quotedGame,'備份與暫存資料表名稱正確引用');
 $failed=false;
 try {
     rrGameStartRatings(['rows'=>[
