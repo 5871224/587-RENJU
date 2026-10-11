@@ -20,6 +20,7 @@
 
      <?php
      require_once 'login.php';
+     require_once __DIR__ . '/record-queries.php';
      echo "<H1>各項紀錄</H1>";
 
 
@@ -31,26 +32,9 @@
           $Y5 = date("Y-m-d", strtotime("-5 year", strtotime(date('Y-m-d'))));
      }
 
-     $statement = $MYSQL->query("SELECT P.姓名,R.勝-IFNULL(R5.勝,0) '勝',R.和-IFNULL(R5.和,0) '和',R.負-IFNULL(R5.負,0) '負',R.勝+R.和+R.負-(IFNULL(R5.勝,0)+IFNULL(R5.和,0)+IFNULL(R5.負,0)) `對局數`,ROUND((R.勝-IFNULL(R5.勝,0)+(R.和-IFNULL(R5.和,0))*0.5)*100/(R.勝+R.和+R.負-(IFNULL(R5.勝,0)+IFNULL(R5.和,0)+IFNULL(R5.負,0))),2) '勝率'
-FROM (SELECT 代號 `N` ,MAX(比賽) `G`
-     FROM `RANK`
-     WHERE 比賽<=(SELECT MAX(賽號) FROM `TOURNAMENT` WHERE 結束<='" . $YY . "') AND 勝+和+負>=15
-     GROUP BY N) `T`
-INNER JOIN `RANK` `R`
-ON T.N=R.代號 AND T.G=R.比賽 AND R.勝+R.和+R.負>=15
-INNER JOIN `PLAYER` `P`
-ON T.N=P.代號 AND P.顯示=1
-LEFT OUTER JOIN
-(SELECT 代號 `N` ,MAX(比賽) `G`
-     FROM `RANK`
-     WHERE 比賽<=(SELECT MAX(賽號) FROM `TOURNAMENT` WHERE 結束<='" . $Y5 . "')
-     GROUP BY N) `T5`
-ON T.N=T5.N
-LEFT OUTER JOIN `RANK` `R5`
-ON T5.N=R5.代號 AND T5.G=R5.比賽
-WHERE P.顯示=1 AND R.勝+R.和+R.負-(IFNULL(R5.勝,0)+IFNULL(R5.和,0)+IFNULL(R5.負,0))>=15 AND T.G>IFNULL((SELECT MAX(賽號) FROM `TOURNAMENT` WHERE 結束<='" . $Y5 . "'),0)
-ORDER BY 勝率 DESC,勝 DESC,和 DESC
-LIMIT 10");
+     $rateBoards = recordRateBoards($MYSQL, $YY, $Y5);
+
+     $statement = $rateBoards['score'];
 
      echo "<H2>神乎棋技</H2>（近五年出賽15局以上最高得分率）";
      echo "<TABLE class='rank'><colgroup><col width='100'><col width='50'><col width='50'><col width='50'><col width='70'><col width='80'></colgroup>";
@@ -61,26 +45,7 @@ LIMIT 10");
      echo "</TABLE><BR/>";
 
 
-     $statement = $MYSQL->query("SELECT P.姓名,R.勝-IFNULL(R5.勝,0) '勝',R.和-IFNULL(R5.和,0) '和',R.負-IFNULL(R5.負,0) '負',R.勝+R.和+R.負-(IFNULL(R5.勝,0)+IFNULL(R5.和,0)+IFNULL(R5.負,0)) `對局數`,ROUND((R.勝-IFNULL(R5.勝,0))*100/(R.勝+R.和+R.負-(IFNULL(R5.勝,0)+IFNULL(R5.和,0)+IFNULL(R5.負,0))),2) '勝率'
-FROM (SELECT 代號 `N` ,MAX(比賽) `G`
-     FROM `RANK`
-     WHERE 比賽<=(SELECT MAX(賽號) FROM `TOURNAMENT` WHERE 結束<='" . $YY . "') AND 勝+和+負>=15
-     GROUP BY N) `T`
-INNER JOIN `RANK` `R`
-ON T.N=R.代號 AND T.G=R.比賽 AND R.勝+R.和+R.負>=15
-INNER JOIN `PLAYER` `P`
-ON T.N=P.代號 AND P.顯示=1
-LEFT OUTER JOIN
-(SELECT 代號 `N` ,MAX(比賽) `G`
-     FROM `RANK`
-     WHERE 比賽<=(SELECT MAX(賽號) FROM `TOURNAMENT` WHERE 結束<='" . $Y5 . "')
-     GROUP BY N) `T5`
-ON T.N=T5.N
-LEFT OUTER JOIN `RANK` `R5`
-ON T5.N=R5.代號 AND T5.G=R5.比賽
-WHERE P.顯示=1 AND R.勝+R.和+R.負-(IFNULL(R5.勝,0)+IFNULL(R5.和,0)+IFNULL(R5.負,0))>=15 AND T.G>IFNULL((SELECT MAX(賽號) FROM `TOURNAMENT` WHERE 結束<='" . $Y5 . "'),0)
-ORDER BY 勝率 DESC,勝 DESC,和 DESC
-LIMIT 10");
+     $statement = $rateBoards['wins'];
 
      echo "<H2>只許成功</H2>（近五年出賽15局以上最高勝率）";
      echo "<TABLE class='rank'><colgroup><col width='100'><col width='50'><col width='50'><col width='50'><col width='70'><col width='80'></colgroup>";
@@ -91,26 +56,7 @@ LIMIT 10");
      echo "</TABLE><BR/>";
 
 
-     $statement = $MYSQL->query("SELECT P.姓名,R.勝-IFNULL(R5.勝,0) '勝',R.和-IFNULL(R5.和,0) '和',R.負-IFNULL(R5.負,0) '負',R.勝+R.和+R.負-(IFNULL(R5.勝,0)+IFNULL(R5.和,0)+IFNULL(R5.負,0)) `對局數`,ROUND((R.和-IFNULL(R5.和,0))*100/(R.勝+R.和+R.負-(IFNULL(R5.勝,0)+IFNULL(R5.和,0)+IFNULL(R5.負,0))),2) '勝率'
-FROM (SELECT 代號 `N` ,MAX(比賽) `G`
-     FROM `RANK`
-     WHERE 比賽<=(SELECT MAX(賽號) FROM `TOURNAMENT` WHERE 結束<='" . $YY . "') AND 勝+和+負>=15
-     GROUP BY N) `T`
-INNER JOIN `RANK` `R`
-ON T.N=R.代號 AND T.G=R.比賽 AND R.勝+R.和+R.負>=15
-INNER JOIN `PLAYER` `P`
-ON T.N=P.代號 AND P.顯示=1
-LEFT OUTER JOIN
-(SELECT 代號 `N` ,MAX(比賽) `G`
-     FROM `RANK`
-     WHERE 比賽<=(SELECT MAX(賽號) FROM `TOURNAMENT` WHERE 結束<='" . $Y5 . "')
-     GROUP BY N) `T5`
-ON T.N=T5.N
-LEFT OUTER JOIN `RANK` `R5`
-ON T5.N=R5.代號 AND T5.G=R5.比賽
-WHERE P.顯示=1 AND R.勝+R.和+R.負-(IFNULL(R5.勝,0)+IFNULL(R5.和,0)+IFNULL(R5.負,0))>=15 AND T.G>IFNULL((SELECT MAX(賽號) FROM `TOURNAMENT` WHERE 結束<='" . $Y5 . "'),0)
-ORDER BY 勝率 DESC,和 DESC,勝 DESC
-LIMIT 10");
+     $statement = $rateBoards['draws'];
 
      echo "<H2>以和為貴</H2>（近五年出賽15局以上最高和棋率）";
      echo "<TABLE class='rank'><colgroup><col width='100'><col width='50'><col width='50'><col width='50'><col width='70'><col width='80'></colgroup>";
@@ -121,26 +67,7 @@ LIMIT 10");
      echo "</TABLE><BR/>";
 
 
-     $statement = $MYSQL->query("SELECT P.姓名,R.勝+R.和+R.負-(IFNULL(R5.勝,0)+IFNULL(R5.和,0)+IFNULL(R5.負,0)) '對局數',ROUND((R.勝+R.和+R.負-(IFNULL(R5.勝,0)+IFNULL(R5.和,0)+IFNULL(R5.負,0)))/5,1) '年平均'
-FROM (SELECT 代號 `N` ,MAX(比賽) `G`
-     FROM `RANK`
-     WHERE 比賽<=(SELECT MAX(賽號) FROM `TOURNAMENT` WHERE 結束<='" . $YY . "')
-     GROUP BY N) `T`
-LEFT OUTER JOIN `RANK` `R`
-ON T.N=R.代號 AND T.G=R.比賽
-LEFT OUTER JOIN `PLAYER` `P`
-ON T.N=P.代號
-LEFT OUTER JOIN
-(SELECT 代號 `N` ,MAX(比賽) `G`
-     FROM `RANK`
-     WHERE 比賽<=(SELECT MAX(賽號) FROM `TOURNAMENT` WHERE 結束<='" . $Y5 . "')
-     GROUP BY N) `T5`
-ON T.N=T5.N
-LEFT OUTER JOIN `RANK` `R5`
-ON T5.N=R5.代號 AND T5.G=R5.比賽
-WHERE P.顯示=1 AND R.勝+R.和+R.負-(IFNULL(R5.勝,0)+IFNULL(R5.和,0)+IFNULL(R5.負,0))>=15 AND T.G>IFNULL((SELECT MAX(賽號) FROM `TOURNAMENT` WHERE 結束<='" . $Y5 . "'),0)
-ORDER BY 對局數 DESC
-LIMIT 10");
+     $statement = $rateBoards['games'];
 
      echo "<H2>業精於勤</H2>（近五年對局最多）";
      echo "<TABLE class='rank'><colgroup><col width='100'><col width='100'><col width='100'></colgroup>";
@@ -178,24 +105,9 @@ LIMIT 10");
 
 
 
-     $statement = $MYSQL->query("SELECT TTT.姓名,TTT.連勝,T1.開始,T2.結束 FROM(SELECT P.姓名,COUNT(TT.C) 連勝,MIN(TT.比賽) 開始,MAX(TT.比賽) 結束
-FROM(SELECT T.P1,T.勝負,T.比賽,@C:=CASE WHEN @R<>T.勝負 OR @P<>T.P1 THEN @C:=@C+1 ELSE @C END C,@P:=T.P1,@R:=T.勝負
-FROM (SELECT @P:=0,@R:=0,@C:=0)`I`,(SELECT P1,比賽,輪次,CASE WHEN 勝負>1 THEN 1 ELSE 0 END 勝負 FROM `GAME`
-UNION ALL 
-SELECT P2,比賽,輪次,CASE WHEN 勝負<1 THEN 1 ELSE 0 END FROM `GAME`
-ORDER BY P1,比賽,輪次
-)`T`
-)`TT`
-LEFT OUTER JOIN `PLAYER` `P`
-ON TT.P1=P.代號
-WHERE P.顯示=1 AND TT.勝負=1
-GROUP BY P.姓名,TT.C
-HAVING COUNT(TT.C)>=8)`TTT`
-LEFT OUTER JOIN `TOURNAMENT` `T1`
-ON TTT.開始=T1.賽號
-LEFT OUTER JOIN `TOURNAMENT` `T2`
-ON TTT.結束=T2.賽號
-ORDER BY TTT.連勝 DESC,T2.結束");
+     $streakBoards = recordConsecutiveBoards($MYSQL);
+
+     $statement = $streakBoards['win'];
 
      echo "<H2>COMBO大師</H2>（連續獲勝局數）";
      echo "<TABLE class='rank'><colgroup><col width='100'><col width='80'><col width='120'><col width='120'></colgroup>";
@@ -207,24 +119,7 @@ ORDER BY TTT.連勝 DESC,T2.結束");
 
 
 
-     $statement = $MYSQL->query("SELECT TTT.姓名,TTT.連勝,T1.開始,T2.結束 FROM(SELECT P.姓名,COUNT(TT.C) 連勝,MIN(TT.比賽) 開始,MAX(TT.比賽) 結束
-FROM(SELECT T.P1,T.勝負,T.比賽,@C:=CASE WHEN @R<>T.勝負 OR @P<>T.P1 THEN @C:=@C+1 ELSE @C END C,@P:=T.P1,@R:=T.勝負
-FROM (SELECT @P:=0,@R:=0,@C:=0)`I`,(SELECT P1,比賽,輪次,CASE WHEN 勝負>=1 THEN 1 ELSE 0 END 勝負 FROM `GAME` 
-UNION ALL 
-SELECT P2,比賽,輪次,CASE WHEN 勝負<=1 THEN 1 ELSE 0 END FROM `GAME`
-ORDER BY P1,比賽,輪次
-)`T`
-)`TT`
-LEFT OUTER JOIN `PLAYER` `P`
-ON TT.P1=P.代號
-WHERE P.顯示=1 AND TT.勝負=1
-GROUP BY P.姓名,TT.C
-HAVING COUNT(TT.C)>=14)`TTT`
-LEFT OUTER JOIN `TOURNAMENT` `T1`
-ON TTT.開始=T1.賽號
-LEFT OUTER JOIN `TOURNAMENT` `T2`
-ON TTT.結束=T2.賽號
-ORDER BY TTT.連勝 DESC,T2.結束");
+     $statement = $streakBoards['unbeaten'];
 
      echo "<H2>獨孤求敗</H2>（連續不敗局數）";
      echo "<TABLE class='rank'><colgroup><col width='100'><col width='80'><col width='120'><col width='120'></colgroup>";
@@ -235,24 +130,7 @@ ORDER BY TTT.連勝 DESC,T2.結束");
      echo "</TABLE><BR/>";
 
 
-     $statement = $MYSQL->query("SELECT TTT.姓名,TTT.連勝,T1.開始,T2.結束 FROM(SELECT P.姓名,COUNT(TT.C) 連勝,MIN(TT.比賽) 開始,MAX(TT.比賽) 結束
-FROM(SELECT T.P1,T.勝負,T.比賽,@C:=CASE WHEN @R<>T.勝負 OR @P<>T.P1 THEN @C:=@C+1 ELSE @C END C,@P:=T.P1,@R:=T.勝負
-FROM (SELECT @P:=0,@R:=0,@C:=0)`I`,(SELECT P1,比賽,輪次,CASE WHEN 勝負=1 THEN 1 ELSE 0 END 勝負 FROM `GAME`
-UNION ALL 
-SELECT P2,比賽,輪次,CASE WHEN 勝負=1 THEN 1 ELSE 0 END FROM `GAME`
-ORDER BY P1,比賽,輪次
-)`T`
-)`TT`
-LEFT OUTER JOIN `PLAYER` `P`
-ON TT.P1=P.代號
-WHERE P.顯示=1 AND TT.勝負=1
-GROUP BY P.姓名,TT.C
-HAVING COUNT(TT.C)>=5)`TTT`
-LEFT OUTER JOIN `TOURNAMENT` `T1`
-ON TTT.開始=T1.賽號
-LEFT OUTER JOIN `TOURNAMENT` `T2`
-ON TTT.結束=T2.賽號
-ORDER BY TTT.連勝 DESC,T2.結束");
+     $statement = $streakBoards['draw'];
 
      echo "<H2>和氣一團</H2>（連續和棋局數）（若一局為兩盤棋，一勝一負做和）";
      echo "<TABLE class='rank'><colgroup><col width='100'><col width='80'><col width='120'><col width='120'></colgroup>";
@@ -263,24 +141,7 @@ ORDER BY TTT.連勝 DESC,T2.結束");
      echo "</TABLE><BR/>";
 
 
-     $statement = $MYSQL->query("SELECT TTT.姓名,TTT.連勝,T1.開始,T2.結束 FROM(SELECT P.姓名,COUNT(TT.C) 連勝,MIN(TT.比賽) 開始,MAX(TT.比賽) 結束
-FROM(SELECT T.P1,T.勝負,T.比賽,@C:=CASE WHEN @R<>T.勝負 OR @P<>T.P1 THEN @C:=@C+1 ELSE @C END C,@P:=T.P1,@R:=T.勝負
-FROM (SELECT @P:=0,@R:=0,@C:=0)`I`,(SELECT P2,P1,比賽,輪次,CASE WHEN 勝負=1 THEN 1 ELSE 0 END 勝負 FROM `GAME`
-UNION ALL 
-SELECT P1,P2,比賽,輪次,CASE WHEN 勝負=1 THEN 1 ELSE 0 END FROM `GAME`
-ORDER BY P1,比賽,輪次,P2
-)`T`
-)`TT`
-LEFT OUTER JOIN `PLAYER` `P`
-ON TT.P1=P.代號
-WHERE P.顯示=1 AND TT.勝負=0
-GROUP BY P.姓名,TT.C
-HAVING COUNT(TT.C)>=48)`TTT`
-LEFT OUTER JOIN `TOURNAMENT` `T1`
-ON TTT.開始=T1.賽號
-LEFT OUTER JOIN `TOURNAMENT` `T2`
-ON TTT.結束=T2.賽號
-ORDER BY TTT.連勝 DESC,T2.結束");
+     $statement = $streakBoards['nondraw'];
 
      echo "<H2>誓不兩立</H2>（連續不和棋局數）";
      echo "<TABLE class='rank'><colgroup><col width='100'><col width='80'><col width='120'><col width='120'></colgroup>";
@@ -291,12 +152,9 @@ ORDER BY TTT.連勝 DESC,T2.結束");
      echo "</TABLE><BR/>";
 
 
-     $record = $MYSQL->query("SELECT T.姓名,CASE WHEN P.性別=1 THEN '男' ELSE '女' END '性別',T.段位,T.日期 FROM `DEN` `T`
-LEFT OUTER JOIN `PLAYER` `P`
-ON T.代號=P.代號
-WHERE 
-(select count(distinct(e1.姓名)) FROM `DEN` as e1 where e1.段位 = T.段位 and e1.日期 < T.日期) < 5 AND LOCATE(SUBSTRING(T.段位,1,1),'初二三四五六七八九')>0
-ORDER BY LOCATE(SUBSTRING(T.段位,1,1),'初二三四五六七八九'),T.日期");
+     $denBoards = recordDenBoards($MYSQL);
+
+     $record = $denBoards['early'];
 
      echo "<H2>長江前浪</H2>（各段位取得最早時間）<BR/><TABLE class='rank'><colgroup><col width='100'><col width='50'><col width='85'><col width='120'></colgroup><TR><TH>棋士</TH><TH>性別</TH><TH>段位</TH><TH>日期</TH></TR>";
 
@@ -311,17 +169,7 @@ ORDER BY LOCATE(SUBSTRING(T.段位,1,1),'初二三四五六七八九'),T.日期"
      echo "</TABLE><BR/>";
 
 
-     $record = $MYSQL->query("SELECT T.姓名,CASE WHEN T.性別=1 THEN '男' ELSE '女' END '性別',T.段位,T.年紀 FROM(SELECT A.姓名,P.性別,A.段位,datediff(A.日期,P.生日)'天數',datediff(A.日期,P.生日)/365.25'年紀' FROM `DEN` `A`
-LEFT OUTER JOIN `PLAYER` `P`
-ON A.代號=P.代號
-WHERE P.生日>0
-ORDER BY A.段位,天數)`T`
-WHERE 
-(select count(distinct(e1.姓名)) FROM (SELECT A.姓名,P.性別,A.段位,datediff(A.日期,P.生日)'天數' FROM `DEN` `A`
-LEFT OUTER JOIN `PLAYER` `P`
-ON A.代號=P.代號
-ORDER BY A.段位,天數) as e1 where  e1.段位 = T.段位 and e1.天數 < T.天數) < 5 AND LOCATE(SUBSTRING(T.段位,1,1),'初二三四五六七八九')>0
-ORDER BY LOCATE(SUBSTRING(T.段位,1,1),'初二三四五六七八九'),T.天數");
+     $record = $denBoards['young'];
 
      echo "<H2>當年之勇</H2>（各段位取得最小年紀）<BR/><TABLE class='rank'><colgroup><col width='100'><col width='50'><col width='85'><col width='100'></colgroup><TR><TH>棋士</TH><TH>性別</TH><TH>段位</TH><TH>年紀</TH></TR>";
 
@@ -422,19 +270,9 @@ GROUP BY TT.星座");
      echo "</TABLE><BR/>";
 
 
-     $record = $MYSQL->query("SELECT TT.姓名,LEFT(T.賽名,3) '屆數',datediff(T.開始,TT.生日)/365.25 '年紀'
-FROM(SELECT MIN(T.賽號)'賽號',P.姓名,P.生日 
-     FROM `TOURNAMENT` `T` 
-     LEFT OUTER JOIN `RANK` `R`
-     ON T.賽號=R.比賽
-     LEFT OUTER JOIN `PLAYER` `P`
-     ON R.代號=P.代號
-     WHERE (T.賽名 LIKE '%台灣名人賽決賽%' OR T.賽名 LIKE '%台灣名人賽循環圈%') AND P.生日>0
-     GROUP BY R.代號,P.姓名,P.生日)`TT`
-LEFT OUTER JOIN `TOURNAMENT` `T` 
-ON TT.賽號=T.賽號
-ORDER BY 年紀
-LIMIT 5");
+     $meijinBoards = recordMeijinAgeBoards($MYSQL);
+
+     $record = $meijinBoards['circle-young'];
 
      echo "<H2>棋怕少壯</H2>（名人賽循環圈出賽最小年紀）<BR/><TABLE class='rank'><colgroup><col width='100'><col width='100'><col width='100'></colgroup><TR><TH>棋士</TH><TH>屆數</TH><TH>年紀</TH></TR>";
 
@@ -443,19 +281,7 @@ LIMIT 5");
      }
      echo "</TABLE><BR/>";
 
-     $record = $MYSQL->query("SELECT TT.姓名,LEFT(T.賽名,3) '屆數',datediff(T.開始,TT.生日)/365.25 '年紀'
-FROM(SELECT MAX(T.賽號)'賽號',P.姓名,P.生日 
-     FROM `TOURNAMENT` `T` 
-     LEFT OUTER JOIN `RANK` `R`
-     ON T.賽號=R.比賽
-     LEFT OUTER JOIN `PLAYER` `P`
-     ON R.代號=P.代號
-     WHERE (T.賽名 LIKE '%台灣名人賽決賽%' OR T.賽名 LIKE '%台灣名人賽循環圈%') AND P.生日>0
-     GROUP BY R.代號,P.姓名,P.生日)`TT`
-LEFT OUTER JOIN `TOURNAMENT` `T` 
-ON TT.賽號=T.賽號
-ORDER BY 年紀 DESC
-LIMIT 5");
+     $record = $meijinBoards['circle-old'];
 
      echo "<H2>老謀深算</H2>（名人賽循環圈出賽最大年紀）<BR/><TABLE class='rank'><colgroup><col width='100'><col width='100'><col width='100'></colgroup><TR><TH>棋士</TH><TH>屆數</TH><TH>年紀</TH></TR>";
 
@@ -464,19 +290,7 @@ LIMIT 5");
      }
      echo "</TABLE><BR/>";
 
-     $record = $MYSQL->query("SELECT TT.姓名,LEFT(T.賽名,3) '屆數',datediff(T.開始,TT.生日)/365.25 '年紀'
-FROM(SELECT MIN(T.賽號)'賽號',P.姓名,P.生日 
-     FROM `TOURNAMENT` `T` 
-     LEFT OUTER JOIN `RANK` `R`
-     ON T.賽號=R.比賽
-     LEFT OUTER JOIN `PLAYER` `P`
-     ON R.代號=P.代號
-     WHERE T.賽名 LIKE '%台灣名人賽挑戰賽%' AND P.生日>0
-     GROUP BY R.代號,P.姓名,P.生日)`TT`
-LEFT OUTER JOIN `TOURNAMENT` `T` 
-ON TT.賽號=T.賽號
-ORDER BY 年紀
-LIMIT 5");
+     $record = $meijinBoards['challenge-young'];
 
      echo "<H2>英雄出少年</H2>（名人賽挑戰賽出賽最小年紀）<BR/><TABLE class='rank'><colgroup><col width='100'><col width='100'><col width='100'></colgroup><TR><TH>棋士</TH><TH>屆數</TH><TH>年紀</TH></TR>";
 
@@ -485,19 +299,7 @@ LIMIT 5");
      }
      echo "</TABLE><BR/>";
 
-     $record = $MYSQL->query("SELECT TT.姓名,LEFT(T.賽名,3) '屆數',datediff(T.開始,TT.生日)/365.25 '年紀'
-FROM(SELECT MAX(T.賽號)'賽號',P.姓名,P.生日 
-     FROM `TOURNAMENT` `T` 
-     LEFT OUTER JOIN `RANK` `R`
-     ON T.賽號=R.比賽
-     LEFT OUTER JOIN `PLAYER` `P`
-     ON R.代號=P.代號
-     WHERE T.賽名 LIKE '%台灣名人賽挑戰賽%' AND P.生日>0
-     GROUP BY R.代號,P.姓名,P.生日)`TT`
-LEFT OUTER JOIN `TOURNAMENT` `T` 
-ON TT.賽號=T.賽號
-ORDER BY 年紀 DESC
-LIMIT 5");
+     $record = $meijinBoards['challenge-old'];
 
      echo "<H2>薑是老的辣</H2>（名人賽挑戰賽出賽最大年紀）<BR/><TABLE class='rank'><colgroup><col width='100'><col width='100'><col width='100'></colgroup><TR><TH>棋士</TH><TH>屆數</TH><TH>年紀</TH></TR>";
 
