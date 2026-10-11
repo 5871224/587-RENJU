@@ -76,10 +76,10 @@ try {
 </style>
 <div class="rr-wrap">
     <div class="rr-head">
-        <div><h2>台灣排名重算檢查</h2><p>同一次重算結果，同時查看逐場差異、計算完整性與每位棋士最後差異；預覽本身唯讀，只有按「一鍵重建正式台灣排名」才會更新 RANK。</p></div>
+        <div><h2>台灣排名重算檢查</h2><p>同一次重算結果，同時查看逐場差異、計算完整性與每位棋士最後差異；預覽本身唯讀，只有按「一鍵重建正式台灣排名」才會同時更新 RANK 與 GAME.P1分／P2分。</p></div>
         <div class="rr-head-actions">
             <div class="rr-badge">唯讀預覽 · <?= number_format($reviewElapsed, 3) ?> 秒</div>
-            <form method="post" onsubmit="return confirm('確定要用目前完整重算結果重建正式 RANK 嗎？\n\n系統會先建立 staging table、完整驗證後再原子交換；目前正式 RANK 會保留成 RANK_REBUILD_BACKUP。');">
+            <form method="post" onsubmit="return confirm('確定要用目前完整重算結果重建正式 RANK 嗎？\n\n系統會建立 RANK 與 GAME 暫存表，先驗證所有正式對局的起始分數，再一次交換兩張正式表。舊 RANK 和 GAME 分別備份，未列入排名和特殊備註對局不修改。');">
                 <input type="hidden" name="view" value="rating-tools"><input type="hidden" name="tool" value="review"><input type="hidden" name="action" value="rebuild_rank"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf'] ?? '') ?>">
                 <button class="btn danger" type="submit">一鍵重建正式台灣排名</button>
             </form>
@@ -121,7 +121,7 @@ try {
     [$tourRows,$tourPage,$tourPages,$tourTotal]=rrReviewPage($historyTours,max(1,(int)($_GET['tour_page']??1)),$perPage);
     [$detailRows,$rowPage,$rowPages,$rowTotal]=rrReviewPage($historyRows,max(1,(int)($_GET['row_page']??1)),$perPage);
 ?>
-    <div class="rr-note"><strong>外國棋手</strong>使用該台灣比賽開始日前最後一筆 RenjuNet 歷史 Elo；現有 GAME.P1分／P2分與 RANK 只作比較參考，不是重算來源。</div>
+    <div class="rr-note"><strong>外國棋手</strong>使用該台灣比賽開始日前最後一筆 RenjuNet 歷史 Elo；重算時會將本場起始績分寫回 GAME.P1分／P2分，供棋士歷程及戰績表直接顯示。</div>
     <div class="rr-cards">
         <div class="rr-card"><div class="label">重算資料列</div><div class="value"><?= number_format((int)($summary['computed_rows']??0)) ?></div></div>
         <div class="rr-card"><div class="label">舊 RANK 資料列</div><div class="value"><?= number_format((int)($summary['current_rows']??0)) ?></div></div>
