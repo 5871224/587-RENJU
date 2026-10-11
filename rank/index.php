@@ -171,7 +171,10 @@ try {
         require_once __DIR__ . '/lib/rating.php';
         $rankCalculation = rrRecalculateHistory($MYSQL);
         $rankRebuild = rrRebuildRankTable($MYSQL, $rankCalculation);
-        $_SESSION['rank_rebuild_flash'] = '正式 RANK 已由完整重算結果重建，共 ' . number_format((int)$rankRebuild['rows']) . ' 筆；上一版保留於 ' . $rankRebuild['backup_table'] . '。';
+        $_SESSION['rank_rebuild_flash'] = '正式 RANK 已重建 ' . number_format((int)$rankRebuild['rows']) .
+            ' 筆，同步更新 GAME 起始分數 ' . number_format((int)$rankRebuild['game_rows']) .
+            ' 局；更新前資料保留在 ' . $rankRebuild['backup_table'] . ' 與 ' .
+            $rankRebuild['game_backup_table'] . '。';
         header('Location: ' . listUrl('rating-tools', '', '', ['tool'=>'review','section'=>'history','rebuilt'=>1]));
         exit;
     }
