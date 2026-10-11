@@ -28,7 +28,8 @@ if ($expected === '' || $provided === '' || !hash_equals($expected, $provided)) 
     rnSyncRedirect($back, 'error', '表單驗證已失效，請重新整理頁面後再試。');
 }
 
-$token = trim((string)($config['rank_github_actions_token'] ?? getenv('RANK_GITHUB_ACTIONS_TOKEN') ?: ''));
+$token = trim((string)($config['rank_github_actions_token'] ?? ''));
+if ($token === '') $token = trim((string)(getenv('RANK_GITHUB_ACTIONS_TOKEN') ?: ''));
 if ($token === '') {
     rnSyncRedirect($back, 'error', '尚未在伺服器設定 GitHub Actions 存取權杖，無法從網站直接啟動。可先到 GitHub Actions 手動執行。');
 }
