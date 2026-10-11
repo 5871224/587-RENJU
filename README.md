@@ -24,11 +24,9 @@
 
 ## RenjuNet 手動同步
 
-`/rank/?view=rating-tools&tool=renjunet` 的「更新 RenjuNet」按鈕會向 GitHub API 發送現有 `renjunet-sync.yml` 工作流程的 `workflow_dispatch` 要求。整個下載與資料庫更新仍在 GitHub Actions 執行，不會占用網頁 PHP 請求。
+`/rank/?view=rating-tools&tool=renjunet` 的「更新 RenjuNet」連結會開啟儲存庫既有的 GitHub Actions 工作流程：`renjunet-sync.yml`。使用者在 GitHub 登入後點選 **Run workflow** 即可立即排入執行；不必在網站設定 GitHub Personal Access Token，也不會提供免驗證的公共觸發端點。
 
-這個功能需要**在網站伺服器** `config.local.php` 另外加入 `'rank_github_actions_token' => '...'`，或者提供 `RANK_GITHUB_ACTIONS_TOKEN` 環境變數。請建立只授權 `5871224/587-RENJU`、具備 **Actions: Read and write** 儲存庫權限的 fine-grained personal access token。此權杖不應放在 GitHub Actions Secrets 代替網站設定，因為 PHP 網頁無法直接讀取 Actions Secrets。不要將 token 提交至 Git。
-
-若未設定，網頁按鈕會顯示不可用，並可透過旁邊的「查看同步進度」開啟 GitHub Actions 執行手動更新。成功送出只表示 GitHub 接受要求，**不代表 RIF 已匯入成功**。頁面顯示 `RENJUNET_IMPORT` 最後實際資料變更日期；官方 RIF 沒變化時不會新增匯入紀錄。同步後要更新 `RENJUNET_ELO`，仍須按下「完整重算 RENJUNET Elo」。
+整個下載與資料庫更新仍在 GitHub Actions 執行。網站繼續顯示 `RENJUNET_IMPORT` 最後實際資料變更日期，來源 RIF 沒變化時不會新增匯入紀錄。需要重建 `RENJUNET_ELO` 時，另按頁面的「完整重算 RENJUNET Elo」。
 
 ## GitHub 自動部署
 
