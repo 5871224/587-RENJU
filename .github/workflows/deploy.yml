@@ -21,6 +21,8 @@ jobs:
       - name: Check PHP and repository safety
         shell: pwsh
         run: ./scripts/check-project.ps1
+      - name: Check RenjuNet sync Python syntax
+        run: python -m py_compile scripts/renjunet_sync.py
 
   deploy:
     needs: validate
