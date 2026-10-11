@@ -526,43 +526,131 @@ ON M.名人=P2.代號");
 
 
 
-     $record = $MYSQL->query("SELECT 賽號,結束 FROM `TOURNAMENT`");
+     // 五林盟主：按照比賽結束日重播 RANK 績分，並加入滿五年未參賽的退榜事件。
+     // 正式排名資格與 rank.php 一致：PLAYER.顯示=1、正式對局 >=15、最近五年內有 RANK 出賽紀錄。
+     // 不限制績分下限；一次讀取排名與正式對局統計，避免每場比賽重查整張排名表。
+     $leaderRatingStmt = $MYSQL->prepare("SELECT R.`代號`, R.`比賽`, R.`績分`, P.`姓名`, DATE(T.`結束`) AS `日期`
+          FROM `RANK` R
+          INNER JOIN `TOURNAMENT` T ON T.`賽號` = R.`比賽`
+          INNER JOIN `PLAYER` P ON P.`代號` = R.`代號`
+          WHERE P.`顯示` = 1 AND R.`績分` IS NOT NULL
+            AND T.`結束` IS NOT NULL AND DATE(T.`結束`) <= ?
+          ORDER BY T.`結束`, R.`比賽`, R.`代號`");
+     $leaderRatingStmt->execute([$YY]);
 
-     $GAME = $record->fetchAll();
-     $D = "1998-08-22";
-     echo "<H2>五林盟主</H2>（歷年排名第一）<BR/><TABLE class='rank'><colgroup><col width='100'><col width='120'><col width='100'></colgroup><TR><TH>棋士</TH><TH>登頂日</TH><TH>領頭日數</TH></TR>";
-     for ($i = 5; $i < count($GAME); $i++) {
-
-          $Y5 = date("Y-m-d", strtotime("-5 year", strtotime($GAME[$i][1])));
-          $record = $MYSQL->query("SELECT P.姓名
-                                   FROM (SELECT 代號 `N` ,MAX(比賽) `G`
-                                        FROM `RANK`
-                                        WHERE 比賽<=" . ($i + 1) . " AND 績分>2000 AND 勝+和+負>=15
-                                        GROUP BY N) `T`
-                                   INNER JOIN `RANK` `R`
-                                   ON T.N=R.代號 AND T.G=R.比賽 AND R.勝+R.和+R.負>=15
-                                   INNER JOIN `PLAYER` `P`
-                                   ON T.N=P.代號 
-                            WHERE P.顯示=1 AND T.G>IFNULL((SELECT MAX(賽號) FROM `TOURNAMENT` WHERE 結束<='" . $Y5 . "'),0)
-                                   ORDER BY R.績分 DESC
-                                   LIMIT 1");
-
-          $NAME = $record->fetchAll();
-
-          if ($NO1 != $NAME[0]['姓名']) {
-               if ($i == 92) {
-                    $GAME[$i][1] = "2009-08-22";
-               }
-               if ($i > 6) {
-                    echo "<TD>" . ((strtotime($GAME[$i][1]) - strtotime($D)) / 86400) . "</TD></TR>";
-               }
-               echo "<TR><TD>" . $NAME[0]['姓名'] . "</TD><TD>" . $GAME[$i][1] . "</TD>";
-               $NO1 = $NAME[0]['姓名'];
-               $D = $GAME[$i][1];
+     $leaderEvents = [];
+     $leaderDates = [];
+     while ($row = $leaderRatingStmt->fetch(PDO::FETCH_ASSOC)) {
+          $date = (string)$row['日期'];
+          $playerId = (int)$row['代號'];
+          $expiry = (new DateTimeImmutable($date))->modify('+5 years')->format('Y-m-d');
+          $leaderEvents[$date][$playerId] = [
+               'name' => (string)$row['姓名'],
+               'rating' => (float)$row['績分'],
+               'expiry' => $expiry,
+               'tour' => (int)$row['比賽']
+          ];
+          $leaderDates[$date] = true;
+          if ($expiry <= $YY) {
+               $leaderDates[$expiry] = true;
           }
      }
+     $leaderRatingStmt->closeCursor();
 
-     echo "<TD>" . ((strtotime(date('Y-m-d')) - strtotime($D)) / 86400) . "</TD></TR></TABLE><BR/>";
+     // 與 rank.php 相同：只計算備註 NULL 的正式 GAME，兩名棋士分別累計一局。
+     $leaderGamesStmt = $MYSQL->prepare("SELECT X.`日期`, X.`代號`, COUNT(*) AS `對局數`
+          FROM (
+               SELECT DATE(T.`結束`) AS `日期`, G.`P1` AS `代號`
+               FROM `GAME` `G`
+               INNER JOIN `TOURNAMENT` T ON T.`賽號` = G.`比賽`
+               WHERE G.`備註` IS NULL AND G.`P1` <> 0 AND T.`結束` IS NOT NULL
+                 AND DATE(T.`結束`) <= ?
+               UNION ALL
+               SELECT DATE(T.`結束`) AS `日期`, G.`P2` AS `代號`
+               FROM `GAME` `G`
+               INNER JOIN `TOURNAMENT` T ON T.`賽號` = G.`比賽`
+               WHERE G.`備註` IS NULL AND G.`P2` <> 0 AND T.`結束` IS NOT NULL
+                 AND DATE(T.`結束`) <= ?
+          ) X
+          GROUP BY X.`日期`, X.`代號`");
+     $leaderGamesStmt->execute([$YY, $YY]);
+     $leaderGamesByDate = [];
+     while ($row = $leaderGamesStmt->fetch(PDO::FETCH_ASSOC)) {
+          $date = (string)$row['日期'];
+          $playerId = (int)$row['代號'];
+          $leaderGamesByDate[$date][$playerId] = (int)$row['對局數'];
+          $leaderDates[$date] = true;
+     }
+     $leaderGamesStmt->closeCursor();
+     unset($leaderRatingStmt, $leaderGamesStmt);
+
+     ksort($leaderDates, SORT_STRING);
+     $leaderPlayers = [];
+     $leaderSegments = [];
+     $leaderCurrentId = null;
+     $leaderStartDate = null;
+     $leaderStarted = false;
+
+     foreach ($leaderDates as $date => $_unused) {
+          // 同一天的所有賽事完成後才結算，避免登頂日重複或出現 0 天交替。
+          foreach ($leaderGamesByDate[$date] ?? [] as $playerId => $count) {
+               if (!isset($leaderPlayers[$playerId])) {
+                    $leaderPlayers[$playerId] = ['games' => 0];
+               }
+               $leaderPlayers[$playerId]['games'] += $count;
+          }
+          foreach ($leaderEvents[$date] ?? [] as $playerId => $change) {
+               $leaderPlayers[$playerId] = array_merge($leaderPlayers[$playerId] ?? ['games' => 0], $change);
+          }
+
+          $bestId = null;
+          $bestRating = null;
+          foreach ($leaderPlayers as $playerId => $player) {
+               if (($player['games'] ?? 0) < 15 || !isset($player['rating'], $player['expiry']) || $date >= $player['expiry']) {
+                    continue;
+               }
+               if ($bestId === null || $player['rating'] > $bestRating ||
+                    ($player['rating'] == $bestRating && (int)$playerId < $bestId)) {
+                    $bestId = (int)$playerId;
+                    $bestRating = $player['rating'];
+               }
+          }
+
+          // 最初尚未有人符合排名資格時不產生空白紀錄；之後無人符合時顯示「從缺」。
+          if (!$leaderStarted && $bestId === null) {
+               continue;
+          }
+          if (!$leaderStarted) {
+               $leaderStarted = true;
+               $leaderCurrentId = $bestId;
+               $leaderStartDate = $date;
+               continue;
+          }
+          if ($leaderCurrentId !== $bestId) {
+               $leaderSegments[] = [
+                    'name' => $leaderCurrentId === null ? '從缺' : $leaderPlayers[$leaderCurrentId]['name'],
+                    'start' => $leaderStartDate,
+                    'days' => (int)((strtotime($date) - strtotime($leaderStartDate)) / 86400)
+               ];
+               $leaderCurrentId = $bestId;
+               $leaderStartDate = $date;
+          }
+     }
+     if ($leaderStarted) {
+          $leaderSegments[] = [
+               'name' => $leaderCurrentId === null ? '從缺' : $leaderPlayers[$leaderCurrentId]['name'],
+               'start' => $leaderStartDate,
+               'days' => (int)((strtotime($YY) - strtotime($leaderStartDate)) / 86400)
+          ];
+     }
+
+     echo "<H2>五林盟主</H2>（歷年排名第一）<BR/><TABLE class='rank'><colgroup><col width='100'><col width='120'><col width='100'></colgroup><TR><TH>棋士</TH><TH>登頂日</TH><TH>領頭日數</TH></TR>";
+     foreach ($leaderSegments as $segment) {
+          echo '<TR><TD>' . htmlspecialchars($segment['name'], ENT_QUOTES, 'UTF-8')
+               . '</TD><TD>' . htmlspecialchars($segment['start'], ENT_QUOTES, 'UTF-8')
+               . '</TD><TD>' . $segment['days'] . '</TD></TR>';
+     }
+     echo "</TABLE><BR/>";
 
 
      $statement = $MYSQL->query("SELECT P.姓名,R.績分,T.結束 FROM `RANK` `R`
