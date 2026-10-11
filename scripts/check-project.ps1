@@ -170,6 +170,33 @@ if ($deployWorkflow -notmatch "'riftw/player.php'") {
     throw 'Production deployment must always include riftw/player.php.'
 }
 
+$playerHistoryCss = Get-Content -Raw 'riftw/player.css'
+foreach ($required in @(
+    '@media (max-width: 768px)',
+    'table.rank.player-summary-table',
+    'tr.player-summary-columns',
+    'tr.player-summary-item',
+    'content: attr(data-label)'
+)) {
+    if (-not $playerHistoryCss.Contains($required)) {
+        throw "Mobile player summary CSS is missing: $required"
+    }
+}
+foreach ($required in @(
+    'player.css?v=1',
+    'player-summary-table',
+    'player-summary-item',
+    "data-label='歷程'",
+    "data-label='頭銜'"
+)) {
+    if (-not $riftwPlayer.Contains($required)) {
+        throw "Player summary responsive markup is missing: $required"
+    }
+}
+if ($deployWorkflow -notmatch "'riftw/player.css'") {
+    throw 'Production deployment must always include the player mobile stylesheet.'
+}
+
 $riftwLogin = Get-Content -Raw 'riftw/login.php'
 foreach ($required in @('normalizeArchiveDateParam', 'FILTER_VALIDATE_INT', "`$scriptName === 'record.php'", "unset(`$_GET['DATE'])")) {
     if ($riftwLogin -notmatch [regex]::Escape($required)) {
