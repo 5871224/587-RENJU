@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/login.php';
 require_once __DIR__ . '/lib/renjunet_rating.php';
+require_once __DIR__ . '/lib/renjunet_player_map.php';
 
 function rcH($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 function rcTaiwan($country): bool {
@@ -22,19 +23,11 @@ function rcMedian(array $values): float {
 
 rnEloEnsureSchema($MYSQL);
 
-$map=[];
-try {
-    foreach ($MYSQL->query('SELECT `player_id`,`renjunet_player_id` FROM `PLAYER_RENJUNET`')->fetchAll(PDO::FETCH_ASSOC) as $r) {
-        $map[(int)$r['player_id']] = (int)$r['renjunet_player_id'];
-    }
-} catch (Throwable $ignored) {}
-
-$rnById=[]; $rnByDisp=[];
-foreach ($MYSQL->query('SELECT `id`,`disp_id` FROM `RENJUNET_PLAYER`')->fetchAll(PDO::FETCH_ASSOC) as $r) {
-    $id=(int)$r['id']; $disp=preg_replace('/\D+/', '', (string)$r['disp_id']);
-    $rnById[$id]=$id;
-    if ($disp!=='') $rnByDisp[ltrim($disp,'0')===''?'0':ltrim($disp,'0')]=$id;
+$identityPlayers = [];
+foreach ($MYSQL->query('SELECT `代號`,`ID`,`RIF` FROM `PLAYER`')->fetchAll(PDO::FETCH_ASSOC) as $person) {
+    $identityPlayers[(int)$person['代號']] = $person;
 }
+$map = rnResolveLocalPlayerIds($MYSQL, $identityPlayers);
 
 $sql="
 SELECT X.`比賽`,T.`賽名`,T.`開始`,T.`結束`,X.`代號`,P.`姓名`,P.`國家`,P.`ID`,P.`RIF`,
@@ -62,13 +55,6 @@ foreach ($local as $r) {
     $pid=(int)$r['代號'];
     if ((int)$r['saved_variants']>1 || (float)$r['saved_min'] !== (float)$r['saved_max']) { $inconsistent[]=$r; continue; }
     $rnId=$map[$pid]??0;
-    $oldId=(int)($r['ID']??0);
-    if ($rnId<=0 && $oldId>0 && isset($rnById[$oldId])) $rnId=$oldId;
-    if ($rnId<=0) {
-        $disp=preg_replace('/\D+/', '', (string)($r['RIF']??''));
-        $key=$disp===''?'':(ltrim($disp,'0')===''?'0':ltrim($disp,'0'));
-        if ($key!=='' && isset($rnByDisp[$key])) $rnId=$rnByDisp[$key];
-    }
     if ($rnId<=0) { $r['reason']='無法解析 RenjuNet 棋手 ID'; $unmapped[]=$r; continue; }
     $start=(string)($r['開始']??'');
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/',$start)) { $r['reason']='本地比賽缺開始日期'; $noHistory[]=$r; continue; }
