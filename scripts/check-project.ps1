@@ -151,8 +151,23 @@ foreach ($required in @('GAME_REBUILD_BACKUP', 'RANK_REBUILD_BACKUP', 'GAME_REBU
     }
 }
 $riftwPlayer = Get-Content -Raw 'riftw/player.php'
-if ($riftwPlayer -match 'WHEN 備註 IS NOT NULL THEN 備註') {
-    throw 'Player history cannot treat an empty GAME note as a special result.'
+if ($riftwPlayer -match 'WHEN 備註 IS NOT NULL THEN 備註' -or
+    $riftwPlayer -match 'WHERE 備註 IS NULL AND P[12]=') {
+    throw 'Player history must recognize empty GAME notes as ordinary games.'
+}
+foreach ($required in @(
+    "CASE WHEN TRIM(COALESCE(備註,''))<>'' THEN 備註",
+    "CASE WHEN TRIM(COALESCE(G.備註,''))<>'' THEN NULL",
+    "WHERE TRIM(COALESCE(備註,''))='' AND P1=",
+    "WHERE TRIM(COALESCE(備註,''))='' AND P2="
+)) {
+    if (-not $riftwPlayer.Contains($required)) {
+        throw "Player history empty-note regression: $required"
+    }
+}
+$deployWorkflow = Get-Content -Raw '.github/workflows/deploy.yml'
+if ($deployWorkflow -notmatch "'riftw/player.php'") {
+    throw 'Production deployment must always include riftw/player.php.'
 }
 
 $riftwLogin = Get-Content -Raw 'riftw/login.php'
