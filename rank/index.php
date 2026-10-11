@@ -119,7 +119,6 @@ $ratingTools = [
     'review' => ['title' => '台灣排名重算檢查', 'file' => 'rating-review.php', 'desc' => '整合逐場差異、完整性檢查與每位棋士最終差異，所有明細皆可分頁查看'],
     'renjunet' => ['title' => 'RenjuNet Elo 重算', 'file' => 'renjunet-elo-embed.php', 'desc' => '依官方歷史 Rating List 與舊 RIF 規則重建 RenjuNet 歷史 Elo'],
     'latest' => ['title' => '重算後最新排名', 'file' => 'rating-latest.php', 'desc' => '查看由歷史資料重新計算後的最新棋士排名'],
-    'elo-audit' => ['title' => '舊世界 Elo 盤點', 'file' => 'rating-elo-audit.php', 'desc' => '盤點國外棋士 GAME.P1分／P2分 是否保存歷史 Elo'],
 ];
 
 $view = isset($_POST['view']) ? (string)$_POST['view'] : (isset($_GET['view']) ? (string)$_GET['view'] : 'dashboard');
@@ -479,8 +478,6 @@ $totalRecords = array_sum($counts);
             <?php require __DIR__ . '/rating-review.php'; ?>
         <?php elseif ($tool === 'latest'): ?>
             <?php require __DIR__ . '/rating-latest.php'; ?>
-        <?php elseif ($tool === 'elo-audit'): ?>
-            <?php require __DIR__ . '/rating-elo-audit.php'; ?>
         <?php else: ?>
             <iframe class="tool-frame" src="<?= h($ratingTools[$tool]['file']) ?>" title="<?= h($ratingTools[$tool]['title']) ?>"></iframe>
         <?php endif; ?>
