@@ -2,7 +2,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="../../renju.css" rel="stylesheet" type="text/css">
+<link href="../../renju.css?v=20261011" rel="stylesheet" type="text/css">
 <link href="player.css?v=1" rel="stylesheet" type="text/css">
 <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -24,6 +24,7 @@ if(isset($_GET['PLAYER'])) {
 else{$PP = 1;}
 
 require_once 'login.php';
+require_once __DIR__ . '/rating-display.php';
 
 // 勝、和、負、對局數一律直接由 GAME 的正式對局計算。
 // 只有備註包含實際文字的特殊紀錄（例如輪空）才排除；NULL 和空字串都屬一般對局。
@@ -321,7 +322,7 @@ foreach($statement as $row){
 		$DATA3=$DATA3."<TR><TD>".$row['輪次']."</TD><TD>".$note."</TD><TD></TD><TD><span class='".$CL."'>".$note."</span></TD><TD></TD></TR>";
 	} else {
 		if ($DATA2==""){$POINT="";} else {$POINT=$row['增減'];}
-		$DATA3=$DATA3."<TR><TD>".$row['輪次']."</TD><TD><a href='player.php?PLAYER=".$row['對手']."'>".$row['姓名']."</a></TD><TD>".$row['對手績分']."</TD><TD><span class='".$CL."'>".$row['結果']."</span></TD><TD>".$POINT."</TD></TR>";
+		$DATA3=$DATA3."<TR><TD>".$row['輪次']."</TD><TD><a href='player.php?PLAYER=".$row['對手']."'>".$row['姓名']."</a></TD>".ratingCell($row['對手績分'], true)."<TD><span class='".$CL."'>".$row['結果']."</span></TD><TD>".$POINT."</TD></TR>";
 		$N+=1;
 		$SUM+=$row['對手績分'];
 		if ($row['結果']=='勝'){$WIN+=1;}
