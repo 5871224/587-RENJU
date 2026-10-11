@@ -80,20 +80,29 @@
 
 
 
-     $statement = $MYSQL->query("SELECT P.姓名,ROUND(G.P1分,2)'賽前分',ROUND(R.績分,2) '績分',ROUND(ROUND(R.績分,2)-ROUND(G.P1分,2),2) '得分',T.賽名 FROM `RANK` `R`
-LEFT OUTER JOIN `PLAYER` `P`
-ON R.代號=P.代號
-LEFT OUTER JOIN `TOURNAMENT` `T`
-ON R.比賽=T.賽號
-LEFT OUTER JOIN (SELECT 比賽,MAX(輪次)'輪次' FROM `GAME` GROUP BY 比賽)`GG`
-ON R.比賽=GG.比賽
-LEFT OUTER JOIN (SELECT G1.比賽,G1.P1,G1.P1分 FROM `GAME` `G1`
-UNION
-SELECT G2.比賽,G2.P2,G2.P2分 FROM `GAME` `G2`) `G`
-ON R.比賽=G.比賽 AND P.代號=G.P1
-WHERE P.顯示=1 AND R.勝+R.和+R.負-GG.輪次>=15
-ORDER BY R.績分-賽前分 DESC
-LIMIT 10");
+     // 對每位棋士、每場比賽只產生一筆賽前績分；UNION ALL 後先依棋士/賽事去重，
+     // 避免原先 UNION 的 DISTINCT 與逐局 JOIN 造成重複候選名次。
+     $statement = $MYSQL->query("SELECT P.姓名,
+            ROUND(G.賽前分,2) AS 賽前分, ROUND(R.績分,2) AS 績分,
+            ROUND(ROUND(R.績分,2)-ROUND(G.賽前分,2),2) AS 得分,
+            T.賽名
+          FROM RANK R
+          JOIN PLAYER P ON R.代號=P.代號 AND P.顯示=1
+          JOIN TOURNAMENT T ON R.比賽=T.賽號
+          JOIN (SELECT 比賽, MAX(輪次) AS 最大輪次
+                FROM GAME WHERE COALESCE(備註,'') <> '輪空' GROUP BY 比賽) GG
+            ON R.比賽=GG.比賽
+          JOIN (
+            SELECT X.比賽, X.代號, MIN(X.起分) AS 賽前分
+            FROM (
+              SELECT 比賽, P1 AS 代號, P1分 AS 起分 FROM GAME WHERE COALESCE(備註,'') <> '輪空'
+              UNION ALL
+              SELECT 比賽, P2 AS 代號, P2分 AS 起分 FROM GAME WHERE COALESCE(備註,'') <> '輪空'
+            ) X GROUP BY X.比賽, X.代號
+          ) G ON R.比賽=G.比賽 AND R.代號=G.代號
+          WHERE R.勝+R.和+R.負-GG.最大輪次>=15
+          ORDER BY R.績分-ROUND(G.賽前分,2) DESC
+          LIMIT 10");
 
      echo "<H2>一鳴驚人</H2>（單場賽事最大得分）";
      echo "<TABLE class='rank'><colgroup><col width='100'><col width='100'><col width='100'><col width='100'><col width='250'></colgroup>";
