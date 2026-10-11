@@ -160,14 +160,20 @@ function rgiUsedSourceIds(PDO $db,array $sources): array {
 }
 function rgiCandidates(array $local,array $source,array $map,array $used): array {
     $counts=[]; foreach($local as $g) $counts[rgiGameKey($g)]=($counts[rgiGameKey($g)]??0)+1;
-    $result=[];
+    $result=[];$sourceCounts=[];
     foreach($local as $g) {
         $k=rgiGameKey($g);$opts=[];
         if($counts[$k]===1 && trim((string)$g['棋譜'])==='' && trim((string)$g['備註'])==='') {
             foreach($source as $s) if(!isset($used[(int)$s['id']]) && rgiPairMatches($g,$s,$map)) $opts[]=(int)$s['id'];
         }
-        $result[$k]=['choices'=>$opts,'unique'=>$counts[$k]===1];
+        $result[$k]=['choices'=>$opts,'unique'=>$counts[$k]===1,'auto'=>0];
+        foreach($opts as $id) $sourceCounts[$id]=($sourceCounts[$id]??0)+1;
     }
+    // 某 RenjuNet 棋譜若同時符合多筆台灣對局，不可預先自動指派給多筆。
+    foreach($result as &$r) {
+        if(count($r['choices'])===1 && ($sourceCounts[$r['choices'][0]]??0)===1) $r['auto']=$r['choices'][0];
+    }
+    unset($r);
     return $result;
 }
 function rgiApply(PDO $db,int $tour,array $local,array $sources,array $map,array $selected): int {
