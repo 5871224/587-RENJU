@@ -111,16 +111,6 @@ jobs:
             if not str(exc).startswith('550'): raise
           ftp.quit()
 
-      - name: Read-only inspect tournament 309 game match
-        shell: bash
-        env:
-          FTP_SERVER: ${{ secrets.FTP_SERVER }}
-          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
-          RENJUNET_SITE_URL: https://587.renju.org.tw
-        run: python scripts/audit-rgi-309.py
-
       - name: Verify public security boundaries
         shell: bash
         run: |
