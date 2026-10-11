@@ -66,7 +66,8 @@ $removedEndpoints = @(
     'bb/SQL.php',
     'bb/querysql.php',
     'bb/readsql.php',
-    'rank/rating-elo-audit.php'
+    'rank/rating-elo-audit.php',
+    'rank/renjunet-elo-compare.php'
 )
 foreach ($file in $removedEndpoints) {
     if (Test-Path $file) {
@@ -77,6 +78,11 @@ foreach ($file in $removedEndpoints) {
 $rankIndexSource = Get-Content -Raw 'rank/index.php'
 if ($rankIndexSource -match 'elo-audit|rating-elo-audit.php|舊世界 Elo 盤點') {
     throw 'Removed world Elo audit must not appear in rating tool navigation.'
+}
+
+$renjunetEloPage = Get-Content -Raw 'rank/renjunet-elo.php'
+if ($renjunetEloPage -match 'renjunet-elo-compare\.php|舊保存分數比對') {
+    throw 'The retired saved Elo comparison page must not be linked.'
 }
 
 $keyinSource = Get-Content -Raw 'bb/keyinsql.php'
