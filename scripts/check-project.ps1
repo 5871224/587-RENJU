@@ -12,6 +12,11 @@ foreach ($file in $phpFiles) {
     }
 }
 
+php scripts/check-renjunet-game-import.php
+if ($LASTEXITCODE -ne 0) {
+    throw 'RenjuNet game import regression checks failed.'
+}
+
 php scripts/check-swiss-render.php
 if ($LASTEXITCODE -ne 0) {
     throw 'Swiss render regression checks failed.'
@@ -96,6 +101,7 @@ foreach ($required in @('$rankAdminConfigured', "rank_admin_user'] ?? ''", "rank
 $rankProtectedPages = @(
     'rank/index.php',
     'rank/sched-import.php',
+    'rank/renjunet-game-import.php',
     'rank/rating-review.php',
     'rank/rating-latest.php',
     'rank/rating-elo-audit.php',
