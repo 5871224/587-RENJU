@@ -464,7 +464,7 @@ $totalRecords = array_sum($counts);
 
 <?php elseif ($view === 'rating-tools'): ?>
     <section class="hero">
-        <div><h1>等級分工具</h1><p>集中管理台灣排名與 RenjuNet Elo 的重算、驗證及歷史 Elo 比對。</p></div>
+        <div><h1>等級分工具</h1><p>集中管理台灣排名與 RenjuNet Elo 的重算、驗證及最新排名查詢。</p></div>
         <div class="badge">重算／檢查／RenjuNet</div>
     </section>
     <section class="panel tools-panel">
