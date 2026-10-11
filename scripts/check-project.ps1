@@ -67,6 +67,7 @@ $removedEndpoints = @(
     'bb/querysql.php',
     'bb/readsql.php',
     'rank/rating-elo-audit.php',
+    'rank/renjunet-sync.php',
     'rank/renjunet-elo-compare.php'
 )
 foreach ($file in $removedEndpoints) {
@@ -115,7 +116,6 @@ $rankProtectedPages = @(
     'rank/sched-import.php',
     'rank/renjunet-game-import.php',
     'rank/renjunet-elo.php',
-    'rank/renjunet-sync.php',
     'rank/rating-review.php',
     'rank/rating-latest.php',
     'rank/recalculate-export.php',
@@ -131,11 +131,12 @@ foreach ($file in $rankProtectedPages) {
     }
 }
 
-$rankSyncSource = Get-Content -Raw 'rank/renjunet-sync.php'
-foreach ($required in @('rn_sync_csrf', 'hash_equals', 'renjunet-sync.yml/dispatches', 'rank_github_actions_token', 'status !== 204')) {
-    if ($rankSyncSource -notmatch [regex]::Escape($required)) {
-        throw "Manual RenjuNet sync endpoint is missing security control: $required"
-    }
+$rnPage = Get-Content -Raw 'rank/renjunet-elo.php'
+if ($rnPage -notmatch 'https://github.com/5871224/587-RENJU/actions/workflows/renjunet-sync.yml') {
+    throw 'RenjuNet manual update must link to the existing GitHub Actions workflow.'
+}
+if ($rnPage -match 'rank_github_actions_token|rn_sync_csrf|renjunet-sync.php') {
+    throw 'RenjuNet manual update must not require a website GitHub API token.'
 }
 
 $riftwLogin = Get-Content -Raw 'riftw/login.php'
