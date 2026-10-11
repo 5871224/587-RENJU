@@ -54,6 +54,14 @@ function recordRateBoards($db, string $today, string $fiveYearsAgo): array
             return (int)$a['代號'] <=> (int)$b['代號'];
         });
         $empty[$group] = array_slice($copy, 0, 10);
+        // 舊版三張比例表的模板都讀取「勝率」，維持相同輸出鍵名。
+        if ($group !== 'games') {
+            $rateField = $group === 'score' ? '得分率' : ($group === 'draws' ? '和棋率' : '勝率');
+            foreach ($empty[$group] as &$entry) {
+                $entry['勝率'] = $entry[$rateField];
+            }
+            unset($entry);
+        }
     }
     return $empty;
 }
