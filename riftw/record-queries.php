@@ -29,11 +29,11 @@ function recordRateBoards($db, string $today, string $fiveYearsAgo): array
                 FROM (
                     SELECT 代號, MAX(比賽) AS 最近,
                         MAX(CASE WHEN 比賽 <= {$oldTour} THEN 比賽 ELSE NULL END) AS 五年前
-                    FROM RANK WHERE 比賽 <= {$lastTour} GROUP BY 代號
+                    FROM `RANK` WHERE 比賽 <= {$lastTour} GROUP BY 代號
                 ) H
-                JOIN RANK R ON R.代號=H.代號 AND R.比賽=H.最近
+                JOIN `RANK` R ON R.代號=H.代號 AND R.比賽=H.最近
                 JOIN PLAYER P ON P.代號=H.代號 AND P.顯示=1
-                LEFT JOIN RANK R5 ON R5.代號=H.代號 AND R5.比賽=H.五年前
+                LEFT JOIN `RANK` R5 ON R5.代號=H.代號 AND R5.比賽=H.五年前
                 WHERE H.最近 > {$oldTour}
                   AND R.勝+R.和+R.負-COALESCE(R5.勝,0)-COALESCE(R5.和,0)-COALESCE(R5.負,0) >= 15
             ) S";
@@ -227,7 +227,7 @@ function recordMeijinAgeBoards($db): array
                DATEDIFF(T.開始,P.生日)/365.25 AS 年紀,
                T.賽名
             FROM TOURNAMENT T
-            JOIN RANK R ON R.比賽=T.賽號
+            JOIN `RANK` R ON R.比賽=T.賽號
             JOIN PLAYER P ON R.代號=P.代號
             WHERE P.生日>0
               AND (T.賽名 LIKE '%台灣名人賽決賽%'
