@@ -102,6 +102,8 @@ $rankProtectedPages = @(
     'rank/index.php',
     'rank/sched-import.php',
     'rank/renjunet-game-import.php',
+    'rank/renjunet-elo.php',
+    'rank/renjunet-sync.php',
     'rank/rating-review.php',
     'rank/rating-latest.php',
     'rank/rating-elo-audit.php',
@@ -115,6 +117,13 @@ foreach ($file in $rankProtectedPages) {
     $source = Get-Content -Raw $file
     if ($source -notmatch 'require_once\s+__DIR__\s*\.\s*[''"]/login\.php[''"]') {
         throw "Rank administration page is missing login protection: $file"
+    }
+}
+
+$rankSyncSource = Get-Content -Raw 'rank/renjunet-sync.php'
+foreach ($required in @('rn_sync_csrf', 'hash_equals', 'renjunet-sync.yml/dispatches', 'rank_github_actions_token', 'status !== 204')) {
+    if ($rankSyncSource -notmatch [regex]::Escape($required)) {
+        throw "Manual RenjuNet sync endpoint is missing security control: $required"
     }
 }
 
