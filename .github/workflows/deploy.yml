@@ -67,7 +67,6 @@ jobs:
               'rank/renjunet-game-import.css',
               'rank/lib/renjunet_game_import.php',
               'rank/lib/renjunet_player_map.php',
-              'rank/renjunet-elo-compare.php',
               'rank/lib/rating.php',
               'rank/rating-review.php',
               'rank/rating-latest.php',
@@ -102,7 +101,7 @@ jobs:
             with open(local_path,'rb') as fh: ftp.storbinary(f'STOR {posixpath.basename(remote_path)}',fh)
           # Rating utility pages below were merged into rank/index.php as server-side partials and must not remain deployed.
           ftp.cwd(base_dir); ensure_dir('rank')
-          for legacy_name in ('recalculate.php','recalculate-check.php','final-diff.php','recalculated-ranking.php','elo-audit.php','rating-elo-audit.php'):
+          for legacy_name in ('recalculate.php','recalculate-check.php','final-diff.php','recalculated-ranking.php','elo-audit.php','rating-elo-audit.php','renjunet-elo-compare.php'):
             try: ftp.delete(legacy_name)
             except ftplib.error_perm as exc:
               if not str(exc).startswith('550'): raise
@@ -133,6 +132,7 @@ jobs:
             '/rank/recalculated-ranking.php'
             '/rank/elo-audit.php'
             '/rank/rating-elo-audit.php'
+            '/rank/renjunet-elo-compare.php'
             '/rank/tests/swiss-render-regression.php'
           )
           failed=0
