@@ -33,3 +33,8 @@
 .rgi-error{border-color:#fecdd3;background:#fff1f2;color:#9f1239}
 .rgi-success{border-color:#b7e3c6;background:#effaf2;color:#176534}
 @media(max-width:720px){.rgi-main{padding:15px 12px 40px}.rgi-head{flex-direction:column;align-items:flex-start}.rgi-search label{width:100%}.rgi-search input{width:100%}.rgi-search button{width:100%}.rgi-panel{padding:15px}}
+
+/* 同棋士組合的 RenjuNet 比對細節：輪次、黑白得分、換算後的 P1/P2 得分 */
+.rgi-detail-list{display:grid;gap:5px;margin-top:7px;min-width:270px;max-width:560px}
+.rgi-detail{font-size:12px;line-height:1.65;color:#475569;white-space:normal;overflow-wrap:anywhere;padding:5px 7px;background:#f5f8fb;border:1px solid #e2eaf2;border-radius:6px}
+.rgi-detail-list .rgi-hint{margin:0;font-size:12px}
