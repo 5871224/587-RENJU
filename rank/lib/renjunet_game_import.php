@@ -74,7 +74,7 @@ function rgiRenjuLoad(PDO $db,int $tour): array {
     $s=$db->prepare('SELECT id,name FROM RENJUNET_TOURNAMENT WHERE id=? LIMIT 1');
     $s->execute([$tour]); $t=$s->fetch(PDO::FETCH_ASSOC);
     if (!$t) throw new RuntimeException('本地 RenjuNet 資料尚無賽事 '.$tour.'，請先同步 RENJUNET 資料。');
-    $s=$db->prepare('SELECT G.id,G.black_player_id AS a_id,G.white_player_id AS b_id,G.black_result,'.
+    $s=$db->prepare('SELECT G.id,G.round AS rn_round,G.black_player_id AS a_id,G.white_player_id AS b_id,G.black_result,'.
         ' A.native_name AS a_native,A.surname AS a_surname,A.name AS a_name,'.
         ' B.native_name AS b_native,B.surname AS b_surname,B.name AS b_name'.
         ' FROM RENJUNET_GAME G'.
@@ -128,11 +128,33 @@ function rgiPlayerMap(PDO $db,array $local,array $renju,array $posted): array {
     }
     return $map;
 }
+/**
+ * GAME.P1 是開局方，不是固定黑方；開局後交換顏色時，P1 可能執白。
+ * RenjuNet 的 black_result 則始終以黑方為基準。
+ */
+function rgiSamePlayers(array $local,array $source,array $map): bool {
+    $p1=(int)($map[(int)$local['P1']]??0);
+    $p2=(int)($map[(int)$local['P2']]??0);
+    $black=(int)$source['a_id'];$white=(int)$source['b_id'];
+    return $p1>0 && $p2>0 && $p1!==$p2 &&
+        (($p1===$black && $p2===$white) || ($p1===$white && $p2===$black));
+}
+function rgiSameRound(array $local,array $source): bool {
+    $localRound=(int)($local['輪次']??0);
+    $rnRound=trim((string)($source['rn_round']??''));
+    return $localRound>0 && ctype_digit($rnRound) && (int)$rnRound===$localRound;
+}
+function rgiSourceP1Score(array $local,array $source,array $map): ?float {
+    if(!rgiSamePlayers($local,$source,$map) || !isset($source['score']) || $source['score']===null) return null;
+    $blackScore=(float)$source['score'];
+    $p1=(int)($map[(int)$local['P1']]??0);
+    return $p1===(int)$source['a_id'] ? $blackScore : 2.0-$blackScore;
+}
 function rgiPairMatches(array $local,array $source,array $map): bool {
     if((int)$local['P1']<1 || (int)$local['P2']<1 || trim((string)$local['備註'])!=='') return false;
-    $b=$map[(int)$local['P1']]??0; $w=$map[(int)$local['P2']]??0;
-    return $b>0 && $w>0 && $b===(int)$source['a_id'] && $w===(int)$source['b_id'] &&
-        $source['score']!==null && abs((float)$local['勝負']-(float)$source['score'])<0.001;
+    if(!rgiSameRound($local,$source)) return false;
+    $p1Score=rgiSourceP1Score($local,$source,$map);
+    return $p1Score!==null && abs((float)$local['勝負']-$p1Score)<0.001;
 }
 function rgiUsedSourceIds(PDO $db,array $sources): array {
     if(!$sources) return [];
@@ -147,14 +169,44 @@ function rgiCandidates(array $local,array $source,array $map,array $used): array
     $counts=[]; foreach($local as $g) $counts[rgiGameKey($g)]=($counts[rgiGameKey($g)]??0)+1;
     $result=[];$sourceCounts=[];
     foreach($local as $g) {
-        $k=rgiGameKey($g);$opts=[];
-        if($counts[$k]===1 && trim((string)$g['棋譜'])==='' && trim((string)$g['備註'])==='') {
-            foreach($source as $s) if(!isset($used[(int)$s['id']]) && rgiPairMatches($g,$s,$map)) $opts[]=(int)$s['id'];
+        $k=rgiGameKey($g);
+        $opts=[];$samePair=[];$wrongScore=[];$alreadyUsed=[];
+        if($counts[$k]===1 && trim((string)$g['棋譜'])==='' &&
+            trim((string)$g['備註'])==='' && (int)$g['P1']>0 && (int)$g['P2']>0) {
+            foreach($source as $s) {
+                if(!rgiSamePlayers($g,$s,$map)) continue;
+                $id=(int)$s['id'];$samePair[]=$id;
+                if(!rgiSameRound($g,$s)) continue;
+                if(!rgiPairMatches($g,$s,$map)) {
+                    $wrongScore[]=$id;
+                } elseif(isset($used[$id])) {
+                    $alreadyUsed[]=$id;
+                } else {
+                    $opts[]=$id;
+                }
+            }
         }
-        $result[$k]=['choices'=>$opts,'unique'=>$counts[$k]===1,'auto'=>0];
+        // 失配原因以「同輪同人同分但已使用」優先，再判斷勝負不符。
+        // 若同輪沒對局，仍列示其他輪次相同棋士組合，方便核對。
+        $reason='';
+        $details=[];
+        if(!$opts) {
+            if($alreadyUsed) {
+                $reason='棋譜已使用';$details=$alreadyUsed;
+            } elseif($wrongScore) {
+                $reason='勝負不符';$details=$wrongScore;
+            } else {
+                $reason='雙方在此輪無對局';$details=$samePair;
+            }
+        }
+        $result[$k]=[
+            'choices'=>$opts,'unique'=>$counts[$k]===1,'auto'=>0,
+            'reason'=>$reason,'details'=>array_slice($details,0,4),
+            'detail_total'=>count($details),
+        ];
         foreach($opts as $id) $sourceCounts[$id]=($sourceCounts[$id]??0)+1;
     }
-    // 某 RenjuNet 棋譜若同時符合多筆台灣對局，不可預先自動指派給多筆。
+    // 同一 RenjuNet 棋譜不得自動指派至多筆對局。
     foreach($result as &$r) {
         if(count($r['choices'])===1 && ($sourceCounts[$r['choices'][0]]??0)===1) $r['auto']=$r['choices'][0];
     }
@@ -170,7 +222,7 @@ function rgiApply(PDO $db,int $tour,array $local,array $sources,array $map,array
         if(!is_string($key)||!preg_match('/^\d+:\d+:\d+$/',$key)||!isset($byKey[$key])||isset($dups[$key]))
             throw new RuntimeException('對局識別重複或無效，請重新讀取。');
         if(!isset($sources[$id])||!rgiPairMatches($byKey[$key],$sources[$id],$map))
-            throw new RuntimeException('棋譜 #'.$id.' 的黑白棋士或勝負不符，無法匯入。');
+            throw new RuntimeException('棋譜 #'.$id.' 的雙方棋士、輪次或勝負不符，無法匯入。');
         if(trim((string)$byKey[$key]['棋譜'])!=='')throw new RuntimeException('棋譜已存在，不能覆蓋：'.$key);
         if(isset($seen[$id]))throw new RuntimeException('RenjuNet 棋譜 #'.$id.' 不可重複對應。');
         $seen[$id]=true;$writes[$key]=$id;
