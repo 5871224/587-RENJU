@@ -52,7 +52,7 @@ foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
 <title>從 RenjuNet 匯入棋譜｜排名管理</title>
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
-<link rel="stylesheet" href="renjunet-game-import.css?v=2">
+<link rel="stylesheet" href="renjunet-game-import.css?v=3">
 </head>
 <body>
 <div class="app">
