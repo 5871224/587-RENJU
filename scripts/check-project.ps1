@@ -65,12 +65,18 @@ $removedEndpoints = @(
     'bb/PP.php',
     'bb/SQL.php',
     'bb/querysql.php',
-    'bb/readsql.php'
+    'bb/readsql.php',
+    'rank/rating-elo-audit.php'
 )
 foreach ($file in $removedEndpoints) {
     if (Test-Path $file) {
         throw "Removed maintenance endpoint must not exist in public repository: $file"
     }
+}
+
+$rankIndexSource = Get-Content -Raw 'rank/index.php'
+if ($rankIndexSource -match 'elo-audit|rating-elo-audit.php|舊世界 Elo 盤點') {
+    throw 'Removed world Elo audit must not appear in rating tool navigation.'
 }
 
 $keyinSource = Get-Content -Raw 'bb/keyinsql.php'
@@ -106,7 +112,6 @@ $rankProtectedPages = @(
     'rank/renjunet-sync.php',
     'rank/rating-review.php',
     'rank/rating-latest.php',
-    'rank/rating-elo-audit.php',
     'rank/recalculate-export.php',
     'rank/swiss.php',
     'rank/swiss-history-add.php',
