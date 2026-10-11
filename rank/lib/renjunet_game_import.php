@@ -20,22 +20,26 @@ function rgiRenjuScore($raw): ?float {
     $v=(float)$raw;
     return ($v>=0 && $v<=1) ? 2*$v : null;
 }
-function rgiRankTourFromSched(PDO $db,int $sched): int {
-    try {
-        $s=$db->prepare('SELECT rank_tournament_id FROM RANK_SCHED_IMPORT WHERE source_tournament_id=? LIMIT 1');
-        $s->execute([$sched]); $n=(int)$s->fetchColumn();
-        if ($n>0) return $n;
-    } catch (Throwable $ignored) {}
-    try {
-        $s=$db->prepare('SELECT '.rgiQ('賽號').' FROM '.rgiQ('TOURNAMENT').
-            ' WHERE CAST('.rgiQ('戰績表').' AS CHAR)=? ORDER BY '.rgiQ('賽號').' DESC LIMIT 1');
-        $s->execute([(string)$sched]);
-        return (int)$s->fetchColumn();
-    } catch (Throwable $ignored) {}
-    return 0;
+/**
+ * 比賽之間不需要 Sched 中介：
+ * TOURNAMENT.棋譜 = RenjuNet 賽事編號 (RENJUNET_TOURNAMENT.id)。
+ */
+function rgiLatestMappedRankTour(PDO $db): int {
+    $s=$db->query('SELECT '.rgiQ('賽號').' FROM '.rgiQ('TOURNAMENT').' WHERE '.
+        'TRIM(COALESCE('.rgiQ('棋譜').",'')) REGEXP '^[0-9]+$'".
+        ' ORDER BY '.rgiQ('賽號').' DESC LIMIT 1');
+    return (int)$s->fetchColumn();
+}
+function rgiRenjuTourFromRank(array $tour): int {
+    $raw=trim((string)($tour['棋譜']??''));
+    $id=rgiPositive($raw);
+    if($id<1) throw new RuntimeException(
+        '排名賽號 '.($tour['賽號']??'').' 的 TOURNAMENT.棋譜 未填有效的 RenjuNet 賽事編號，請先在「比賽」頁修改。'
+    );
+    return $id;
 }
 function rgiRankLoad(PDO $db,int $tour): array {
-    $s=$db->prepare('SELECT '.rgiQ('賽號').','.rgiQ('賽名').' FROM '.rgiQ('TOURNAMENT').' WHERE '.rgiQ('賽號').'=?');
+    $s=$db->prepare('SELECT '.rgiQ('賽號').','.rgiQ('賽名').','.rgiQ('棋譜').' FROM '.rgiQ('TOURNAMENT').' WHERE '.rgiQ('賽號').'=?');
     $s->execute([$tour]); $t=$s->fetch(PDO::FETCH_ASSOC);
     if (!$t) throw new RuntimeException('排名系統找不到賽號 '.$tour.'。');
     $s=$db->prepare('SELECT G.'.rgiQ('比賽').',G.'.rgiQ('輪次').',G.'.rgiQ('P1').',G.'.rgiQ('P2').
