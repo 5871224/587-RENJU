@@ -8,6 +8,13 @@ expectRGI(rgiRenjuScore(1.0)===2.0,'black win');
 expectRGI(rgiRenjuScore(0.5)===1.0,'draw');
 expectRGI(rgiRenjuScore(0.0)===0.0,'black loss');
 expectRGI(rgiRenjuScore(null)===null,'unknown result');
+expectRGI(rgiRenjuTourFromRank(['賽號'=>309,'棋譜'=>'3678'])===3678,'TOURNAMENT.棋譜 is RenjuNet tournament id');
+$rejected=false;
+try { rgiRenjuTourFromRank(['賽號'=>309,'棋譜'=>'']); } catch (RuntimeException $e) { $rejected=true; }
+expectRGI($rejected,'missing TOURNAMENT.棋譜 rejected');
+$rejected=false;
+try { rgiRenjuTourFromRank(['賽號'=>309,'棋譜'=>'not-a-number']); } catch (RuntimeException $e) { $rejected=true; }
+expectRGI($rejected,'malformed TOURNAMENT.棋譜 rejected');
 $a=['比賽'=>309,'輪次'=>1,'P1'=>10,'P2'=>20,'勝負'=>2,'備註'=>'','棋譜'=>''];
 $b=['比賽'=>309,'輪次'=>2,'P1'=>10,'P2'=>20,'勝負'=>2,'備註'=>'','棋譜'=>''];
 $r=['id'=>12345,'a_id'=>100,'b_id'=>200,'score'=>2.0];
