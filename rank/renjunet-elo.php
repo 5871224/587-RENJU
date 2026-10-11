@@ -21,6 +21,20 @@ function rnPageUrl(array $params = []): string
 $rnEmbedded = defined('RANK_ADMIN_EMBEDDED') && RANK_ADMIN_EMBEDDED;
 rnEloEnsureSchema($MYSQL);
 
+// 手動更新 RenjuNet 只觸發 GitHub Actions；網站本身不執行大量 RIF 匯入。
+if (empty($_SESSION['rn_sync_csrf'])) $_SESSION['rn_sync_csrf'] = bin2hex(random_bytes(32));
+$rnSyncEnabled = trim((string)($config['rank_github_actions_token'] ?? (getenv('RANK_GITHUB_ACTIONS_TOKEN') ?: ''))) !== '';
+$rnSyncFlash = $_SESSION['rn_sync_flash'] ?? null;
+unset($_SESSION['rn_sync_flash']);
+$rnLastImport = null;
+try {
+    $rnLastImport = $MYSQL->query(
+        'SELECT database_date,imported_at,player_count,tournament_count,game_count FROM RENJUNET_IMPORT ORDER BY imported_at DESC,id DESC LIMIT 1'
+    )->fetch(PDO::FETCH_ASSOC) ?: null;
+} catch (Throwable $ignored) {
+    // 尚未匯入 RenjuNet 的環境仍可使用手動更新。
+}
+
 $rnError = '';
 $rnMessage = '';
 $rnQ = trim((string)($_GET['q'] ?? ''));
@@ -109,6 +123,9 @@ $runHistory = $MYSQL->query(
 
 <?php if ($rnMessage !== ''): ?><div class="rn-success"><?= rnH($rnMessage) ?></div><?php endif; ?>
 <?php if ($rnError !== ''): ?><div class="rn-error">重算失敗：<?= rnH($rnError) ?></div><?php endif; ?>
+<?php if (is_array($rnSyncFlash) && isset($rnSyncFlash['message'])): ?>
+<div class="<?= ($rnSyncFlash['kind'] ?? '') === 'success' ? 'rn-success' : 'rn-error' ?>"><?= rnH($rnSyncFlash['message']) ?></div>
+<?php endif; ?>
 
 <div class="rn-notice"><strong>歷史基準：</strong>使用 1999-07-15 官方 RIF Rating List（已核對 221 位 RenjuNet 身份）作 seed；其後新棋手只計算對 established 棋手的對局，累積至少 10 局且至少 3 分後轉 established。Provisional 採 Rp=Ra+400(W-L)/N（上限 Ra+300）；established 採 K=32、We=1/(1+2^(dR/120))。真正沒有官方／歷史 Elo 的棋手，台灣排名端才以 1900 作 fallback。</div>
 
@@ -117,6 +134,35 @@ $runHistory = $MYSQL->query(
     <div class="rn-card"><div class="label">Renju Rated 對局</div><div class="value"><?= number_format($eligibleGames) ?></div></div>
     <div class="rn-card"><div class="label">已有 Elo 棋手</div><div class="value"><?= number_format($totalPlayers) ?></div></div>
     <div class="rn-card"><div class="label">歷史 Elo 資料列</div><div class="value"><?= number_format($totalRows) ?></div></div>
+</section>
+
+<section class="rn-panel">
+    <div class="rn-head">
+        <div>
+            <h2>RenjuNet 原始資料同步</h2>
+            <div class="rn-sub">從 RenjuNet 官方下載最新 RIF，更新世界棋士、賽事與棋譜；與下方歷史 Elo 重算是兩個獨立步驟。</div>
+        </div>
+        <form method="post" action="renjunet-sync.php" class="rn-sync-form" onsubmit="return confirm('確定送出 RenjuNet 資料同步要求嗎？更新將在 GitHub Actions 背景執行。')">
+            <input type="hidden" name="rn_sync_csrf" value="<?= rnH($_SESSION['rn_sync_csrf']) ?>">
+            <input type="hidden" name="return_to" value="<?= $rnEmbedded ? 'embedded' : 'standalone' ?>">
+            <button type="submit" class="btn primary" <?= !$rnSyncEnabled ? 'disabled title="尚未設定 GitHub Actions 存取權杖"' : '' ?>>更新 RenjuNet</button>
+            <a class="btn" target="_blank" rel="noopener noreferrer" href="https://github.com/5871224/587-RENJU/actions/workflows/renjunet-sync.yml">查看同步進度 ↗</a>
+        </form>
+    </div>
+    <div class="rn-sync-info">
+        <?php if ($rnLastImport): ?>
+        <span>資料日期：<strong><?= rnH($rnLastImport['database_date']) ?></strong></span>
+        <span>上次資料匯入：<strong><?= rnH($rnLastImport['imported_at']) ?></strong></span>
+        <span>棋士 <?= number_format((int)$rnLastImport['player_count']) ?> 人、對局 <?= number_format((int)$rnLastImport['game_count']) ?> 筆</span>
+        <?php else: ?><span>目前沒有可讀取的 RenjuNet 匯入紀錄。</span><?php endif; ?>
+    </div>
+    <div class="rn-sync-note">
+        <?php if (!$rnSyncEnabled): ?>
+        尚未設定網站的 GitHub Actions 存取權杖，因此暫時無法在此直接執行。可使用「查看同步進度」連結至 GitHub 手動執行；設定完成後按鈕會自動啟用。
+        <?php else: ?>
+        按鈕僅送出同步要求；正式資料更新時間與結果請由 GitHub Actions 確認。若官方檔案沒有變更，會跳過資料重建。同步完成後如需更新歷史 Elo，請再執行「完整重算」。
+        <?php endif; ?>
+    </div>
 </section>
 
 <section class="rn-panel">
