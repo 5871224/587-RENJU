@@ -41,7 +41,7 @@ if(isset($_SESSION['rgi_flash'])){
 $already=0;$unmapped=0;$auto=0;
 foreach($local as $g)if(trim((string)($g['棋譜']??''))!=='')$already++;
 foreach($players as $p)if(($map[(int)$p['代號']]??0)===0)$unmapped++;
-foreach($matches as $c)if(count($c['choices'])===1)$auto++;
+foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
 ?>
 <!doctype html>
 <html lang="zh-Hant">
@@ -127,7 +127,7 @@ foreach($matches as $c)if(count($c['choices'])===1)$auto++;
     $duplicated=empty($matches[$key]['unique']);
     $chosen=array_key_exists($key,$postedSelection)
         ?rgiPositive($postedSelection[$key])
-        :(count($choices)===1?(int)$choices[0]:0);
+        :($matches[$key]['auto']??0);
     if($chosen&&!in_array($chosen,$choices,true))$chosen=0;
 ?>
 <tr>
@@ -154,8 +154,8 @@ foreach($matches as $c)if(count($c['choices'])===1)$auto++;
 <?php if($linked!==''): ?><span class="rgi-good">已連結</span>
 <?php elseif($special): ?>輪空或特殊紀錄
 <?php elseif($duplicated): ?><span class="rgi-attention">同輪棋士重複，無法唯一更新</span>
-<?php elseif(count($choices)===1): ?><span class="rgi-good">唯一符合</span>
-<?php elseif(count($choices)>1): ?><span class="rgi-attention">有 <?= count($choices) ?> 筆候選</span>
+<?php elseif(($matches[$key]['auto']??0)>0): ?><span class="rgi-good">唯一符合</span>
+<?php elseif(count($choices)>0): ?><span class="rgi-attention">有 <?= count($choices) ?> 筆候選，請選擇</span>
 <?php else: ?><span class="rgi-attention">無符合棋譜</span><?php endif; ?>
 </td>
 </tr>
