@@ -96,7 +96,7 @@ foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
 <input type="hidden" name="tour" value="<?= $rankTour ?>">
 <section class="rgi-panel">
 <h2>2. 核對棋士身分</h2>
-<p class="rgi-hint">優先採用 PLAYER_RENJUNET、RIF 及唯一姓名比對。若有空白或對錯棋士，請在下拉清單調整後按「重新比對」。</p>
+<p class="rgi-hint">優先採用 PLAYER.ID，沒有有效 ID 時才使用 PLAYER.RIF 對應 RenjuNet。無法對應的棋士可在下拉清單暫時指定，按「重新比對」即可更新本次預覽。</p>
 <div class="rgi-scroll rgi-players"><table class="rgi-table">
 <thead><tr><th>排名棋士</th><th>RenjuNet 棋士</th></tr></thead><tbody>
 <?php foreach($players as $p):
