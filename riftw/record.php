@@ -86,7 +86,7 @@
             ROUND(G.賽前分,2) AS 賽前分, ROUND(R.績分,2) AS 績分,
             ROUND(ROUND(R.績分,2)-ROUND(G.賽前分,2),2) AS 得分,
             T.賽名
-          FROM RANK R
+          FROM `RANK` R
           JOIN PLAYER P ON R.代號=P.代號 AND P.顯示=1
           JOIN TOURNAMENT T ON R.比賽=T.賽號
           JOIN (SELECT 比賽, MAX(輪次) AS 最大輪次
@@ -198,9 +198,9 @@
          ROUND(AVG(R.績分),2) AS 平均,
          MAX(ROUND(R.績分,2)) AS 最高
          FROM (SELECT 代號, MAX(日期) AS 日期 FROM DEN GROUP BY 代號) B
-         LEFT JOIN (SELECT 代號, MAX(比賽) AS G FROM RANK GROUP BY 代號) T
+         LEFT JOIN (SELECT 代號, MAX(比賽) AS G FROM `RANK` GROUP BY 代號) T
            ON B.代號=T.代號
-         LEFT JOIN RANK R ON T.代號=R.代號 AND T.G=R.比賽
+         LEFT JOIN `RANK` R ON T.代號=R.代號 AND T.G=R.比賽
          LEFT JOIN DEN D ON B.代號=D.代號 AND B.日期=D.日期
          GROUP BY D.段位, D.段數
          ORDER BY D.段數 DESC");
