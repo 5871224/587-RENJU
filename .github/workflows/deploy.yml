@@ -81,6 +81,7 @@ jobs:
               'rank/swiss.css',
               'rank/swiss-ui.js',
               'riftw/tourb.php',
+              'riftw/player.php',
           )
           for forced in forced_files:
               if os.path.isfile(forced) and forced not in files: files.append(forced)
