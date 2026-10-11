@@ -15,6 +15,7 @@
 	<div id="myDiv"></div>
 <?php
 require_once 'login.php';
+require_once __DIR__ . '/rating-display.php';
 
 function tourH($value): string {
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
@@ -27,8 +28,7 @@ if ($TT === false || $TT === null) {
 
 $stmt = $MYSQL->prepare("SELECT T.賽名,G.輪次,ROUND(G.P1分,2) AS P1分,P1.姓名 AS 選手1,
     CASE WHEN G.勝負>1 THEN '>' WHEN G.勝負=1 THEN '=' WHEN G.勝負<1 THEN '<' END AS 結果,
-    P2.姓名 AS 選手2,ROUND(G.P2分,2) AS P2分,G.P1,G.P2,T.開始,T.結束,T.棋譜,
-    P1.ID AS P1ID,P2.ID AS P2ID
+    P2.姓名 AS 選手2,ROUND(G.P2分,2) AS P2分,G.P1,G.P2,T.開始,T.結束,T.棋譜,G.棋譜 AS 對局棋譜
     FROM GAME G
     LEFT JOIN PLAYER P1 ON G.P1=P1.代號
     LEFT JOIN PLAYER P2 ON G.P2=P2.代號
@@ -75,15 +75,16 @@ foreach ($rows as $row) {
     $result = tourH($row['結果']);
 
     $resultHtml = $result;
-    if ($renjuTournamentId > 0) {
-        $p1Id = max(0, (int)($row['P1ID'] ?? 0));
-        $p2Id = max(0, (int)($row['P2ID'] ?? 0));
-        $resultHtml = "<a target='_blank' rel='noopener noreferrer' href='https://www.renju.net/game/search?player1={$p1Id}&amp;player2={$p2Id}&amp;tournament={$renjuTournamentId}'>{$result}</a>";
+    $gameId = max(0, (int)($row['對局棋譜'] ?? 0));
+    if ($gameId > 0) {
+        $resultHtml = "<a target='_blank' rel='noopener noreferrer' href='https://www.renju.net/game/{$gameId}/'>{$result}</a>";
     }
 
-    echo '<TR><TD>' . tourH($row['P1分']) . "</TD><TD><a href='player.php?PLAYER={$p1}'>{$p1Name}</a></TD><TD>"
+    echo '<TR>' . ratingCell($row['P1分'], true)
+        . "<TD><a href='player.php?PLAYER={$p1}'>{$p1Name}</a></TD><TD>"
         . $resultHtml
-        . "</TD><TD><a href='player.php?PLAYER={$p2}'>{$p2Name}</a></TD><TD>" . tourH($row['P2分']) . '</TD></TR>';
+        . "</TD><TD><a href='player.php?PLAYER={$p2}'>{$p2Name}</a></TD>"
+        . ratingCell($row['P2分'], true) . '</TR>';
 }
 if ($tableOpen) {
     echo '</TABLE><BR/>';
