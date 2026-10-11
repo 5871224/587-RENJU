@@ -59,7 +59,7 @@ foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
 <?php $rankTopbarActive='games'; require __DIR__ . '/topbar.php'; ?>
 <main class="rgi-main">
 <header class="rgi-head">
-    <div><h1>從 RenjuNet 匯入棋譜</h1><p>依棋士、黑白方及勝負逐局比對，寫入 GAME 的「棋譜」欄。</p></div>
+    <div><h1>從 RenjuNet 匯入棋譜</h1><p>依雙方棋士、輪次及勝負逐局比對，寫入 GAME 的「棋譜」欄。</p></div>
     <a class="btn" href="./?view=games">← 返回對局</a>
 </header>
 <?php if($error!==''): ?><div class="rgi-alert rgi-error" role="alert"><?= rgiH($error) ?></div><?php endif; ?>
@@ -116,13 +116,14 @@ foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
 </section>
 <section class="rgi-panel">
 <h2>3. 逐局對應棋譜</h2>
-<p class="rgi-hint">只有黑方、白方和勝負完全符合的 RenjuNet 棋譜會列為候選。唯一符合者預先選好；多筆符合者需自行選擇。不選則跳過，已填寫的棋譜不會被覆蓋。</p>
+<p class="rgi-hint">GAME.P1 是開局方，P2 是另一方，兩者不一定是黑白方；依雙方身分、輪次及開局方實際得分比對。唯一符合者預先選好；多筆符合者需自行選擇，已填棋譜不覆蓋。未找到時僅顯示勝負不符、棋譜已使用或雙方在此輪無對局。</p>
 <div class="rgi-scroll"><table class="rgi-table">
-<thead><tr><th>輪次</th><th>黑方（P1）</th><th>白方（P2）</th><th>P1 分數</th><th>RenjuNet 棋譜</th><th>狀態</th></tr></thead><tbody>
+<thead><tr><th>輪次</th><th>開局方（P1）</th><th>另一方（P2）</th><th>P1 得分</th><th>RenjuNet 棋譜</th><th>狀態</th></tr></thead><tbody>
 <?php foreach($local as $g):
     $key=rgiGameKey($g);
     $linked=trim((string)($g['棋譜']??''));
     $choices=$matches[$key]['choices']??[];
+    $diagnosis=$matches[$key]??[];
     $special=(int)$g['P1']<1||(int)$g['P2']<1||trim((string)$g['備註'])!=='';
     $duplicated=empty($matches[$key]['unique']);
     $chosen=array_key_exists($key,$postedSelection)
@@ -145,7 +146,7 @@ foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
 <option value="">不匯入</option>
 <?php foreach($choices as $gid):
     $sg=$sources[$gid]; ?>
-<option value="<?= (int)$gid ?>" <?= $chosen===$gid?'selected':'' ?>>#<?= (int)$gid ?>｜<?= rgiH($sg['a_display']) ?> <?= rgiH($sg['score']/2) ?> : <?= rgiH(1-$sg['score']/2) ?> <?= rgiH($sg['b_display']) ?></option>
+<option value="<?= (int)$gid ?>" <?= $chosen===$gid?'selected':'' ?>>#<?= (int)$gid ?>｜第 <?= rgiH($sg['rn_round']) ?> 輪｜黑 <?= rgiH($sg['a_display']) ?> <?= rgiH($sg['score']/2) ?> : <?= rgiH(1-$sg['score']/2) ?> <?= rgiH($sg['b_display']) ?> 白｜P1 得 <?= rgiH(rgiSourceP1Score($g,$sg,$map)) ?></option>
 <?php endforeach; ?>
 </select>
 <?php endif; ?>
@@ -156,7 +157,28 @@ foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
 <?php elseif($duplicated): ?><span class="rgi-attention">同輪棋士重複，無法唯一更新</span>
 <?php elseif(($matches[$key]['auto']??0)>0): ?><span class="rgi-good">唯一符合</span>
 <?php elseif(count($choices)>0): ?><span class="rgi-attention">有 <?= count($choices) ?> 筆候選，請選擇</span>
-<?php else: ?><span class="rgi-attention">無符合棋譜</span><?php endif; ?>
+<?php else: ?>
+<span class="rgi-attention"><?= rgiH($diagnosis['reason']??'雙方在此輪無對局') ?></span>
+<?php if(!empty($diagnosis['details'])): ?>
+<div class="rgi-detail-list">
+<?php foreach($diagnosis['details'] as $gid):
+    $sg=$sources[(int)$gid];
+    $p1Score=rgiSourceP1Score($g,$sg,$map);
+?>
+<div class="rgi-detail">
+<a href="https://www.renju.net/game/<?= (int)$gid ?>/" target="_blank" rel="noopener noreferrer">#<?= (int)$gid ?> ↗</a>
+｜RenjuNet 第 <?= rgiH($sg['rn_round']!==''?$sg['rn_round']:'—') ?> 輪
+｜黑 <?= rgiH($sg['a_display']) ?> <?= $sg['score']===null?'?':rgiH($sg['score']/2) ?> : <?= $sg['score']===null?'?':rgiH(1-$sg['score']/2) ?> <?= rgiH($sg['b_display']) ?> 白
+<?php if($p1Score!==null): ?>｜換算 P1:P2 = <?= rgiH($p1Score) ?> : <?= rgiH(2-$p1Score) ?><?php endif; ?>
+<?php if(isset($used[(int)$gid])): ?>｜已連結<?php endif; ?>
+</div>
+<?php endforeach; ?>
+<?php if(($diagnosis['detail_total']??0)>count($diagnosis['details'])): ?>
+<div class="rgi-hint">另有 <?= (int)$diagnosis['detail_total']-count($diagnosis['details']) ?> 筆相同棋士組合的棋譜。</div>
+<?php endif; ?>
+</div>
+<?php endif; ?>
+<?php endif; ?>
 </td>
 </tr>
 <?php endforeach; ?>
