@@ -25,7 +25,7 @@ else{$PP = 1;}
 require_once 'login.php';
 
 // 勝、和、負、對局數一律直接由 GAME 的正式對局計算。
-// 備註不為 NULL 的輪空等特殊紀錄不列入正式對局。
+// 只有備註包含實際文字的特殊紀錄（例如輪空）才排除；NULL 和空字串都屬一般對局。
 $player = $MYSQL->query("SELECT P.姓名,P.顯示,P.國家,P.RIF,ROUND(R.績分,2)'績分',
 IFNULL(S.勝,0) '勝',IFNULL(S.和,0) '和',IFNULL(S.負,0) '負',IFNULL(S.對局,0) '對局',
 ROUND((IFNULL(S.勝,0)+IFNULL(S.和,0)*0.5)*100/NULLIF(IFNULL(S.對局,0),0),2) '勝率',
@@ -42,12 +42,12 @@ LEFT OUTER JOIN (
 		SELECT P1 AS 代號,
 		CASE WHEN 勝負=2 THEN '勝' WHEN 勝負=1 THEN '和' ELSE '負' END AS 結果
 		FROM `GAME`
-		WHERE 備註 IS NULL AND P1=".$PP."
+		WHERE TRIM(COALESCE(備註,''))='' AND P1=".$PP."
 		UNION ALL
 		SELECT P2 AS 代號,
 		CASE WHEN 勝負=0 THEN '勝' WHEN 勝負=1 THEN '和' ELSE '負' END AS 結果
 		FROM `GAME`
-		WHERE 備註 IS NULL AND P2=".$PP."
+		WHERE TRIM(COALESCE(備註,''))='' AND P2=".$PP."
 	) G0
 	GROUP BY 代號
 ) `S` ON S.代號=R.代號
