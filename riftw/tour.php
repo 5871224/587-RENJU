@@ -2,7 +2,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link href="../../renju.css" rel="stylesheet" type="text/css">
+	<link href="../../renju.css?v=20261011" rel="stylesheet" type="text/css">
 	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 	<script type="text/javascript">
 		$(document).ready(function() {
