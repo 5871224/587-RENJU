@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/renjunet_rating.php';
+require_once __DIR__ . '/renjunet_player_map.php';
 
 /**
  * 台灣連珠舊 VBA「績分」邏輯的 PHP 移植版。
@@ -95,53 +96,7 @@ function rrTournamentRatingDate(array $tour): ?string
 
 function rrLoadRenjuNetPlayerIds(PDO $db, array $players): array
 {
-    $result = [];
-
-    try {
-        $stmt = $db->query('SELECT `player_id`,`renjunet_player_id` FROM `PLAYER_RENJUNET`');
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $result[(int)$row['player_id']] = (int)$row['renjunet_player_id'];
-        }
-    } catch (Throwable $ignored) {
-    }
-
-    $needFallback = [];
-    foreach ($players as $playerId => $player) {
-        if (isset($result[$playerId])) {
-            continue;
-        }
-        $rif = trim((string)($player['RIF'] ?? ''));
-        if ($rif !== '') {
-            $needFallback[$playerId] = $rif;
-        }
-    }
-    if (!$needFallback) {
-        return $result;
-    }
-
-    try {
-        $byId = [];
-        $byDisp = [];
-        $stmt = $db->query('SELECT `id`,`disp_id` FROM `RENJUNET_PLAYER`');
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $id = (int)$row['id'];
-            $byId[$id] = $id;
-            $disp = trim((string)$row['disp_id']);
-            if ($disp !== '') {
-                $byDisp[$disp] = $id;
-            }
-        }
-        foreach ($needFallback as $playerId => $rif) {
-            if (ctype_digit($rif) && isset($byId[(int)$rif])) {
-                $result[$playerId] = (int)$rif;
-            } elseif (isset($byDisp[$rif])) {
-                $result[$playerId] = (int)$byDisp[$rif];
-            }
-        }
-    } catch (Throwable $ignored) {
-    }
-
-    return $result;
+    return rnResolveLocalPlayerIds($db, $players);
 }
 
 function rrRenjuNetRatingAt(
@@ -183,7 +138,7 @@ function rrRenjuNetRatingAt(
 function rrRecalculateHistory(PDO $db): array
 {
     $players = [];
-    $stmtPlayers = $db->query('SELECT `代號`,`姓名`,`顯示`,`RIF`,`國家` FROM `PLAYER`');
+    $stmtPlayers = $db->query('SELECT `代號`,`姓名`,`顯示`,`ID`,`RIF`,`國家` FROM `PLAYER`');
     foreach ($stmtPlayers->fetchAll(PDO::FETCH_ASSOC) as $row) {
         $players[(int)$row['代號']] = $row;
     }
@@ -300,7 +255,7 @@ function rrRecalculateHistory(PDO $db): array
                 } elseif ($renjuNetPlayerId === null || $renjuNetPlayerId <= 0) {
                     // 找不到 RenjuNet 身份／歷史 Elo 時，比照賽號 233 的特殊情況固定以 1900 起算；
                     // 不再回用 GAME.P1分/P2分，避免舊保存值被誤當成世界 Elo。
-                    $warnings[] = "賽號 {$tourId} 外部棋士 {$playerId} 找不到 PLAYER_RENJUNET／RIF 對應，固定以 " . RN_ELO_INITIAL_RATING . " 起算";
+                    $warnings[] = "賽號 {$tourId} 外部棋士 {$playerId} 找不到 PLAYER.ID／RIF 對應，固定以 " . RN_ELO_INITIAL_RATING . " 起算";
                     $startRating = (float)RN_ELO_INITIAL_RATING;
                     $ratingSource = 'renjunet_initial_fallback';
                 } else {
