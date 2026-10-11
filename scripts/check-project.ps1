@@ -17,6 +17,11 @@ if ($LASTEXITCODE -ne 0) {
     throw 'RenjuNet game import regression checks failed.'
 }
 
+php scripts/check-rank-game-rebuild.php
+if ($LASTEXITCODE -ne 0) {
+    throw 'RANK and GAME starting scores regression checks failed.'
+}
+
 php scripts/check-swiss-render.php
 if ($LASTEXITCODE -ne 0) {
     throw 'Swiss render regression checks failed.'
@@ -137,6 +142,17 @@ if ($rnPage -notmatch 'https://github.com/5871224/587-RENJU/actions/workflows/re
 }
 if ($rnPage -match 'rank_github_actions_token|rn_sync_csrf|renjunet-sync.php') {
     throw 'RenjuNet manual update must not require a website GitHub API token.'
+}
+
+$ratingSource = Get-Content -Raw 'rank/lib/rating.php'
+foreach ($required in @('GAME_REBUILD_BACKUP', 'RANK_REBUILD_BACKUP', 'GAME_REBUILD_SCORES', 'rrGameStartRatings', 'RENAME TABLE')) {
+    if ($ratingSource -notmatch [regex]::Escape($required)) {
+        throw "RANK/GAME synchronized rebuild is missing: $required"
+    }
+}
+$riftwPlayer = Get-Content -Raw 'riftw/player.php'
+if ($riftwPlayer -match 'WHEN 備註 IS NOT NULL THEN 備註') {
+    throw 'Player history cannot treat an empty GAME note as a special result.'
 }
 
 $riftwLogin = Get-Content -Raw 'riftw/login.php'
