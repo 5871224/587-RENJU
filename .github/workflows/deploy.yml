@@ -109,18 +109,6 @@ jobs:
             if not str(exc).startswith('550'): raise
           ftp.quit()
 
-      - name: Retire redundant RenjuNet mapping safely
-        shell: bash
-        env:
-          FTP_SERVER: ${{ secrets.FTP_SERVER }}
-          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
-          RENJUNET_SITE_URL: https://587.renju.org.tw
-        run: |
-          python -m py_compile scripts/retire-renjunet-player-map.py
-          python scripts/retire-renjunet-player-map.py
-
       - name: Verify public security boundaries
         shell: bash
         run: |
