@@ -35,7 +35,6 @@ DDL = {
 "RENJUNET_TOURNAMENT": """CREATE TABLE IF NOT EXISTS `RENJUNET_TOURNAMENT` (`id` INT UNSIGNED NOT NULL,`name` VARCHAR(255) NOT NULL,`country_id` INT UNSIGNED NOT NULL,`city_id` INT UNSIGNED NOT NULL,`year` SMALLINT UNSIGNED NULL,`month_id` TINYINT UNSIGNED NULL,`start_date` DATE NULL,`end_date` DATE NULL,`rule_id` SMALLINT UNSIGNED NULL,`rated` TINYINT(1) NOT NULL DEFAULT 0,`type` TINYINT UNSIGNED NULL,PRIMARY KEY (`id`),KEY `idx_dates` (`start_date`,`end_date`),KEY `idx_country` (`country_id`),KEY `idx_city` (`city_id`),KEY `idx_rule` (`rule_id`),KEY `idx_name` (`name`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci""",
 "RENJUNET_GAME": """CREATE TABLE IF NOT EXISTS `RENJUNET_GAME` (`id` INT UNSIGNED NOT NULL,`publisher_id` INT UNSIGNED NOT NULL,`tournament_id` INT UNSIGNED NOT NULL,`round` VARCHAR(50) NULL,`rule_id` SMALLINT UNSIGNED NOT NULL,`black_player_id` INT UNSIGNED NOT NULL,`white_player_id` INT UNSIGNED NOT NULL,`black_result` DECIMAL(3,1) NOT NULL,`black_time` DECIMAL(10,2) NULL,`white_time` DECIMAL(10,2) NULL,`opening_id` SMALLINT UNSIGNED NOT NULL,`alt` VARCHAR(100) NOT NULL DEFAULT '',`swap` VARCHAR(20) NOT NULL DEFAULT '',`moves` TEXT NOT NULL,`info` TEXT NULL,PRIMARY KEY (`id`),KEY `idx_tournament` (`tournament_id`),KEY `idx_black` (`black_player_id`),KEY `idx_white` (`white_player_id`),KEY `idx_players` (`black_player_id`,`white_player_id`),KEY `idx_publisher` (`publisher_id`),KEY `idx_rule` (`rule_id`),KEY `idx_opening` (`opening_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci""",
 "RENJUNET_IMPORT": """CREATE TABLE IF NOT EXISTS `RENJUNET_IMPORT` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,`source_file` VARCHAR(255) NOT NULL,`source_url` VARCHAR(500) NULL,`database_version` VARCHAR(20) NOT NULL,`database_date` DATE NOT NULL,`sha256` CHAR(64) NOT NULL,`imported_at` DATETIME NOT NULL,`country_count` INT UNSIGNED NOT NULL,`city_count` INT UNSIGNED NOT NULL,`month_count` INT UNSIGNED NOT NULL,`rule_count` INT UNSIGNED NOT NULL,`opening_count` INT UNSIGNED NOT NULL,`player_count` INT UNSIGNED NOT NULL,`tournament_count` INT UNSIGNED NOT NULL,`game_count` INT UNSIGNED NOT NULL,PRIMARY KEY (`id`),UNIQUE KEY `uq_sha256` (`sha256`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci""",
-"PLAYER_RENJUNET": """CREATE TABLE IF NOT EXISTS `PLAYER_RENJUNET` (`player_id` INT NOT NULL,`renjunet_player_id` INT UNSIGNED NOT NULL,`matched_by` VARCHAR(50) NULL,`note` VARCHAR(255) NULL,PRIMARY KEY (`player_id`),UNIQUE KEY `uq_renjunet_player` (`renjunet_player_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci""",
 }
 
 def qstr(value):
@@ -198,8 +197,7 @@ def import_to_staging(db,meta,sha):
       "game_rule":"SELECT COUNT(*) AS n FROM `RENJUNET_GAME_SYNC` x LEFT JOIN `RENJUNET_RULE_SYNC` p ON p.id=x.rule_id WHERE p.id IS NULL",
       "game_black":"SELECT COUNT(*) AS n FROM `RENJUNET_GAME_SYNC` x LEFT JOIN `RENJUNET_PLAYER_SYNC` p ON p.id=x.black_player_id WHERE p.id IS NULL",
       "game_white":"SELECT COUNT(*) AS n FROM `RENJUNET_GAME_SYNC` x LEFT JOIN `RENJUNET_PLAYER_SYNC` p ON p.id=x.white_player_id WHERE p.id IS NULL",
-      "game_opening":"SELECT COUNT(*) AS n FROM `RENJUNET_GAME_SYNC` x LEFT JOIN `RENJUNET_OPENING_SYNC` p ON p.id=x.opening_id WHERE p.id IS NULL",
-      "mapping_preserved":"SELECT COUNT(*) AS n FROM `PLAYER_RENJUNET` m LEFT JOIN `RENJUNET_PLAYER_SYNC` p ON p.id=m.renjunet_player_id WHERE p.id IS NULL"}
+      "game_opening":"SELECT COUNT(*) AS n FROM `RENJUNET_GAME_SYNC` x LEFT JOIN `RENJUNET_OPENING_SYNC` p ON p.id=x.opening_id WHERE p.id IS NULL"}
     for name,query in checks.items():
         rows=db.query(query); n=int(rows[0]["n"]) if rows else -1
         if n!=0: raise RuntimeError(f"Referential check failed: {name}={n}")
@@ -219,9 +217,7 @@ def validate_live(db,counts=None):
     for tag,table in TABLE_MAP.items():
         result[tag]=table_count(db,table)
         if counts is not None and result[tag]!=counts[tag]: raise RuntimeError(f"Published count mismatch: {table}")
-    mapping=table_count(db,"PLAYER_RENJUNET"); missing=db.query("SELECT COUNT(*) AS n FROM `PLAYER_RENJUNET` m LEFT JOIN `RENJUNET_PLAYER` p ON p.id=m.renjunet_player_id WHERE p.id IS NULL")
-    if missing and int(missing[0]["n"])!=0: raise RuntimeError("PLAYER_RENJUNET contains missing RenjuNet player ids")
-    return result,mapping
+    return result
 
 def write_summary(lines):
     path=os.environ.get("GITHUB_STEP_SUMMARY")
@@ -236,8 +232,8 @@ def main():
             old_date=str(latest[0]["database_date"]); old_sha=str(latest[0]["sha256"])
             if meta["date"]<old_date: raise RuntimeError(f"Downloaded RenjuNet data {meta['date']} is older than installed {old_date}")
             if sha==old_sha:
-                counts,mapping=validate_live(db); print("Already current; no database changes needed."); write_summary(["## RenjuNet sync","- Status: already current",f"- Database date: {meta['date']}",f"- SHA256: `{sha}`",f"- Games: {counts['game']}",f"- Players: {counts['player']}",f"- PLAYER_RENJUNET mappings preserved: {mapping}"]); return 0
-        counts=import_to_staging(db,meta,sha); publish(db,meta,sha,counts); live,mapping=validate_live(db,counts); print("RenjuNet sync completed successfully."); write_summary(["## RenjuNet sync","- Status: updated successfully",f"- Database date: {meta['date']}",f"- SHA256: `{sha}`",f"- Games: {live['game']}",f"- Players: {live['player']}",f"- PLAYER_RENJUNET mappings preserved: {mapping}"])
+                counts=validate_live(db); print("Already current; no database changes needed."); write_summary(["## RenjuNet sync","- Status: already current",f"- Database date: {meta['date']}",f"- SHA256: `{sha}`",f"- Games: {counts['game']}",f"- Players: {counts['player']}"]); return 0
+        counts=import_to_staging(db,meta,sha); publish(db,meta,sha,counts); live=validate_live(db,counts); print("RenjuNet sync completed successfully."); write_summary(["## RenjuNet sync","- Status: updated successfully",f"- Database date: {meta['date']}",f"- SHA256: `{sha}`",f"- Games: {live['game']}",f"- Players: {live['player']}"])
     return 0
 
 if __name__=="__main__": raise SystemExit(main())
