@@ -109,12 +109,10 @@ function recordConsecutiveBoards($db): array
         $outcome = $value == 1.0 ? 'draw' :
             (($row['方位'] == 1 ? $value > 1 : $value < 1) ? 'win' : 'loss');
         foreach ($thresholds as $key => $_min) {
-            $good = match ($key) {
-                'win' => $outcome === 'win',
-                'unbeaten' => $outcome !== 'loss',
-                'draw' => $outcome === 'draw',
-                default => $outcome !== 'draw',
-            };
+            $good = ($key === 'win' && $outcome === 'win')
+                || ($key === 'unbeaten' && $outcome !== 'loss')
+                || ($key === 'draw' && $outcome === 'draw')
+                || ($key === 'nondraw' && $outcome !== 'draw');
             if (!$good) {
                 // 在失敗局結束前一段紀錄，以當前棋手代號分組而非姓名。
                 $old = $streaks[$key] ?? null;
@@ -162,11 +160,12 @@ function recordDenFirstFive(array $rows, string $mode): array
         $order = (int)$a['段序'] <=> (int)$b['段序'];
         if ($order) return $order;
         $key = $mode === 'young' ? '天數' : '日期';
+        $gradeCmp = strcmp((string)$a['段位'], (string)$b['段位']);
+        if ($gradeCmp) return $gradeCmp;
         $comparison = $mode === 'young'
             ? ((int)$a[$key] <=> (int)$b[$key])
             : strcmp((string)$a[$key], (string)$b[$key]);
-        return $comparison ?: strcmp((string)$a['段位'], (string)$b['段位'])
-            ?: ((int)$a['代號'] <=> (int)$b['代號']);
+        return $comparison ?: ((int)$a['代號'] <=> (int)$b['代號']);
     });
     $counts = [];
     $out = [];
@@ -256,4 +255,53 @@ function recordMeijinAgeBoards($db): array
         }
     }
     return $boards;
+}
+
+
+/** 將段位棋士母體一次取出，重用於男女比例及星座比例兩個榜單。 */
+function recordDemographicBoards($db): array
+{
+    $sql = "SELECT P.性別, P.生日,
+                   CASE WHEN P.生日>0 THEN CAST(DATE_FORMAT(P.生日,'%c%d') AS UNSIGNED)
+                        ELSE NULL END AS 月日
+            FROM (SELECT DISTINCT 代號 FROM DEN WHERE RIGHT(段位,1)='段') D
+            LEFT JOIN PLAYER P ON D.代號=P.代號";
+    $genderCounts = [];
+    $zodiacCounts = [];
+    $birthdayTotal = 0;
+    foreach ($db->query($sql) as $row) {
+        $genderKey = $row['性別'];
+        $genderCounts[$genderKey ?? ''] = ($genderCounts[$genderKey ?? ''] ?? 0) + 1;
+        if ($row['月日'] === null) continue;
+        ++$birthdayTotal;
+        $monthDay = (int)$row['月日'];
+        $zodiac = 12;
+        foreach ([[120,218],[219,320],[321,419],[420,520],[521,620],[621,722],
+                  [723,822],[823,922],[923,1022],[1023,1121],[1122,1221]] as $i => $range) {
+            if ($monthDay >= $range[0] && $monthDay <= $range[1]) {
+                $zodiac = $i + 1;
+                break;
+            }
+        }
+        ++$zodiacCounts[$zodiac];
+    }
+    $gender = [];
+    foreach ($genderCounts as $key => $count) {
+        $gender[] = ['性別'=>$key, '人數'=>$count];
+    }
+    $labels = [
+        1=>'水瓶(01/20~02/18)', 2=>'雙魚(02/19~03/20)', 3=>'牡羊(03/21~04/19)',
+        4=>'金牛(04/20~05/20)', 5=>'雙子(05/21~06/20)', 6=>'巨蟹(06/21~07/22)',
+        7=>'獅子(07/23~08/22)', 8=>'處女(08/23~09/22)', 9=>'天秤(09/23~10/22)',
+        10=>'天蠍(10/23~11/21)', 11=>'射手(11/22~12/21)', 12=>'魔羯(12/22~01/19)'
+    ];
+    ksort($zodiacCounts, SORT_NUMERIC);
+    $zodiac = [];
+    foreach ($zodiacCounts as $sign => $count) {
+        $zodiac[] = [
+            '星座'=>$labels[$sign], '人數'=>$count,
+            '比例'=>$birthdayTotal ? number_format($count*100/$birthdayTotal, 2, '.', '') : '0.00'
+        ];
+    }
+    return ['gender'=>$gender, 'zodiac'=>$zodiac];
 }
