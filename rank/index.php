@@ -497,8 +497,9 @@ $totalRecords = array_sum($counts);
             <div><h2><?= h($current['table']) ?></h2><div class="sub">MySQL 即時資料<?= $q !== '' ? ' · 本次找到 ' . number_format(count($rows)) . ' 筆' : ' · 顯示全部 ' . number_format(count($rows)) . ' 筆' ?></div></div>
             <div class="panel-tools">
                 <a class="btn primary" href="<?= h(listUrl($view, $q, $searchField, ['new' => 1])) ?>">＋ 新增</a>
+                <?php if ($view === 'games'): ?><a class="btn" href="renjunet-game-import.php">從 RenjuNet 匯入棋譜</a><?php endif; ?>
                 <?php if ($view === 'tournaments'): ?>
-                <a class="btn" href="sched-import.php?id=65">從 Sched 匯入比賽</a>
+                <a class="btn" href="sched-import.php">從 Sched 匯入比賽</a>
                 <a class="btn" href="player-transfer.php">轉移棋手</a>
                 <details class="shift-tool">
                     <summary class="btn">空出賽號</summary>
