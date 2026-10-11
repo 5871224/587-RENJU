@@ -1,0 +1,111 @@
+/* 棋士歷程頁專屬樣式：僅將 SUMMARY 的歷程表格轉成手機資訊卡。 */
+@media (max-width: 768px) {
+  .player-page table.rank.player-summary-table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .player-page table.rank.player-summary-table colgroup {
+    display: none;
+  }
+
+  .player-page table.rank.player-summary-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .player-page table.rank.player-summary-table tr.player-summary-heading {
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .player-page table.rank.player-summary-table tr.player-summary-heading th {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 9px;
+    text-align: center;
+  }
+
+  .player-page table.rank.player-summary-table tr.player-summary-columns {
+    display: none;
+  }
+
+  .player-page table.rank.player-summary-table tr.player-summary-item {
+    display: block;
+    width: 100%;
+    margin: 0 0 10px;
+    background: var(--renju-surface);
+    border: 1px solid var(--renju-border);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(36, 69, 95, 0.07);
+    overflow: hidden;
+  }
+
+  .player-page table.rank.player-summary-table tr.player-summary-item td,
+  .player-page table.rank.player-summary-table tr.player-summary-item:nth-child(even) td {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    padding: 9px 12px;
+    border: 0;
+    border-bottom: 1px solid var(--renju-border);
+    background: var(--renju-surface);
+    text-align: left;
+    white-space: normal !important;
+    word-break: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.55;
+    font-size: 14px;
+  }
+
+  .player-page table.rank.player-summary-table tr.player-summary-item td:last-child {
+    border-bottom: 0;
+  }
+
+  .player-page table.rank.player-summary-table tr.player-summary-item td.player-summary-date {
+    background: var(--renju-primary-soft);
+    border-bottom-color: var(--renju-border);
+  }
+
+  .player-page table.rank.player-summary-table tr.player-summary-item td::before {
+    content: attr(data-label);
+    flex: 0 0 34px;
+    padding-top: 2px;
+    color: var(--renju-text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.45;
+    white-space: nowrap;
+  }
+
+  .player-page table.rank.player-summary-table tr.player-summary-item .player-summary-value {
+    display: block;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .player-page table.rank.player-summary-table tr.player-summary-item td.player-summary-date .player-summary-value {
+    font-weight: 600;
+    color: var(--renju-primary-dark);
+    white-space: nowrap;
+  }
+
+  .player-page table.rank.player-summary-table tr.player-summary-item td.player-summary-empty {
+    display: none;
+  }
+
+  .player-page table.rank.player-summary-table tr.player-summary-item td:has(+ td.player-summary-empty) {
+    border-bottom: 0;
+  }
+}
