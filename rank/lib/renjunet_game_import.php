@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/renjunet_player_map.php';
+
 /** GAME.棋譜 儲存的是 RenjuNet 單局 id，不是賽事 id。 */
 function rgiH($v): string { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
 function rgiQ(string $s): string { $q=chr(96); return $q.str_replace($q,$q.$q,$s).$q; }
@@ -55,7 +57,7 @@ function rgiRankLoad(PDO $db,int $tour): array {
     $players=[];
     if ($ids) {
         $ph=implode(',',array_fill(0,count($ids),'?'));
-        $s=$db->prepare('SELECT '.rgiQ('代號').','.rgiQ('姓名').','.rgiQ('RIF').' FROM '.rgiQ('PLAYER').
+        $s=$db->prepare('SELECT '.rgiQ('代號').','.rgiQ('姓名').','.rgiQ('ID').','.rgiQ('RIF').' FROM '.rgiQ('PLAYER').
             ' WHERE '.rgiQ('代號').' IN ('.$ph.') ORDER BY '.rgiQ('姓名'));
         $s->execute(array_keys($ids));
         foreach ($s->fetchAll(PDO::FETCH_ASSOC) as $p) $players[(int)$p['代號']]=$p;
@@ -96,54 +98,33 @@ function rgiRenjuLoad(PDO $db,int $tour): array {
     uasort($players,static fn($a,$b)=>strcmp($a['display'],$b['display']));
     return [$t,$games,$players];
 }
-/** 不修改 PLAYER_RENJUNET；使用者本次頁面可以人工核對 RN 棋士。 */
+/**
+ * 身分由 PLAYER.ID、PLAYER.RIF 自動解析。未能確定者可在本次預覽
+ * 暫時指定，不另建永久對照表，也不改動 PLAYER。
+ */
 function rgiPlayerMap(PDO $db,array $local,array $renju,array $posted): array {
-    $explicit=[]; $renjuSet=array_fill_keys(array_keys($renju),true);
-    $ids=array_keys($local);
-    if ($ids) {
-        try {
-            $s=$db->prepare('SELECT player_id,renjunet_player_id FROM PLAYER_RENJUNET WHERE player_id IN ('.
-                implode(',',array_fill(0,count($ids),'?')).')');
-            $s->execute($ids);
-            foreach ($s->fetchAll(PDO::FETCH_ASSOC) as $p) $explicit[(int)$p['player_id']]=(int)$p['renjunet_player_id'];
-        } catch(Throwable $ignored) {}
-    }
-    $disp=[];
-    if ($renju) {
-        try {
-            $s=$db->prepare('SELECT id,disp_id FROM RENJUNET_PLAYER WHERE id IN ('.
-                implode(',',array_fill(0,count($renju),'?')).')');
-            $s->execute(array_keys($renju));
-            foreach($s->fetchAll(PDO::FETCH_ASSOC) as $p) if(trim((string)$p['disp_id'])!=='') $disp[(string)$p['disp_id']]=(int)$p['id'];
-        } catch(Throwable $ignored) {}
-    }
-    $byName=[];
-    foreach($renju as $p) {
-        foreach(['native','roman'] as $kind) {
-            $n=rgiNormalize((string)$p[$kind]); if ($n!=='') $byName[$n][(int)$p['id']]=true;
-        }
-    }
-    $map=[]; $used=[];
+    $resolved = rnResolveLocalPlayerIds($db,$local);
+    $renjuSet = array_fill_keys(array_keys($renju),true);
+    $map = [];
+    $used = [];
     foreach($local as $p) {
-        $id=(int)$p['代號'];$mapped=0;
-        if (array_key_exists($id,$posted)) {
-            $mapped=rgiPositive($posted[$id]);
-            if ($mapped && !isset($renjuSet[$mapped])) throw new RuntimeException('棋士「'.$p['姓名'].'」的對應不在此 RenjuNet 賽事。');
-        } else {
-            $rif=trim((string)($p['RIF']??''));
-            if(isset($explicit[$id]) && isset($renjuSet[$explicit[$id]])) $mapped=$explicit[$id];
-            elseif($rif!=='' && isset($disp[$rif])) $mapped=$disp[$rif];
-            elseif($rif!=='' && ctype_digit($rif) && isset($renjuSet[(int)$rif])) $mapped=(int)$rif;
-            else {
-                $names=$byName[rgiNormalize((string)$p['姓名'])]??[];
-                if(count($names)===1) $mapped=(int)array_key_first($names);
+        $id = (int)$p['代號'];
+        if(array_key_exists($id,$posted)) {
+            $mapped = rgiPositive($posted[$id]);
+            if($mapped && !isset($renjuSet[$mapped])) {
+                throw new RuntimeException('棋士「'.$p['姓名'].'」的對應不在此 RenjuNet 賽事。');
             }
+        } else {
+            $mapped = (int)($resolved[$id] ?? 0);
+            if(!isset($renjuSet[$mapped])) $mapped = 0;
         }
-        if($mapped>0) {
-            if(isset($used[$mapped])) throw new RuntimeException('兩名排名棋士不可對應同一位 RenjuNet 棋士。');
-            $used[$mapped]=true;
+        if($mapped > 0) {
+            if(isset($used[$mapped])) {
+                throw new RuntimeException('兩名排名棋士不可對應同一位 RenjuNet 棋士。');
+            }
+            $used[$mapped] = true;
         }
-        $map[$id]=$mapped;
+        $map[$id] = $mapped;
     }
     return $map;
 }
