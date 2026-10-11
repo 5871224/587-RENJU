@@ -114,14 +114,14 @@ $runHistory = $MYSQL->query(
 <link rel="stylesheet" href="renjunet-elo.css?v=20260827">
 </head>
 <body class="rn-standalone">
-<header class="topbar-simple"><strong>RenjuNet Elo</strong><a href="./">← 排名管理首頁</a><a href="renjunet-elo-compare.php">舊保存分數比對</a><a href="?">重新整理</a></header>
+<header class="topbar-simple"><strong>RenjuNet Elo</strong><a href="./">← 排名管理首頁</a><a href="?">重新整理</a></header>
 <?php else: ?>
 <link rel="stylesheet" href="renjunet-elo.css?v=20260827">
 <?php endif; ?>
 <<?= $rnEmbedded ? 'div' : 'main' ?> class="rn-main<?= $rnEmbedded ? ' rn-embedded' : '' ?>">
 <section class="rn-hero">
     <div><h1>RenjuNet 歷史 Elo 重算</h1><p>以 1999-07-15 官方 RIF Rating List 作為歷史基準，之後依 provisional／established 規則逐賽事重建舊制 Elo。</p></div>
-    <div class="rn-hero-actions"><div class="rn-badge">Historical RIF Elo · 非 WHR</div><?php if ($rnEmbedded): ?><a class="btn" href="renjunet-elo-compare.php">舊保存分數比對</a><?php endif; ?></div>
+    <div class="rn-hero-actions"><div class="rn-badge">Historical RIF Elo · 非 WHR</div></div>
 </section>
 
 <?php if ($rnMessage !== ''): ?><div class="rn-success"><?= rnH($rnMessage) ?></div><?php endif; ?>
