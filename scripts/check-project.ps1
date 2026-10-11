@@ -22,6 +22,11 @@ if ($LASTEXITCODE -ne 0) {
     throw 'RANK and GAME starting scores regression checks failed.'
 }
 
+php scripts/check-record-queries.php
+if ($LASTEXITCODE -ne 0) {
+    throw 'Historical record statistics regression checks failed.'
+}
+
 php scripts/check-swiss-render.php
 if ($LASTEXITCODE -ne 0) {
     throw 'Swiss render regression checks failed.'
