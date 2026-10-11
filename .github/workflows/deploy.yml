@@ -107,6 +107,18 @@ jobs:
             if not str(exc).startswith('550'): raise
           ftp.quit()
 
+      - name: Read-only audit PLAYER IDs vs RenjuNet mappings
+        shell: bash
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
+          RENJUNET_SITE_URL: https://587.renju.org.tw
+        run: |
+          python -m py_compile scripts/audit-renjunet-player-map.py
+          python scripts/audit-renjunet-player-map.py
+
       - name: Verify public security boundaries
         shell: bash
         run: |
