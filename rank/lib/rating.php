@@ -516,98 +516,199 @@ function rrCompareWithCurrent(PDO $db, array $calculation): array
 
 
 /**
- * 以完整重算結果重建正式 RANK。
- * 正式 RANK 目前是 MyISAM，不能依賴 transaction rollback；因此先建立 staging table，
- * 寫完與驗證後再以 RENAME TABLE 原子交換。上一版保留在 RANK_REBUILD_BACKUP。
+ * 每一組（比賽、棋士）的起始績分，只取同一次歷史重算結果。
+ * 這份資料可供 RANK 與 GAME 的 MyISAM 暫存表共同使用。
+ */
+function rrGameStartRatings(array $calculation): array
+{
+    $ratings = [];
+    foreach (($calculation['rows'] ?? []) as $row) {
+        $tour = (int)($row['tour_id'] ?? 0);
+        $player = (int)($row['player_id'] ?? 0);
+        $value = $row['start_rating'] ?? null;
+        if ($tour <= 0 || $player <= 0 || !is_numeric($value) || !is_finite((float)$value)) {
+            throw new RuntimeException('無法取得有效的比賽起始分數，不更新 RANK／GAME。');
+        }
+        $key = $tour . ':' . $player;
+        if (isset($ratings[$key])) throw new RuntimeException('重複的比賽／棋士：' . $key);
+        $ratings[$key] = ['tour' => $tour, 'player' => $player, 'rating' => (float)$value];
+    }
+    return $ratings;
+}
+
+/**
+ * RANK、GAME 都是 MyISAM：先分別建立新表並驗證，最後單一 RENAME TABLE
+ * 一次切換兩張正式表。舊資料保留於 RANK_REBUILD_BACKUP、
+ * GAME_REBUILD_BACKUP，不逐筆直接覆寫，也不影響備註特殊局。
  */
 function rrRebuildRankTable(PDO $db, array $calculation): array
 {
     $computed = $calculation['rows'] ?? [];
-    if (!$computed) {
-        throw new RuntimeException('重算結果為空，禁止重建 RANK。');
-    }
+    if (!$computed) throw new RuntimeException('重算結果為空，禁止重建正式排名。');
+    $starts = rrGameStartRatings($calculation);
+    if (count($starts) !== count($computed)) throw new RuntimeException('GAME 起始分資料筆數不完整。');
 
-    $stage = 'RANK_REBUILD_NEW';
-    $backup = 'RANK_REBUILD_BACKUP';
-    $failed = 'RANK_REBUILD_FAILED';
+    $rankNew = 'RANK_REBUILD_NEW';
+    $rankBackup = 'RANK_REBUILD_BACKUP';
+    $rankFailed = 'RANK_REBUILD_FAILED';
+    $gameNew = 'GAME_REBUILD_NEW';
+    $gameBackup = 'GAME_REBUILD_BACKUP';
+    $gameFailed = 'GAME_REBUILD_FAILED';
+    $scoreNew = 'GAME_REBUILD_SCORES';
     $swapped = false;
 
     foreach ($computed as $row) {
-        if ((int)($row['tour_id'] ?? 0) <= 0 || (int)($row['player_id'] ?? 0) <= 0) {
-            throw new RuntimeException('重算結果含無效的賽號或棋士代號，禁止重建 RANK。');
-        }
-        foreach (['end_rating','wins','draws','losses'] as $required) {
-            if (!array_key_exists($required, $row) || !is_numeric($row[$required])) {
-                throw new RuntimeException('重算結果缺少必要欄位：' . $required);
+        foreach (['tour_id','player_id','end_rating','wins','draws','losses'] as $field) {
+            if (!isset($row[$field]) || !is_numeric($row[$field])) {
+                throw new RuntimeException('歷史重算結果缺少：' . $field);
             }
         }
     }
 
     try {
-        $db->exec("DROP TABLE IF EXISTS `{$stage}`");
-        $db->exec("CREATE TABLE `{$stage}` LIKE `RANK`");
+        // 只在暫存表工作，原表保持不變直到最後原子交換。
+        foreach ([$rankNew,$gameNew,$scoreNew] as $name) {
+            $db->exec('DROP TABLE IF EXISTS ' . rrRebuildQuote($name));
+        }
+        $db->exec('CREATE TABLE ' . rrRebuildQuote($rankNew) . ' LIKE `RANK`');
+        $db->exec('CREATE TABLE ' . rrRebuildQuote($gameNew) . ' LIKE `GAME`');
+        $originalGameRows = (int)$db->query('SELECT COUNT(*) FROM `GAME`')->fetchColumn();
+        $db->exec('INSERT INTO ' . rrRebuildQuote($gameNew) . ' SELECT * FROM `GAME`');
+        if ((int)$db->query('SELECT COUNT(*) FROM ' . rrRebuildQuote($gameNew))->fetchColumn() !== $originalGameRows) {
+            throw new RuntimeException('GAME 暫存資料筆數驗證失敗。');
+        }
+        $db->exec('CREATE TABLE ' . rrRebuildQuote($scoreNew) .
+            ' (`比賽` INT NOT NULL,`代號` INT NOT NULL,`起始分` DOUBLE NOT NULL,' .
+            ' PRIMARY KEY (`比賽`,`代號`)) ENGINE=MyISAM');
+        foreach (array_chunk(array_values($starts), 300) as $chunk) {
+            $values = [];
+            $params = [];
+            foreach ($chunk as $start) {
+                $values[] = '(?,?,?)';
+                array_push($params, $start['tour'], $start['player'], $start['rating']);
+            }
+            $stmt = $db->prepare('INSERT INTO ' . rrRebuildQuote($scoreNew) .
+                ' (`比賽`,`代號`,`起始分`) VALUES ' . implode(',', $values));
+            $stmt->execute($params);
+        }
+        if ((int)$db->query('SELECT COUNT(*) FROM ' . rrRebuildQuote($scoreNew))->fetchColumn() !== count($starts)) {
+            throw new RuntimeException('GAME 起始分數暫存筆數驗證失敗。');
+        }
+
+        // 正式對局全部必須能取得兩位棋士的起始績分，避免部分更新。
+        $eligible = "T.`等級` BETWEEN 1 AND 6 AND COALESCE(G.`備註`,'')='' AND G.`P1`>0 AND G.`P2`>0";
+        $expectedGames = (int)$db->query(
+            'SELECT COUNT(*) FROM `GAME` G JOIN `TOURNAMENT` T ON T.`賽號`=G.`比賽` WHERE ' . $eligible
+        )->fetchColumn();
+        $scoreJoins = ' FROM ' . rrRebuildQuote($gameNew) . ' G' .
+            ' JOIN ' . rrRebuildQuote($scoreNew) . ' A ON A.`比賽`=G.`比賽` AND A.`代號`=G.`P1`' .
+            ' JOIN ' . rrRebuildQuote($scoreNew) . ' B ON B.`比賽`=G.`比賽` AND B.`代號`=G.`P2`';
+        $scoreWhere = " WHERE COALESCE(G.`備註`,'')=''";
+        $pairedGames = (int)$db->query('SELECT COUNT(*)' . $scoreJoins . $scoreWhere)->fetchColumn();
+        if ($expectedGames !== $pairedGames) {
+            throw new RuntimeException('有正式對局缺少起始分數：預期 ' . $expectedGames .
+                ' 局，已配對 ' . $pairedGames . ' 局；正式資料未修改。');
+        }
+        $db->exec(
+            'UPDATE ' . rrRebuildQuote($gameNew) . ' G' .
+            ' JOIN ' . rrRebuildQuote($scoreNew) . ' A ON A.`比賽`=G.`比賽` AND A.`代號`=G.`P1`' .
+            ' JOIN ' . rrRebuildQuote($scoreNew) . ' B ON B.`比賽`=G.`比賽` AND B.`代號`=G.`P2`' .
+            ' SET G.`P1分`=A.`起始分`,G.`P2分`=B.`起始分`' .
+            $scoreWhere
+        );
+
+        $verifyScores = static function (string $table) use ($db,$scoreNew,$expectedGames): void {
+            $joins = ' FROM ' . rrRebuildQuote($table) . ' G' .
+                ' JOIN ' . rrRebuildQuote($scoreNew) . ' A ON A.`比賽`=G.`比賽` AND A.`代號`=G.`P1`' .
+                ' JOIN ' . rrRebuildQuote($scoreNew) . ' B ON B.`比賽`=G.`比賽` AND B.`代號`=G.`P2`';
+            $where = " WHERE COALESCE(G.`備註`,'')=''";
+            $actual = (int)$db->query('SELECT COUNT(*)' . $joins . $where)->fetchColumn();
+            $wrong = (int)$db->query('SELECT COUNT(*)' . $joins . $where .
+                ' AND (ABS(G.`P1分`-A.`起始分`)>0.00001 OR ABS(G.`P2分`-B.`起始分`)>0.00001)'
+            )->fetchColumn();
+            if ($actual !== $expectedGames || $wrong) {
+                throw new RuntimeException('GAME 起始分數驗證失敗：局數 ' . $actual .
+                    '／' . $expectedGames . '；分數不同 ' . $wrong . ' 局。');
+            }
+        };
+        $verifyScores($gameNew);
 
         foreach (array_chunk(array_values($computed), 300) as $chunk) {
             $values = [];
             $params = [];
             foreach ($chunk as $row) {
                 $values[] = '(?,?,?,?,?,?)';
-                $params[] = (int)$row['tour_id'];
-                $params[] = (int)$row['player_id'];
-                $params[] = (float)$row['end_rating'];
-                $params[] = (int)$row['wins'];
-                $params[] = (int)$row['draws'];
-                $params[] = (int)$row['losses'];
+                array_push($params,(int)$row['tour_id'],(int)$row['player_id'],(float)$row['end_rating'],
+                    (int)$row['wins'],(int)$row['draws'],(int)$row['losses']);
             }
-            $stmt = $db->prepare(
-                "INSERT INTO `{$stage}` (`比賽`,`代號`,`績分`,`勝`,`和`,`負`) VALUES " . implode(',', $values)
-            );
+            $stmt = $db->prepare('INSERT INTO ' . rrRebuildQuote($rankNew) .
+                ' (`比賽`,`代號`,`績分`,`勝`,`和`,`負`) VALUES ' . implode(',', $values));
             $stmt->execute($params);
         }
-
-        $stageCount = (int)$db->query("SELECT COUNT(*) FROM `{$stage}`")->fetchColumn();
-        if ($stageCount !== count($computed)) {
-            throw new RuntimeException('RANK staging 筆數驗證失敗：預期 ' . count($computed) . '，實際 ' . $stageCount . '。');
+        if ((int)$db->query('SELECT COUNT(*) FROM ' . rrRebuildQuote($rankNew))->fetchColumn() !== count($computed)) {
+            throw new RuntimeException('RANK 暫存資料筆數驗證失敗。');
+        }
+        if ((int)$db->query('SELECT COUNT(*) FROM `GAME`')->fetchColumn() !== $originalGameRows) {
+            throw new RuntimeException('重算期間 GAME 筆數異動，取消更新以免漏掉對局。');
         }
 
-        $db->exec("DROP TABLE IF EXISTS `{$failed}`");
-        $db->exec("DROP TABLE IF EXISTS `{$backup}`");
-        $db->exec("RENAME TABLE `RANK` TO `{$backup}`, `{$stage}` TO `RANK`");
+        foreach ([$rankFailed,$gameFailed,$rankBackup,$gameBackup] as $name) {
+            $db->exec('DROP TABLE IF EXISTS ' . rrRebuildQuote($name));
+        }
+        // 單句 RENAME TABLE 確保 RANK 和 GAME 不會只交換其中一張。
+        $db->exec('RENAME TABLE `RANK` TO ' . rrRebuildQuote($rankBackup) .
+            ', ' . rrRebuildQuote($rankNew) . ' TO `RANK`' .
+            ', `GAME` TO ' . rrRebuildQuote($gameBackup) .
+            ', ' . rrRebuildQuote($gameNew) . ' TO `GAME`');
         $swapped = true;
 
-        $verification = rrCompareWithCurrent($db, $calculation);
-        $summary = $verification['summary'] ?? [];
+        $comparison = rrCompareWithCurrent($db, $calculation);
+        $summary = $comparison['summary'] ?? [];
         $expected = count($computed);
-        $verified = (int)($summary['current_rows'] ?? -1) === $expected
-            && (int)($summary['computed_rows'] ?? -1) === $expected
-            && (int)($summary['full_matches'] ?? -1) === $expected
-            && (int)($summary['missing_current'] ?? -1) === 0
-            && (int)($summary['extra_current'] ?? -1) === 0;
-        if (!$verified) {
-            throw new RuntimeException('新 RANK 完整比對未通過，自動還原舊 RANK。');
+        if ((int)($summary['current_rows'] ?? -1) !== $expected ||
+            (int)($summary['computed_rows'] ?? -1) !== $expected ||
+            (int)($summary['full_matches'] ?? -1) !== $expected ||
+            (int)($summary['missing_current'] ?? -1) !== 0 ||
+            (int)($summary['extra_current'] ?? -1) !== 0) {
+            throw new RuntimeException('新 RANK 驗證失敗，還原 RANK 與 GAME。');
         }
-
+        $verifyScores('GAME');
+        if ((int)$db->query('SELECT COUNT(*) FROM `GAME`')->fetchColumn() !== $originalGameRows) {
+            throw new RuntimeException('新 GAME 全表局數驗證失敗，還原 RANK 與 GAME。');
+        }
+        $db->exec('DROP TABLE IF EXISTS ' . rrRebuildQuote($scoreNew));
         return [
-            'rows' => $expected,
-            'backup_table' => $backup,
-            'full_matches' => (int)$summary['full_matches'],
+            'rows'=>$expected,'backup_table'=>$rankBackup,'full_matches'=>(int)$summary['full_matches'],
+            'game_rows'=>$expectedGames,'game_backup_table'=>$gameBackup,
         ];
     } catch (Throwable $e) {
         if ($swapped) {
             try {
-                $db->exec("DROP TABLE IF EXISTS `{$failed}`");
-                $db->exec("RENAME TABLE `RANK` TO `{$failed}`, `{$backup}` TO `RANK`");
-                $db->exec("DROP TABLE IF EXISTS `{$failed}`");
-            } catch (Throwable $rollbackError) {
-                throw new RuntimeException(
-                    $e->getMessage() . '；且自動還原 RANK 失敗：' . $rollbackError->getMessage(),
-                    0,
-                    $e
-                );
+                foreach ([$rankFailed,$gameFailed] as $name) {
+                    $db->exec('DROP TABLE IF EXISTS ' . rrRebuildQuote($name));
+                }
+                $db->exec('RENAME TABLE `RANK` TO ' . rrRebuildQuote($rankFailed) .
+                    ', ' . rrRebuildQuote($rankBackup) . ' TO `RANK`' .
+                    ', `GAME` TO ' . rrRebuildQuote($gameFailed) .
+                    ', ' . rrRebuildQuote($gameBackup) . ' TO `GAME`');
+                foreach ([$rankFailed,$gameFailed] as $name) {
+                    $db->exec('DROP TABLE IF EXISTS ' . rrRebuildQuote($name));
+                }
+            } catch (Throwable $error) {
+                throw new RuntimeException($e->getMessage() .
+                    '；且 RANK／GAME 自動還原失敗：' . $error->getMessage(),0,$e);
             }
         } else {
-            try { $db->exec("DROP TABLE IF EXISTS `{$stage}`"); } catch (Throwable $ignored) {}
+            foreach ([$rankNew,$gameNew] as $name) {
+                try { $db->exec('DROP TABLE IF EXISTS ' . rrRebuildQuote($name)); } catch (Throwable $ignored) {}
+            }
         }
+        try { $db->exec('DROP TABLE IF EXISTS ' . rrRebuildQuote($scoreNew)); } catch (Throwable $ignored) {}
         throw $e;
     }
+}
+
+function rrRebuildQuote(string $name): string
+{
+    return chr(96) . str_replace(chr(96),chr(96).chr(96),$name) . chr(96);
 }
