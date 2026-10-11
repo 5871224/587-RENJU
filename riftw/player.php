@@ -259,9 +259,9 @@ if($R[0]['顯示']==1 && count($chartData) > 0){
 }
 
 $statement = $MYSQL->query("SELECT T.賽名,G.`輪次`,P.姓名,ROUND(G.對手績分,2) '對手績分',G.結果,G.備註,
-CASE WHEN G.備註 IS NOT NULL THEN NULL ELSE ROUND(CASE WHEN G.結果='勝' THEN 32*(1-1 / ( 1 + Power(10,G.分差/400))) WHEN G.結果='負' THEN 32*(0-1 / ( 1 + Power(10,G.分差/400))) ELSE 32*(0.5-1 / ( 1 + Power(10,G.分差/400))) END,2) END '增減',
+CASE WHEN TRIM(COALESCE(G.備註,''))<>'' THEN NULL ELSE ROUND(CASE WHEN G.結果='勝' THEN 32*(1-1 / ( 1 + Power(10,G.分差/400))) WHEN G.結果='負' THEN 32*(0-1 / ( 1 + Power(10,G.分差/400))) ELSE 32*(0.5-1 / ( 1 + Power(10,G.分差/400))) END,2) END '增減',
 T.開始,T.結束,G.對手,ROUND(G.自己分,2) '自己分',ROUND(R.績分,2) '績分',T.賽號
-FROM (SELECT `比賽`,`輪次`,`備註`,CASE WHEN P1=".$PP." THEN `P2` ELSE `P1` END '對手',CASE WHEN P1=".$PP." THEN `P1分` ELSE `P2分` END '自己分',CASE WHEN P1=".$PP." THEN `P2分` ELSE `P1分` END '對手績分',CASE WHEN 備註 IS NOT NULL THEN 備註 WHEN (P1=".$PP." AND 勝負=2)OR(P2=".$PP." AND 勝負=0) THEN '勝' WHEN (P1=".$PP." AND 勝負=0)OR(P2=".$PP." AND 勝負=2) THEN '負' WHEN 勝負=1 THEN '和' END '結果',CASE WHEN P1=".$PP." THEN `P2分`-`P1分` ELSE `P1分`-`P2分` END '分差'
+FROM (SELECT `比賽`,`輪次`,`備註`,CASE WHEN P1=".$PP." THEN `P2` ELSE `P1` END '對手',CASE WHEN P1=".$PP." THEN `P1分` ELSE `P2分` END '自己分',CASE WHEN P1=".$PP." THEN `P2分` ELSE `P1分` END '對手績分',CASE WHEN TRIM(COALESCE(備註,''))<>'' THEN 備註 WHEN (P1=".$PP." AND 勝負=2)OR(P2=".$PP." AND 勝負=0) THEN '勝' WHEN (P1=".$PP." AND 勝負=0)OR(P2=".$PP." AND 勝負=2) THEN '負' WHEN 勝負=1 THEN '和' END '結果',CASE WHEN P1=".$PP." THEN `P2分`-`P1分` ELSE `P1分`-`P2分` END '分差'
 FROM `GAME`
 WHERE P1=".$PP." OR P2=".$PP." ) `G`
 LEFT OUTER JOIN `PLAYER` `P`
