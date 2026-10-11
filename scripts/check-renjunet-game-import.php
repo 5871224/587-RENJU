@@ -4,6 +4,26 @@ require_once __DIR__ . '/../rank/lib/renjunet_game_import.php';
 function expectRGI(bool $truth,string $message): void {
     if (!$truth) throw new RuntimeException('RenjuNet 匯入測試失敗：'.$message);
 }
+
+$rnPeople=[
+  ['id'=>42,'disp_id'=>'00123'],
+  ['id'=>43,'disp_id'=>'00456'],
+  ['id'=>44,'disp_id'=>'00777'],
+  ['id'=>45,'disp_id'=>'777'],
+];
+$localPeople=[
+  10=>['ID'=>42,'RIF'=>'00123'],        // ID is authoritative
+  11=>['ID'=>null,'RIF'=>'456'],        // Fallback to disp_id
+  12=>['ID'=>999999,'RIF'=>'00456'],  // Invalid ID, safe RIF
+  13=>['ID'=>0,'RIF'=>'00777'],      // Ambiguous public id; never guess
+  14=>['ID'=>42,'RIF'=>'456'],       // Direct ID wins over RIF
+];
+$resolved=rnResolveLocalPlayerIdsFromRows($localPeople,$rnPeople);
+expectRGI(($resolved[10]??0)===42,'PLAYER.ID resolves correctly');
+expectRGI(($resolved[11]??0)===43,'PLAYER.RIF matches public disp_id with leading zeros');
+expectRGI(($resolved[12]??0)===43,'invalid internal ID can fall back to public RIF');
+expectRGI(!isset($resolved[13]),'ambiguous public RIF cannot be used');
+expectRGI(($resolved[14]??0)===42,'PLAYER.ID takes precedence over RIF');
 expectRGI(rgiRenjuScore(1.0)===2.0,'black win');
 expectRGI(rgiRenjuScore(0.5)===1.0,'draw');
 expectRGI(rgiRenjuScore(0.0)===0.0,'black loss');
