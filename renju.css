@@ -110,7 +110,7 @@ button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: no
 /* 排名頁與日期選擇器 */
 .ranking-page .rank-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .ranking-page #datepicker { min-height: 36px; padding: 6px 10px; font-size: 0.9rem; }
-.ranking-page .rating-score { color: var(--rating-color, var(--renju-text)); font-weight: 600; }
+table.rank td.rating-score { color: var(--rating-color, var(--renju-text)); font-weight: 600; }
 .ranking-page .ui-widget, .ranking-page .ui-widget input, .ranking-page .ui-widget select, .ranking-page .ui-widget button { font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; }
 .ranking-page .ui-datepicker { padding: 8px; background: var(--renju-surface); border: 1px solid var(--renju-border); border-radius: 10px; box-shadow: 0 10px 26px rgba(36, 69, 95, 0.18); color: var(--renju-text); }
 .ranking-page .ui-datepicker .ui-datepicker-header { padding: 7px 4px; background: var(--renju-primary); border: 0; border-radius: 7px; color: #FBF8F2; }
