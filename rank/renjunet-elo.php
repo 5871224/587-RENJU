@@ -21,14 +21,7 @@ function rnPageUrl(array $params = []): string
 $rnEmbedded = defined('RANK_ADMIN_EMBEDDED') && RANK_ADMIN_EMBEDDED;
 rnEloEnsureSchema($MYSQL);
 
-// 手動更新 RenjuNet 只觸發 GitHub Actions；網站本身不執行大量 RIF 匯入。
-if (empty($_SESSION['rn_sync_csrf'])) $_SESSION['rn_sync_csrf'] = bin2hex(random_bytes(32));
-$rnSyncToken = trim((string)($config['rank_github_actions_token'] ?? ''));
-if ($rnSyncToken === '') $rnSyncToken = trim((string)(getenv('RANK_GITHUB_ACTIONS_TOKEN') ?: ''));
-$rnSyncEnabled = $rnSyncToken !== '';
-unset($rnSyncToken);
-$rnSyncFlash = $_SESSION['rn_sync_flash'] ?? null;
-unset($_SESSION['rn_sync_flash']);
+// 手動同步直接使用使用者的 GitHub 工作流程頁面，不另需網站憑證。
 $rnLastImport = null;
 try {
     $rnLastImport = $MYSQL->query(
@@ -126,9 +119,6 @@ $runHistory = $MYSQL->query(
 
 <?php if ($rnMessage !== ''): ?><div class="rn-success"><?= rnH($rnMessage) ?></div><?php endif; ?>
 <?php if ($rnError !== ''): ?><div class="rn-error">重算失敗：<?= rnH($rnError) ?></div><?php endif; ?>
-<?php if (is_array($rnSyncFlash) && isset($rnSyncFlash['message'])): ?>
-<div class="<?= ($rnSyncFlash['kind'] ?? '') === 'success' ? 'rn-success' : 'rn-error' ?>"><?= rnH($rnSyncFlash['message']) ?></div>
-<?php endif; ?>
 
 <div class="rn-notice"><strong>歷史基準：</strong>使用 1999-07-15 官方 RIF Rating List（已核對 221 位 RenjuNet 身份）作 seed；其後新棋手只計算對 established 棋手的對局，累積至少 10 局且至少 3 分後轉 established。Provisional 採 Rp=Ra+400(W-L)/N（上限 Ra+300）；established 採 K=32、We=1/(1+2^(dR/120))。真正沒有官方／歷史 Elo 的棋手，台灣排名端才以 1900 作 fallback。</div>
 
@@ -145,12 +135,9 @@ $runHistory = $MYSQL->query(
             <h2>RenjuNet 原始資料同步</h2>
             <div class="rn-sub">從 RenjuNet 官方下載最新 RIF，更新世界棋士、賽事與棋譜；與下方歷史 Elo 重算是兩個獨立步驟。</div>
         </div>
-        <form method="post" action="renjunet-sync.php" class="rn-sync-form" onsubmit="return confirm('確定送出 RenjuNet 資料同步要求嗎？更新將在 GitHub Actions 背景執行。')">
-            <input type="hidden" name="rn_sync_csrf" value="<?= rnH($_SESSION['rn_sync_csrf']) ?>">
-            <input type="hidden" name="return_to" value="<?= $rnEmbedded ? 'embedded' : 'standalone' ?>">
-            <button type="submit" class="btn primary" <?= !$rnSyncEnabled ? 'disabled title="尚未設定 GitHub Actions 存取權杖"' : '' ?>>更新 RenjuNet</button>
-            <a class="btn" target="_blank" rel="noopener noreferrer" href="https://github.com/5871224/587-RENJU/actions/workflows/renjunet-sync.yml">查看同步進度 ↗</a>
-        </form>
+        <div class="rn-sync-form">
+            <a class="btn primary" target="_blank" rel="noopener noreferrer" href="https://github.com/5871224/587-RENJU/actions/workflows/renjunet-sync.yml">更新 RenjuNet ↗</a>
+        </div>
     </div>
     <div class="rn-sync-info">
         <?php if ($rnLastImport): ?>
@@ -160,11 +147,7 @@ $runHistory = $MYSQL->query(
         <?php else: ?><span>目前沒有可讀取的 RenjuNet 匯入紀錄。</span><?php endif; ?>
     </div>
     <div class="rn-sync-note">
-        <?php if (!$rnSyncEnabled): ?>
-        尚未設定網站的 GitHub Actions 存取權杖，因此暫時無法在此直接執行。可使用「查看同步進度」連結至 GitHub 手動執行；設定完成後按鈕會自動啟用。
-        <?php else: ?>
-        按鈕僅送出同步要求；正式資料更新時間與結果請由 GitHub Actions 確認。若官方檔案沒有變更，會跳過資料重建。同步完成後如需更新歷史 Elo，請再執行「完整重算」。
-        <?php endif; ?>
+        按「更新 RenjuNet」將開啟 GitHub Actions 工作流程，登入 GitHub 後點選「Run workflow」即可手動更新。無須另行設定 Token；可在同一頁查看執行結果。官方檔案沒有變更時會跳過匯入，同步完成後如需更新歷史 Elo，再執行下方「完整重算」。
     </div>
 </section>
 
