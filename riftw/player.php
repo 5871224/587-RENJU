@@ -3,6 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="../../renju.css" rel="stylesheet" type="text/css">
+<link href="player.css?v=1" rel="stylesheet" type="text/css">
 <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
@@ -122,13 +123,13 @@ if(count($summaryRows)>0){
 	}
 
 	if($hasSummaryTitle){
-		ECHO "<TABLE class='rank'><colgroup><col width='120'><col width='350'><col><col width='160'></colgroup>";
-		ECHO "<TR><TH colspan='4'>棋手歷程</TH></TR>";
-		ECHO "<TR><TH>日期</TH><TH>比賽</TH><TH>歷程</TH><TH>頭銜</TH></TR>";
+		ECHO "<TABLE class='rank player-summary-table'><colgroup><col width='120'><col width='350'><col><col width='160'></colgroup>";
+		ECHO "<TR class='player-summary-heading'><TH colspan='4'>棋手歷程</TH></TR>";
+		ECHO "<TR class='player-summary-columns'><TH>日期</TH><TH>比賽</TH><TH>歷程</TH><TH>頭銜</TH></TR>";
 	}else{
-		ECHO "<TABLE class='rank'><colgroup><col width='120'><col width='350'><col></colgroup>";
-		ECHO "<TR><TH colspan='3'>棋手歷程</TH></TR>";
-		ECHO "<TR><TH>日期</TH><TH>比賽</TH><TH>歷程</TH></TR>";
+		ECHO "<TABLE class='rank player-summary-table'><colgroup><col width='120'><col width='350'><col></colgroup>";
+		ECHO "<TR class='player-summary-heading'><TH colspan='3'>棋手歷程</TH></TR>";
+		ECHO "<TR class='player-summary-columns'><TH>日期</TH><TH>比賽</TH><TH>歷程</TH></TR>";
 	}
 	foreach($summaryRows as $summaryRow){
 		$summaryDateRaw = (string)($summaryRow['日期'] ?? '');
@@ -159,9 +160,16 @@ if(count($summaryRows)>0){
 			$tournamentText = "";
 		}
 		if($hasSummaryTitle){
-			ECHO "<TR><TD class='nowrap'>".$summaryDate."</TD><TD>".$tournamentText."</TD><TD class='text-left'>".$summaryText."</TD><TD class='text-left'>".$summaryTitle."</TD></TR>";
+			ECHO "<TR class='player-summary-item'>".
+    "<TD class='player-summary-date nowrap' data-label='日期'><span class='player-summary-value'>".$summaryDate."</span></TD>".
+    "<TD data-label='比賽'><span class='player-summary-value'>".$tournamentText."</span></TD>".
+    "<TD class='text-left' data-label='歷程'><span class='player-summary-value'>".$summaryText."</span></TD>".
+    "<TD class='text-left".($summaryTitle===''?' player-summary-empty':'')."' data-label='頭銜'><span class='player-summary-value'>".$summaryTitle."</span></TD></TR>";
 		}else{
-			ECHO "<TR><TD class='nowrap'>".$summaryDate."</TD><TD>".$tournamentText."</TD><TD class='text-left'>".$summaryText."</TD></TR>";
+			ECHO "<TR class='player-summary-item'>".
+    "<TD class='player-summary-date nowrap' data-label='日期'><span class='player-summary-value'>".$summaryDate."</span></TD>".
+    "<TD data-label='比賽'><span class='player-summary-value'>".$tournamentText."</span></TD>".
+    "<TD class='text-left' data-label='歷程'><span class='player-summary-value'>".$summaryText."</span></TD></TR>";
 		}
 	}
 	ECHO "</TABLE><BR/>";
