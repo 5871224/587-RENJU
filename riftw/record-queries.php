@@ -283,7 +283,7 @@ function recordDemographicBoards($db): array
                 break;
             }
         }
-        ++$zodiacCounts[$zodiac];
+        $zodiacCounts[$zodiac] = ($zodiacCounts[$zodiac] ?? 0) + 1;
     }
     $gender = [];
     foreach ($genderCounts as $key => $count) {
