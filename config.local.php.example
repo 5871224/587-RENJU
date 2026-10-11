@@ -12,4 +12,10 @@ return [
     // php -r "echo password_hash('your-strong-password', PASSWORD_DEFAULT), PHP_EOL;"
     'rank_admin_user' => 'admin',
     'rank_admin_password_hash' => 'your_password_hash',
+    
+    // Optional: lets /rank/ manually dispatch the existing RenjuNet sync workflow.
+    // Fine-grained GitHub personal access token: repository 5871224/587-RENJU,
+    // repository permission Actions: Read and write. Do not commit real tokens.
+    // Instead of this key you may configure the RANK_GITHUB_ACTIONS_TOKEN environment variable.
+    'rank_github_actions_token' => '',
 ];
