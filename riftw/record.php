@@ -184,35 +184,38 @@ LIMIT 10");
      echo "</TABLE><BR/>";
 
 
-     $record = $MYSQL->query("SELECT TT.*,ROUND(@P-TT.平均,2)*(@P!=0)'差',@P:=TT.平均 FROM (SELECT D.段位,D.段數,COUNT(R.績分) '人數',ROUND(AVG(R.績分),2) '平均',MAX(ROUND(R.績分,2)) '最高'
-FROM (SELECT 代號,MAX(`日期`)'日期' FROM `DEN` GROUP BY 代號)`B`
-LEFT OUTER JOIN (SELECT 代號,MAX(比賽) `G` FROM `RANK` GROUP BY 代號) `T`
-ON B.代號=T.代號
-LEFT OUTER JOIN `RANK` `R`
-ON T.代號=R.代號 AND T.G=R.比賽
-LEFT OUTER JOIN `DEN` `D`
-ON B.代號=D.代號 AND B.日期=D.日期
-GROUP BY D.段位,D.段數
-ORDER BY D.段數 DESC)`TT`,(SELECT @P:=0)`P`");
+     // 取消依賴 @P 變數的平均差，保留原本按段數由高到低的統計口徑。
+     $record = $MYSQL->query("SELECT D.段位, D.段數, COUNT(R.績分) AS 人數,
+         ROUND(AVG(R.績分),2) AS 平均,
+         MAX(ROUND(R.績分,2)) AS 最高
+         FROM (SELECT 代號, MAX(日期) AS 日期 FROM DEN GROUP BY 代號) B
+         LEFT JOIN (SELECT 代號, MAX(比賽) AS G FROM RANK GROUP BY 代號) T
+           ON B.代號=T.代號
+         LEFT JOIN RANK R ON T.代號=R.代號 AND T.G=R.比賽
+         LEFT JOIN DEN D ON B.代號=D.代號 AND B.日期=D.日期
+         GROUP BY D.段位, D.段數
+         ORDER BY D.段數 DESC");
 
      echo "<H2>城府深深</H2>（目前段位平均及最高績分）<BR/><TABLE class='rank'><colgroup><col width='80'><col width='50'><col width='100'><col width='100'><col width='80'></colgroup><TR><TH>段位</TH><TH>人數</TH><TH>最高績分</TH><TH>平均績分</TH><TH>平均差</TH></TR>";
 
+     $previousAverage = 0.0;
      foreach ($record as $row) {
-          echo "<TR><TD>" . $row['段位'] . "</TD><TD>" . $row['人數'] . "</TD><TD>" . $row['最高'] . "</TD><TD>" . $row['平均'] . "</TD><TD>" . $row['差'] . "</TD></TR>";
+          $average = (float)($row['平均'] ?? 0);
+          $difference = $previousAverage != 0.0 ? round($previousAverage - $average, 2) : 0;
+          echo "<TR><TD>" . $row['段位'] . "</TD><TD>" . $row['人數'] . "</TD><TD>" . $row['最高'] . "</TD><TD>" . $row['平均'] . "</TD><TD>" . $difference . "</TD></TR>";
+          $previousAverage = $average;
      }
      echo "</TABLE><BR/>";
 
 
-     $record = $MYSQL->query("SELECT T.性別, COUNT(T.代號)'人數' FROM(SELECT D.代號,P.性別 FROM `DEN` `D`
-LEFT OUTER JOIN `PLAYER` `P`
-ON D.代號=P.代號
-WHERE RIGHT(D.段位,1)='段'
-GROUP BY D.代號)`T`
-GROUP BY T.性別");
+     $demographicBoards = recordDemographicBoards($MYSQL);
+     $record = $demographicBoards['gender'];
 
      echo "<H2>才子佳人</H2>（段位男女人數比）<BR/><TABLE class='rank'><colgroup><col width='100'><col width='100'><col width='100'><col width='100'></colgroup><TR><TH>統計</TH><TH>男棋士</TH><TH>女棋士</TH><TH>總計</TH></TR>";
 
 
+     $BOY = 0;
+     $GIRL = 0;
      foreach ($record as $row) {
           if ($row['性別'] == 1) {
                $BOY = $row['人數'];
@@ -222,46 +225,12 @@ GROUP BY T.性別");
           }
      }
      echo "<TR><TD>人數</TD><TD>" . $BOY . "</TD><TD>" . $GIRL . "</TD><TD>" . ($BOY + $GIRL) . "</TD></TR>";
-     echo "<TR><TD>比例</TD><TD>" . ROUND($BOY * 100 / ($BOY + $GIRL), 2) . "%</TD><TD>" . ROUND($GIRL * 100 / ($BOY + $GIRL), 2) . "%</TD><TD>100%</TD></TR>";
+     $genderTotal = $BOY + $GIRL;
+     echo "<TR><TD>比例</TD><TD>" . ($genderTotal ? ROUND($BOY * 100 / $genderTotal, 2) : 0) . "%</TD><TD>" . ($genderTotal ? ROUND($GIRL * 100 / $genderTotal, 2) : 0) . "%</TD><TD>100%</TD></TR>";
      echo "</TABLE><BR/>";
 
 
-     $record = $MYSQL->query("SELECT CASE WHEN TT.星座=1 THEN '水瓶(01/20~02/18)'
-WHEN TT.星座=2 THEN '雙魚(02/19~03/20)'
-WHEN TT.星座=3 THEN '牡羊(03/21~04/19)'
-WHEN TT.星座=4 THEN '金牛(04/20~05/20)'
-WHEN TT.星座=5 THEN '雙子(05/21~06/20)'
-WHEN TT.星座=6 THEN '巨蟹(06/21~07/22)'
-WHEN TT.星座=7 THEN '獅子(07/23~08/22)'
-WHEN TT.星座=8 THEN '處女(08/23~09/22)'
-WHEN TT.星座=9 THEN '天秤(09/23~10/22)'
-WHEN TT.星座=10 THEN '天蠍(10/23~11/21)'
-WHEN TT.星座=11 THEN '射手(11/22~12/21)'
-WHEN TT.星座=12 THEN '魔羯(12/22~01/19)' END '星座',COUNT(TT.代號) '人數',ROUND(COUNT(TT.代號)*100/TC.ALL,2) '比例' FROM (SELECT T.代號,
-CASE WHEN DATE_FORMAT(P.生日, '%c%d') BETWEEN 120 AND 218 THEN 1
-WHEN DATE_FORMAT(P.生日, '%c%d') BETWEEN 219 AND 320 THEN 2
-WHEN DATE_FORMAT(P.生日, '%c%d') BETWEEN 321 AND 419 THEN 3
-WHEN DATE_FORMAT(P.生日, '%c%d') BETWEEN 420 AND 520 THEN 4
-WHEN DATE_FORMAT(P.生日, '%c%d') BETWEEN 521 AND 620 THEN 5
-WHEN DATE_FORMAT(P.生日, '%c%d') BETWEEN 621 AND 722 THEN 6
-WHEN DATE_FORMAT(P.生日, '%c%d') BETWEEN 723 AND 822 THEN 7
-WHEN DATE_FORMAT(P.生日, '%c%d') BETWEEN 823 AND 922 THEN 8
-WHEN DATE_FORMAT(P.生日, '%c%d') BETWEEN 923 AND 1022 THEN 9
-WHEN DATE_FORMAT(P.生日, '%c%d') BETWEEN 1023 AND 1121 THEN 10
-WHEN DATE_FORMAT(P.生日, '%c%d') BETWEEN 1122 AND 1221 THEN 11
-WHEN DATE_FORMAT(P.生日, '%c%d')<>0 THEN 12 END '星座'
-FROM (SELECT D.代號 FROM `DEN` `D`
-	WHERE RIGHT(D.段位,1)='段'
-	GROUP BY D.代號)`T`
-LEFT OUTER JOIN `PLAYER` `P`
-ON T.代號=P.代號
-WHERE P.生日>0
-ORDER BY '星座')`TT`,
-(SELECT COUNT(DISTINCT D.代號) 'ALL' FROM `DEN` `D`
-LEFT OUTER JOIN `PLAYER` `P`
-ON D.代號=P.代號
-WHERE RIGHT(D.段位,1)='段' AND P.生日>0)`TC`
-GROUP BY TT.星座");
+     $record = $demographicBoards['zodiac'];
 
      echo "<H2>星羅棋佈</H2>（各星座段位人數比）(僅統計有生日資料者)<BR/><TABLE class='rank'><colgroup><col width='200'><col width='100'><col width='100'></colgroup><TR><TH>星座</TH><TH>人數</TH><TH>比例</TH></TR>";
      foreach ($record as $row) {
