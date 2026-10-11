@@ -23,7 +23,10 @@ rnEloEnsureSchema($MYSQL);
 
 // 手動更新 RenjuNet 只觸發 GitHub Actions；網站本身不執行大量 RIF 匯入。
 if (empty($_SESSION['rn_sync_csrf'])) $_SESSION['rn_sync_csrf'] = bin2hex(random_bytes(32));
-$rnSyncEnabled = trim((string)($config['rank_github_actions_token'] ?? (getenv('RANK_GITHUB_ACTIONS_TOKEN') ?: ''))) !== '';
+$rnSyncToken = trim((string)($config['rank_github_actions_token'] ?? ''));
+if ($rnSyncToken === '') $rnSyncToken = trim((string)(getenv('RANK_GITHUB_ACTIONS_TOKEN') ?: ''));
+$rnSyncEnabled = $rnSyncToken !== '';
+unset($rnSyncToken);
 $rnSyncFlash = $_SESSION['rn_sync_flash'] ?? null;
 unset($_SESSION['rn_sync_flash']);
 $rnLastImport = null;
