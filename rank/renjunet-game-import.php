@@ -8,20 +8,21 @@ if (empty($_SESSION['rgi_csrf'])) $_SESSION['rgi_csrf']=bin2hex(random_bytes(32)
 $csrf=(string)$_SESSION['rgi_csrf'];
 $isPost=($_SERVER['REQUEST_METHOD']??'GET')==='POST';
 $input=$isPost?$_POST:$_GET;
-$sched=rgiPositive($input['sched']??65);
-if(!$sched)$sched=65;
-$renjuTour=rgiPositive($input['renju']??3678);
-if(!$renjuTour)$renjuTour=3678;
 $rankTour=rgiPositive($input['tour']??null);
+$renjuTour=0;
 $rankMeta=null;$renjuMeta=null;$local=[];$players=[];$sources=[];$rnPlayers=[];$map=[];$matches=[];$used=[];
 $error='';$message='';
 $postedMap=is_array($_POST['player_map']??null)?$_POST['player_map']:[];
 $postedSelection=is_array($_POST['assign']??null)?$_POST['assign']:[];
 try{
-    if($rankTour===0)$rankTour=rgiRankTourFromSched($MYSQL,$sched);
+    if($rankTour===0 && !$isPost && !array_key_exists('tour',$_GET)) {
+        $rankTour=rgiLatestMappedRankTour($MYSQL);
+    }
     if($isPost && !hash_equals($csrf,(string)($_POST['csrf']??'')))throw new RuntimeException('登入表單驗證失敗，請重新整理。');
+    if($isPost && $rankTour===0) throw new RuntimeException('請選擇有效的排名賽號。');
     if($rankTour>0){
         [$rankMeta,$local,$players]=rgiRankLoad($MYSQL,$rankTour);
+        $renjuTour=rgiRenjuTourFromRank($rankMeta);
         [$renjuMeta,$sources,$rnPlayers]=rgiRenjuLoad($MYSQL,$renjuTour);
         $map=rgiPlayerMap($MYSQL,$players,$rnPlayers,$postedMap);
         $used=rgiUsedSourceIds($MYSQL,$sources);
@@ -29,7 +30,7 @@ try{
         if($isPost && ($_POST['action']??'')==='apply'){
             $count=rgiApply($MYSQL,$rankTour,$local,$sources,$map,$postedSelection);
             $_SESSION['rgi_flash']='已為排名賽號 '.$rankTour.' 匯入 '.$count.' 筆棋譜連結。';
-            header('Location: ?'.http_build_query(['tour'=>$rankTour,'renju'=>$renjuTour,'sched'=>$sched]));
+            header('Location: ?'.http_build_query(['tour'=>$rankTour]));
             exit;
         }
     }
@@ -51,7 +52,7 @@ foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
 <title>從 RenjuNet 匯入棋譜｜排名管理</title>
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
-<link rel="stylesheet" href="renjunet-game-import.css?v=1">
+<link rel="stylesheet" href="renjunet-game-import.css?v=2">
 </head>
 <body>
 <div class="app">
@@ -66,11 +67,12 @@ foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
 <section class="rgi-panel">
 <h2>1. 選擇比賽</h2>
 <form class="rgi-search" method="get">
-    <label>Sched 賽號 <input type="number" name="sched" min="1" value="<?= $sched ?>" required title="用於自動尋找相對應的排名賽號"></label>
     <label>排名賽號 <input type="number" name="tour" min="1" value="<?= $rankTour>0?$rankTour:'' ?>" required placeholder="排名系統的賽號"></label>
-    <label>RenjuNet 賽號 <input type="number" name="renju" min="1" value="<?= $renjuTour ?>" required></label>
     <button class="btn primary" type="submit">讀取並核對</button>
+    <?php if ($renjuTour>0): ?>
+    <span class="rgi-hint">RenjuNet 賽號：<strong><?= $renjuTour ?></strong>（來自 TOURNAMENT.棋譜）</span>
     <a href="https://www.renju.net/tournament/<?= $renjuTour ?>/" target="_blank" rel="noopener noreferrer">查看 RenjuNet 比賽 ↗</a>
+    <?php endif; ?>
 </form>
 <?php if($rankMeta && $renjuMeta): ?>
 <div class="rgi-meta">
@@ -85,15 +87,13 @@ foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
     <?php if($unmapped): ?><span>尚未對應棋士 <strong><?= $unmapped ?></strong> 人</span><?php endif; ?>
 </div>
 <?php elseif($rankTour===0): ?>
-<p class="rgi-hint">找不到 Sched <?= $sched ?> 對應的排名賽號，請手動填入排名系統中的賽號再讀取。</p>
+<p class="rgi-hint">尚未找到已填寫 RenjuNet 賽號的比賽，請在「比賽」頁設定 TOURNAMENT.棋譜，再輸入排名賽號讀取。</p>
 <?php endif; ?>
 </section>
 <?php if($rankMeta && $renjuMeta): ?>
 <form method="post" class="rgi-import-form">
 <input type="hidden" name="csrf" value="<?= rgiH($csrf) ?>">
 <input type="hidden" name="tour" value="<?= $rankTour ?>">
-<input type="hidden" name="renju" value="<?= $renjuTour ?>">
-<input type="hidden" name="sched" value="<?= $sched ?>">
 <section class="rgi-panel">
 <h2>2. 核對棋士身分</h2>
 <p class="rgi-hint">優先採用 PLAYER_RENJUNET、RIF 及唯一姓名比對。若有空白或對錯棋士，請在下拉清單調整後按「重新比對」。</p>
