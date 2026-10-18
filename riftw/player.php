@@ -285,10 +285,12 @@ $WIN=0;
 $LOST=0;
 $N=0;
 $SUM=0;
-$G='';
+$G=null; // 依賽號分組，避免不同賽事同名而被合併
 $DATA1="";
 $DATA2="";
 $DATA3="";
+$hasOfficialGame=false;
+$isProvisionalTournament=false;
 
 foreach($statement as $row){
 	$isSpecial = ($row['備註'] !== null && trim((string)$row['備註']) !== '');
@@ -297,24 +299,30 @@ foreach($statement as $row){
 	elseif($row['結果']=='和'){$CL='result-draw';}
 	else{$CL='result-note';}
 
-	if ($G!=$row['賽名']){
-		if ($G!=''){
+	if ($G !== (int)$row['賽號']){
+		if ($G !== null){
 			$DATA3=$DATA3."</TABLE><BR/>";
-			if ($DATA2=="" && $N>0){$DATA2=round($SUM/$N,2)." + ( ".$WIN." - ".$LOST." ) / ".$N." * ( 200 + 200 * ".$N." / ".max(15,$N)." ) = ".round($SUM/$N + ( $WIN - $LOST ) / $N * ( 200 + 200 * $N / max(15,$N) ),2)."<BR/>";}
+			if ($DATA2==="" && $isProvisionalTournament && $hasOfficialGame && $N>0){$DATA2=round($SUM/$N,2)." + ( ".$WIN." - ".$LOST." ) / ".$N." * ( 200 + 200 * ".$N." / ".max(15,$N)." ) = ".round($SUM/$N + ( $WIN - $LOST ) / $N * ( 200 + 200 * $N / max(15,$N) ),2)."<BR/>";}
 			ECHO $DATA1.$DATA2.$DATA3;
 			$DATA1="";
 			$DATA2="";
 			$DATA3="";
 		}
 
+		// 一場賽事的計分制式依「賽前」正式對局數決定，輪空不計局數。
+		$isProvisionalTournament = ($R[0]['顯示'] != 0 && $N < 15);
+		$hasOfficialGame=false;
 		$DATA1="<a href='tourb.php?TOUR=".$row['賽號']."'><b>".$row['賽名']."</b></a><BR/>";
 		$DATA1=$DATA1.$row['開始']."　~　".$row['結束']."<BR/>";
-		if(!$isSpecial){
-			if($R[0]['顯示']==0){$DATA2=$row['自己分'];}
-			elseif($N>=15){$DATA2=$row['自己分']."　~　".$row['績分']."<BR/>";}
-		}
 		$DATA3="<TABLE class='rank'><colgroup><col width='50'><col width='200'><col width='100'><col width='50'><col width='80'></colgroup>";
 		$DATA3=$DATA3."<TR><TH>輪次</TH><TH>對手</TH><TH>對手績分</TH><TH>結果</TH><TH>增減分</TH></TR>";
+	}
+
+	// 首筆紀錄可能是輪空；延至第一筆正式對局才決定本場顯示的起迄績分。
+	if (!$isSpecial && !$hasOfficialGame){
+		$hasOfficialGame=true;
+		if ($R[0]['顯示']==0){$DATA2=$row['自己分'];}
+		elseif (!$isProvisionalTournament){$DATA2=$row['自己分']."　~　".$row['績分']."<BR/>";}
 	}
 
 	if ($isSpecial){
@@ -329,12 +337,12 @@ foreach($statement as $row){
 		elseif($row['結果']=='負'){$LOST+=1;}
 		elseif($row['結果']=='和'){$WIN+=0.5;$LOST+=0.5;}
 	}
-	$G=$row['賽名'];
+	$G=(int)$row['賽號'];
 }
 
 if ($DATA3!=''){
 	$DATA3=$DATA3."</TABLE><BR/>";
-	if ($DATA2=="" && $N>0){$DATA2=round($SUM/$N,2)." + ( ".$WIN." - ".$LOST." ) / ".$N." * ( 200 + 200 * ".$N." / ".max(15,$N)." ) = ".round($SUM/$N + ( $WIN - $LOST ) / $N * ( 200 + 200 * $N / max(15,$N) ),2)."<BR/>";}
+	if ($DATA2==="" && $isProvisionalTournament && $hasOfficialGame && $N>0){$DATA2=round($SUM/$N,2)." + ( ".$WIN." - ".$LOST." ) / ".$N." * ( 200 + 200 * ".$N." / ".max(15,$N)." ) = ".round($SUM/$N + ( $WIN - $LOST ) / $N * ( 200 + 200 * $N / max(15,$N) ),2)."<BR/>";}
 	ECHO $DATA1.$DATA2.$DATA3;
 }
 ?>
