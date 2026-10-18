@@ -226,8 +226,49 @@ function swissLoadRanksBefore(PDO $db, array &$players, array $tournament): void
     }
 }
 
+/** 0 / NULL 是缺少起始績分，不是有效的棋士等級分。 */
+function swissValidStartingRating($value): ?float {
+    if ($value === null || $value === '' || !is_numeric($value)) return null;
+    $rating = (float)$value;
+    return is_finite($rating) && $rating > 0 ? $rating : null;
+}
+
+/** 僅在本場沒有有效正式對局起始分時，使用賽前最後一筆 RANK 績分。 */
+function swissLoadPriorRatings(PDO $db, array &$players, array $tournament): void {
+    $missing = [];
+    foreach ($players as $id => $player) {
+        if ($player['rating'] === null) $missing[] = (int)$id;
+    }
+    if (!$missing) return;
+
+    $tourNo = (int)($tournament['賽號'] ?? 0);
+    if ($tourNo < 1) return;
+    $ph = implode(',', array_fill(0, count($missing), '?'));
+    $params = $missing;
+    $sql = "SELECT R.`代號`,R.`績分` FROM `RANK` R " .
+        "INNER JOIN `TOURNAMENT` T ON T.`賽號`=R.`比賽` " .
+        "WHERE R.`代號` IN ($ph) AND R.`績分`>0";
+    $start = substr(trim((string)($tournament['開始'] ?? '')), 0, 10);
+    if ($start !== '') {
+        $sql .= " AND (T.`開始`<? OR (T.`開始`=? AND T.`賽號`<?))";
+        array_push($params, $start, $start, $tourNo);
+    } else {
+        $sql .= " AND T.`賽號`<?";
+        $params[] = $tourNo;
+    }
+    $sql .= " ORDER BY R.`代號`,T.`開始` DESC,T.`賽號` DESC";
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $id = (int)$row['代號'];
+        if (isset($players[$id]) && $players[$id]['rating'] === null) {
+            $players[$id]['rating'] = swissValidStartingRating($row['績分']);
+        }
+    }
+}
+
 function swissBuildPlayers(PDO $db, array $tournament, array $games): array {
-    $players = []; $rounds = []; $seen = 0;
+    $players = []; $rounds = []; $seen = 0; $specialRatings = [];
     $newPlayer = function(int $id, string $name, $rating) use (&$seen): array {
         return ['id'=>$id,'name'=>$name,'rating'=>$rating,'rank'=>'','total'=>0.0,'t1'=>0.0,'t2'=>0.0,'t3'=>0.0,'t4'=>0.0,'t5'=>0.0,'t6'=>0.0,'t7'=>0.0,'games'=>[],'promotion'=>0.0,'first_seen'=>$seen++];
     };
@@ -235,20 +276,30 @@ function swissBuildPlayers(PDO $db, array $tournament, array $games): array {
         $a=(int)$g['P1']; $b=(int)$g['P2']; $r=(int)$g['輪次']; if ($r > 0) $rounds[$r]=true;
         if (swissIsSpecialGame($g)) {
             if ($b <= 0) continue;
-            if (!isset($players[$b])) $players[$b]=$newPlayer($b,(string)($g['選手2'] ?: $b),$g['P2分']);
+            // 輪空分數不可覆蓋本場正式對局的起始績分。
+            if (!isset($players[$b])) $players[$b]=$newPlayer($b,(string)($g['選手2'] ?: $b),null);
+            $specialRating = swissValidStartingRating($g['P2分'] ?? null);
+            if ($specialRating !== null && !isset($specialRatings[$b])) $specialRatings[$b] = $specialRating;
             $score=2.0-(float)$g['勝負']; $players[$b]['total'] += $score;
             $players[$b]['games'][$r]=['opp'=>null,'score'=>$score,'opening'=>false,'status'=>trim((string)$g['備註'])];
             continue;
         }
         if ($a<=0 || $b<=0) continue;
-        if (!isset($players[$a])) $players[$a]=$newPlayer($a,(string)($g['選手1'] ?: $a),$g['P1分']);
-        if (!isset($players[$b])) $players[$b]=$newPlayer($b,(string)($g['選手2'] ?: $b),$g['P2分']);
-        if (($players[$a]['rating']===null || $players[$a]['rating']==='') && $g['P1分']!=='') $players[$a]['rating']=$g['P1分'];
-        if (($players[$b]['rating']===null || $players[$b]['rating']==='') && $g['P2分']!=='') $players[$b]['rating']=$g['P2分'];
+        $ratingA = swissValidStartingRating($g['P1分'] ?? null);
+        $ratingB = swissValidStartingRating($g['P2分'] ?? null);
+        if (!isset($players[$a])) $players[$a]=$newPlayer($a,(string)($g['選手1'] ?: $a),$ratingA);
+        if (!isset($players[$b])) $players[$b]=$newPlayer($b,(string)($g['選手2'] ?: $b),$ratingB);
+        if ($players[$a]['rating']===null && $ratingA !== null) $players[$a]['rating']=$ratingA;
+        if ($players[$b]['rating']===null && $ratingB !== null) $players[$b]['rating']=$ratingB;
         $sa=(float)$g['勝負']; $sb=2.0-$sa;
         $players[$a]['total'] += $sa; $players[$b]['total'] += $sb;
         $players[$a]['games'][$r]=['opp'=>$b,'score'=>$sa,'opening'=>true,'status'=>''];
         $players[$b]['games'][$r]=['opp'=>$a,'score'=>$sb,'opening'=>false,'status'=>''];
+    }
+    // 正式對局 > 賽前歷史 RANK > 有效特殊紀錄；均無資料時保留空白而不是 0。
+    swissLoadPriorRatings($db, $players, $tournament);
+    foreach ($specialRatings as $id => $rating) {
+        if (isset($players[$id]) && $players[$id]['rating'] === null) $players[$id]['rating'] = $rating;
     }
     ksort($rounds, SORT_NUMERIC);
     swissLoadRanksBefore($db, $players, $tournament);
