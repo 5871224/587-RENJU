@@ -56,6 +56,7 @@ jobs:
           forced_files=(
               'bb/keyinsql.php',
               'rank/index.php',
+              'rank/pagination.js',
               'rank/topbar.php',
                'rank/sched-import.php',
                'rank/sched-import.css',
