@@ -684,6 +684,7 @@ foreach ($games as $game):
   <datalist id="sri-system-options"><?php foreach ($formatOptions as $option): ?><option value="<?= sriH($option) ?>"></option><?php endforeach; ?></datalist>
 </div>
 <div id="sri-existing-fields" hidden data-selected="<?= sriH($_POST['existing_tour_no'] ?? '') ?>">
+  <div class="sri-alert sri-warning">選擇現有比賽後，本次匯入會刪除該排名賽號的全部舊 GAME，再完整寫入這場 Sched 的對局；原有比賽名稱、日期及其他設定不變。</div>
   <div class="sri-tour-search">
     <label>比賽日期 <input type="date" id="sri-tour-date" value="<?= sriH($start) ?>"></label>
     <label>名稱或賽號 <input type="search" id="sri-tour-name" placeholder="輸入比賽名稱或賽號"></label>
