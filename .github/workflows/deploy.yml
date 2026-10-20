@@ -55,6 +55,9 @@ jobs:
           # Force-upload important runtime dependencies so a successful later run repairs any earlier partial deployment.
           forced_files=(
               'bb/keyinsql.php',
+              'index.html',
+              'home-info.php',
+              'js/home-info.js',
               'rank/index.php',
               'rank/pagination.js',
               'rank/topbar.php',
