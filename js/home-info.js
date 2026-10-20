@@ -153,7 +153,18 @@
       renderUpdates(state.updates);
       updateButtons();
     } catch (error) {
-      console.error('首頁資訊載入失敗，保留頁面備援內容。', error);
+      console.error('首頁資訊載入失敗。', error);
+      [elements.competitionBody, elements.updateBody].forEach((tbody) => {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 2;
+        td.className = 'home-info-empty';
+        td.textContent = '資訊暫時無法載入，請稍後重新整理';
+        tr.appendChild(td);
+        tbody.replaceChildren(tr);
+      });
+      state.totals.competition = 0;
+      state.totals.updates = 0;
       updateButtons();
     }
   }
