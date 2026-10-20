@@ -318,12 +318,38 @@ try {
                 if (!array_key_exists($pk, $original)) throw new RuntimeException('缺少原始主鍵：' . $pk);
             }
             $fields = isset($_POST['field']) && is_array($_POST['field']) ? $_POST['field'] : [];
+
+            // 舊版快取的 pagination.js 會提交畫面上的中文欄名與選項文字。
+            // 保留相容性，避免部署期間新 PHP 與舊 JavaScript 混用時無法儲存。
+            if ($table === 'SITE_NOTICE') {
+                foreach ($columns as $column) {
+                    $label = adminColumnLabel($table, $column);
+                    if (!array_key_exists($column, $fields) && array_key_exists($label, $fields)) {
+                        $fields[$column] = $fields[$label];
+                    }
+                }
+                // SITE_NOTICE 的自動編號只用於 WHERE，不允許變更主鍵。
+                unset($fields['id']);
+            }
+
             $sets = [];
             $params = [];
             foreach ($columns as $column) {
                 if (!array_key_exists($column, $fields)) continue;
+                $value = $fields[$column];
+                if ($table === 'SITE_NOTICE' && !is_array($value)) {
+                    $options = siteNoticeFieldOptions($column);
+                    if ($options !== null) {
+                        foreach ($options as $dbValue => $displayText) {
+                            if ((string)$value === (string)$displayText) {
+                                $value = (string)$dbValue;
+                                break;
+                            }
+                        }
+                    }
+                }
                 $sets[] = qi($column) . '=?';
-                $params[] = normalizeFieldValue($fields[$column], $columnMeta[$column] ?? []);
+                $params[] = normalizeFieldValue($value, $columnMeta[$column] ?? []);
             }
             if (!$sets) throw new RuntimeException('沒有可更新的欄位。');
             $where = [];
