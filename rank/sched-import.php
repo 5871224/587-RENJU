@@ -143,27 +143,23 @@ function sriGames(array $snapshot): array {
     if (!$rows) $errors[] = '沒有可匯入的已完成對局。';
     return [$rows, $errors, $warnings];
 }
-function sriRegistry(PDO $db, bool $create): void {
-    if (!$create) return;
-    $db->exec(
-        'CREATE TABLE IF NOT EXISTS ' . sriQ('RANK_SCHED_IMPORT') . ' (' .
-        'source_tournament_id INT UNSIGNED NOT NULL PRIMARY KEY,' .
-        'source_database VARCHAR(100) NOT NULL,' .
-        'rank_tournament_id INT NOT NULL UNIQUE,' .
-        'source_hash CHAR(64) NOT NULL,' .
-        'imported_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP' .
-        ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
-    );
-}
+/**
+ * 只以 TOURNAMENT.戰績表 作為 Sched 編號對應來源。
+ * 兩場排名比賽使用相同 Sched 編號時停止，避免誤刪錯誤賽號的 GAME。
+ */
 function sriExisting(PDO $db, int $id): ?array {
-    try {
-        $stmt = $db->prepare('SELECT * FROM ' . sriQ('RANK_SCHED_IMPORT') . ' WHERE source_tournament_id=?');
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    } catch (PDOException $e) {
-        if ((string)$e->getCode() === '42S02') return null;
-        throw $e;
+    $stmt = $db->prepare(
+        'SELECT ' . sriQ('賽號') . ' AS rank_tournament_id, ' . sriQ('戰績表') .
+        ' FROM ' . sriQ('TOURNAMENT') .
+        ' WHERE TRIM(CAST(' . sriQ('戰績表') . ' AS CHAR))=?' .
+        ' ORDER BY ' . sriQ('賽號') . ' LIMIT 2'
+    );
+    $stmt->execute([(string)$id]);
+    $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if (count($matches) > 1) {
+        throw new RuntimeException('Sched 比賽 #' . $id . ' 對應多個排名賽號，請先修正 TOURNAMENT.戰績表。');
     }
+    return $matches[0] ?? null;
 }
 function sriInsert(PDO $db, string $table, array $values): void {
     // 與 rank 現有資料維護共用的 SHOW COLUMNS 自適應 INSERT，不修改既有 schema。
@@ -193,32 +189,18 @@ function sriGameKey(int $round, int $p1, int $p2): string {
     if ($p1 === 0) return 'special:' . $round . ':' . $p2;
     return 'game:' . $round . ':' . min($p1, $p2) . ':' . max($p1, $p2);
 }
-/** 寫入前檢查同輪雙方是否在既有 GAME 出現過；不取代或覆蓋歷史對局。 */
-function sriEnsureGamesDoNotOverlap(PDO $db, int $tourNo, array $games, array $map): void {
-    $stmt = $db->prepare(
-        'SELECT ' . sriQ('輪次') . ',' . sriQ('P1') . ',' . sriQ('P2') .
-        ' FROM ' . sriQ('GAME') . ' WHERE ' . sriQ('比賽') . '=? FOR UPDATE'
-    );
-    $stmt->execute([$tourNo]);
+/** 重匯採完整取代，所以只檢查來源本身不可出現重複對局／輪空。 */
+function sriValidateImportedGames(array $games, array $map): void {
     $seen = [];
-    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        $key = sriGameKey((int)$row['輪次'], (int)$row['P1'], (int)$row['P2']);
-        $seen[$key] = true;
-    }
-    $proposed = [];
     foreach ($games as $game) {
         $round = (int)$game['round'];
         $p1 = $game['a'] ? (int)$map[$game['a']] : 0;
         $p2 = (int)$map[$game['b']];
         $key = sriGameKey($round, $p1, $p2);
         if (isset($seen[$key])) {
-            throw new RuntimeException('排名賽號 ' . $tourNo . ' 第 ' . $round .
-                ' 輪已有相同棋士的對局／輪空，為避免重複匯入，已取消整批匯入。');
-        }
-        if (isset($proposed[$key])) {
             throw new RuntimeException('Sched 第 ' . $round . ' 輪有重複的相同對局／輪空，請先修正來源資料。');
         }
-        $proposed[$key] = true;
+        $seen[$key] = true;
     }
 }
 function sriFindTournaments(PDO $db, string $name, string $date): array {
@@ -276,20 +258,26 @@ function sriCheckTournamentColumns(PDO $db, array $values): void {
         }
     }
 }
+/**
+ * 同一來源可以重複匯入：以 TOURNAMENT.戰績表 定位，刪除該賽號全部 GAME 後重建。
+ * GAME / TOURNAMENT 是 MyISAM，沒有交易回滾能力；重匯先建立實體備份表，
+ * 失敗時自動恢復，成功且筆數驗證後才刪除暫存備份。
+ */
 function sriCommit(PDO $db, int $sourceId, string $database, array $snapshot, string $hash,
     array $map, int $tourNo, array $details, array $games, string $mode): array {
-    // DDL 不可放進匯入交易內（MySQL CREATE TABLE 會隱含 COMMIT）。
-    sriRegistry($db, true);
+
     if (!in_array($mode, ['new', 'existing'], true)) throw new RuntimeException('請選擇有效的匯入方式。');
+    if ($sourceId < 1) throw new RuntimeException('Sched 比賽編號無效。');
     if ($mode === 'existing' && ($tourNo < 1 || $tourNo > 999999)) {
         throw new RuntimeException('請選擇有效的現有排名賽號。');
     }
-
     $src = $snapshot['tournament'];
     if ((string)$src['game_type'] !== '五子' || !in_array($src['system_type'], ['瑞士制', '單循環', '雙循環'], true)) {
         throw new RuntimeException('只允許匯入 Sched 的五子棋瑞士制／單循環／雙循環比賽。');
     }
+    // 戰績表必須使用來源編號，不允許由表單改成其他數字而失去對應。
     if ($mode === 'new') {
+        $details['戰績表'] = (string)$sourceId;
         foreach (['賽標', '賽名', '開始', '結束', '棋譜', '戰績', '戰績表', '地點', '規則', '賽制', '等級'] as $field) {
             if (!array_key_exists($field, $details)) throw new RuntimeException('缺少比賽欄位：' . $field);
         }
@@ -308,87 +296,163 @@ function sriCommit(PDO $db, int $sourceId, string $database, array $snapshot, st
         sriCheckTournamentColumns($db, array_merge(['賽號' => 1], $details));
     }
 
-    // 只有新增模式需要分配新賽號。以 MySQL 命名鎖包住 MAX+1 與整筆寫入，
-    // 避免兩個 Sched 匯入同時取得同一號碼；其他途徑同時新增仍受主鍵約束。
-    $lockName = 'rank_sched_import_next_tournament';
-    $locked = false;
-    if ($mode === 'new') {
-        $lock = $db->prepare('SELECT GET_LOCK(?,10)');
-        $lock->execute([$lockName]);
-        if ((int)$lock->fetchColumn() !== 1) throw new RuntimeException('無法取得新賽號，請稍後再試。');
-        $locked = true;
-    }
-    try {
-        $db->beginTransaction();
-        try {
-            if ($mode === 'new') {
-                $tourNo = 1 + (int)$db->query(
-                    'SELECT COALESCE(MAX(' . sriQ('賽號') . '),0) FROM ' . sriQ('TOURNAMENT')
-                )->fetchColumn();
-                if ($tourNo < 1 || $tourNo > 999999) throw new RuntimeException('無法分配有效的新賽號。');
+    sriValidateImportedGames($games, $map);
+    $gameMeta = swissTableColumns($db, 'GAME');
+    $prepared = [];
+    foreach ($games as $game) {
+        $values = ['輪次' => (int)$game['round'],
+            'P1' => $game['a'] ? (int)$map[$game['a']] : 0,
+            'P2' => (int)$map[$game['b']],
+            '勝負' => $game['result'], '備註' => $game['memo']];
+        // 匯入不計算歷史等級分，重建正式排名時另行補入。
+        foreach (['P1分', 'P2分'] as $field) {
+            if (isset($gameMeta[$field])) {
+                $values[$field] = ($gameMeta[$field]['Null'] ?? 'NO') === 'YES' ? null : 0;
             }
-
-            $existingTourQuery = $db->prepare('SELECT ' . sriQ('賽號') . ',' . sriQ('賽名') . ',' . sriQ('賽制') .
-                ' FROM ' . sriQ('TOURNAMENT') . ' WHERE ' . sriQ('賽號') . '=? FOR UPDATE');
-            $existingTourQuery->execute([$tourNo]);
-            $existingTour = $existingTourQuery->fetch(PDO::FETCH_ASSOC) ?: null;
-            if ($mode === 'new') {
-                if ($existingTour) throw new RuntimeException('新賽號 ' . $tourNo . ' 已被使用，請重試匯入。');
-                $dup = $db->prepare('SELECT ' . sriQ('賽號') . ' FROM ' . sriQ('TOURNAMENT') .
-                    ' WHERE ' . sriQ('賽名') . '=? AND ' . sriQ('開始') . '=? LIMIT 1');
-                $dup->execute([(string)$details['賽名'], (string)$details['開始']]);
-                $old = $dup->fetchColumn();
-                if ($old !== false) throw new RuntimeException('同名同日期的比賽已存在（賽號 ' . $old . '），請改選現有比賽。');
-            } else {
-                if (!$existingTour) throw new RuntimeException('排名賽號 ' . $tourNo . ' 不存在，請重新查詢選擇。');
-                if (trim((string)$existingTour['賽制']) !== trim((string)$src['system_type'])) {
-                    throw new RuntimeException('既有比賽的賽制（' . $existingTour['賽制'] .
-                        '）與 Sched（' . $src['system_type'] . '）不同，請先確認。');
-                }
-                $previous = $db->prepare('SELECT source_tournament_id FROM ' . sriQ('RANK_SCHED_IMPORT') .
-                    ' WHERE rank_tournament_id=?');
-                $previous->execute([$tourNo]);
-                $oldSource = $previous->fetchColumn();
-                if ($oldSource !== false) throw new RuntimeException('排名賽號 ' . $tourNo .
-                    ' 已有 Sched 比賽 #' . $oldSource . ' 的匯入關聯，不可再次綁定。');
-            }
-
-            sriEnsureGamesDoNotOverlap($db, $tourNo, $games, $map);
-            $registry = $db->prepare('INSERT INTO ' . sriQ('RANK_SCHED_IMPORT') .
-                ' (source_tournament_id,source_database,rank_tournament_id,source_hash) VALUES (?,?,?,?)');
-            $registry->execute([$sourceId, $database, $tourNo, $hash]);
-
-            if ($mode === 'new') {
-                sriInsert($db, 'TOURNAMENT', array_merge(['賽號' => $tourNo], $details));
-            }
-            $gameMeta = swissTableColumns($db, 'GAME');
-            foreach ($games as $game) {
-                $values = ['比賽' => $tourNo, '輪次' => $game['round'],
-                    'P1' => $game['a'] ? $map[$game['a']] : 0,
-                    'P2' => $map[$game['b']],
-                    '勝負' => $game['result'], '備註' => $game['memo']];
-                // Sched 不提供歷史 Elo，不可拿目前等級分冒充歷史數值。
-                foreach (['P1分', 'P2分'] as $key) {
-                    if (isset($gameMeta[$key])) {
-                        $values[$key] = ($gameMeta[$key]['Null'] ?? 'NO') === 'YES' ? null : 0;
-                    }
-                }
-                sriInsert($db, 'GAME', $values);
-            }
-            $db->commit();
-            return ['tour_no' => $tourNo, 'count' => count($games)];
-        } catch (Throwable $e) {
-            if ($db->inTransaction()) $db->rollBack();
-            throw $e;
         }
-    } finally {
-        if ($locked) {
-            try {
-                $unlock = $db->prepare('SELECT RELEASE_LOCK(?)');
-                $unlock->execute([$lockName]);
-            } catch (Throwable $ignored) {
-                // 連線終止時 MySQL 會釋放此命名鎖。
+        $prepared[] = $values;
+    }
+    if (!$prepared) throw new RuntimeException('沒有可匯入的對局，原 GAME 不會刪除。');
+
+    $lockName = 'rank_sched_import_all';
+    $lock = $db->prepare('SELECT GET_LOCK(?,15)');
+    $lock->execute([$lockName]);
+    if ((int)$lock->fetchColumn() !== 1) throw new RuntimeException('無法取得匯入鎖，請稍後再試。');
+
+    $backup = '';
+    $createdTour = false;
+    $deletedOldGames = false;
+    $linkChanged = false;
+    $originalLink = null;
+    $oldCount = 0;
+    try {
+        // 在鎖內重新確認來源／目標的對應，避免重複匯入時誤選另一個賽號。
+        $linked = sriExisting($db, $sourceId);
+        if ($linked !== null) {
+            $linkedTour = (int)$linked['rank_tournament_id'];
+            if ($mode !== 'existing' || $tourNo !== $linkedTour) {
+                throw new RuntimeException('Sched #' . $sourceId . ' 已對應排名賽號 ' . $linkedTour . '，請重新讀取後同步更新。');
             }
+        } elseif ($mode === 'new') {
+            $tourNo = 1 + (int)$db->query('SELECT COALESCE(MAX(' . sriQ('賽號') . '),0) FROM ' . sriQ('TOURNAMENT'))->fetchColumn();
+            if ($tourNo < 1 || $tourNo > 999999) throw new RuntimeException('無法分配有效的新賽號。');
+        }
+
+        $stmt = $db->prepare('SELECT ' . sriQ('賽號') . ',' . sriQ('賽名') . ',' .
+            sriQ('賽制') . ',' . sriQ('戰績表') . ' FROM ' . sriQ('TOURNAMENT') .
+            ' WHERE ' . sriQ('賽號') . '=? LIMIT 1');
+        $stmt->execute([$tourNo]);
+        $target = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        if ($mode === 'new') {
+            if ($target) throw new RuntimeException('新賽號 ' . $tourNo . ' 已被使用，請重新匯入。');
+            $dup = $db->prepare('SELECT ' . sriQ('賽號') . ' FROM ' . sriQ('TOURNAMENT') .
+                ' WHERE ' . sriQ('賽名') . '=? AND ' . sriQ('開始') . '=? LIMIT 1');
+            $dup->execute([(string)$details['賽名'], (string)$details['開始']]);
+            if (($old = $dup->fetchColumn()) !== false) {
+                throw new RuntimeException('同名同日期的比賽已存在（賽號 ' . $old . '），請改選現有比賽。');
+            }
+        } else {
+            if (!$target) throw new RuntimeException('排名賽號 ' . $tourNo . ' 不存在，請重新查詢選擇。');
+            if (trim((string)$target['賽制']) !== trim((string)$src['system_type'])) {
+                throw new RuntimeException('既有比賽的賽制（' . $target['賽制'] .
+                    '）與 Sched（' . $src['system_type'] . '）不同，請先確認。');
+            }
+            $originalLink = $target['戰績表'];
+            $linkedId = trim((string)($originalLink ?? ''));
+            if ($linkedId !== '' && $linkedId !== (string)$sourceId) {
+                throw new RuntimeException('排名賽號 ' . $tourNo . ' 的戰績表已對應 Sched #' .
+                    $linkedId . '，不可覆蓋其他來源的對局。');
+            }
+        }
+
+        if ($mode === 'existing') {
+            $backup = 'GAME_SCHED_BACKUP_' . $tourNo . '_' . bin2hex(random_bytes(5));
+            // 保留原始欄位和所有內容（包括棋譜、起始分等），失敗可原樣恢復。
+            $db->exec('CREATE TABLE ' . sriQ($backup) . ' LIKE ' . sriQ('GAME'));
+            $copy = $db->prepare('INSERT INTO ' . sriQ($backup) . ' SELECT * FROM ' .
+                sriQ('GAME') . ' WHERE ' . sriQ('比賽') . '=?');
+            $copy->execute([$tourNo]);
+            $oldCount = (int)$db->query('SELECT COUNT(*) FROM ' . sriQ($backup))->fetchColumn();
+            $countSql = $db->prepare('SELECT COUNT(*) FROM ' . sriQ('GAME') .
+                ' WHERE ' . sriQ('比賽') . '=?');
+            $countSql->execute([$tourNo]);
+            if ($oldCount !== (int)$countSql->fetchColumn()) {
+                throw new RuntimeException('舊 GAME 備份筆數不符，禁止刪除原資料。');
+            }
+            $delete = $db->prepare('DELETE FROM ' . sriQ('GAME') . ' WHERE ' . sriQ('比賽') . '=?');
+            $deletedOldGames = true;
+            $delete->execute([$tourNo]);
+        } else {
+            sriInsert($db, 'TOURNAMENT', array_merge(['賽號' => $tourNo], $details));
+            $createdTour = true;
+        }
+
+        foreach ($prepared as $values) {
+            sriInsert($db, 'GAME', array_merge(['比賽' => $tourNo], $values));
+        }
+        $check = $db->prepare('SELECT COUNT(*) FROM ' . sriQ('GAME') .
+            ' WHERE ' . sriQ('比賽') . '=?');
+        $check->execute([$tourNo]);
+        if ((int)$check->fetchColumn() !== count($prepared)) {
+            throw new RuntimeException('重新匯入 GAME 的筆數驗證失敗。');
+        }
+        if ($mode === 'existing' && trim((string)($originalLink ?? '')) !== (string)$sourceId) {
+            $update = $db->prepare('UPDATE ' . sriQ('TOURNAMENT') . ' SET ' .
+                sriQ('戰績表') . '=? WHERE ' . sriQ('賽號') . '=?');
+            $update->execute([(string)$sourceId, $tourNo]);
+            $linkChanged = true;
+        }
+        if ($backup !== '') {
+            $db->exec('DROP TABLE ' . sriQ($backup));
+            $backup = '';
+        }
+        return ['tour_no' => $tourNo, 'count' => count($prepared),
+            'old_count' => $oldCount, 'replaced' => $mode === 'existing'];
+    } catch (Throwable $e) {
+        $restoreError = null;
+        try {
+            if ($deletedOldGames) {
+                // GAME 使用 MyISAM，不能依賴 rollBack；必須以實體備份還原。
+                $clean = $db->prepare('DELETE FROM ' . sriQ('GAME') .
+                    ' WHERE ' . sriQ('比賽') . '=?');
+                $clean->execute([$tourNo]);
+                $db->exec('INSERT INTO ' . sriQ('GAME') .
+                    ' SELECT * FROM ' . sriQ($backup));
+                $verify = $db->prepare('SELECT COUNT(*) FROM ' . sriQ('GAME') .
+                    ' WHERE ' . sriQ('比賽') . '=?');
+                $verify->execute([$tourNo]);
+                if ((int)$verify->fetchColumn() !== $oldCount) {
+                    throw new RuntimeException('回復舊 GAME 筆數不符。');
+                }
+            } elseif ($createdTour) {
+                $db->prepare('DELETE FROM ' . sriQ('GAME') . ' WHERE ' .
+                    sriQ('比賽') . '=?')->execute([$tourNo]);
+                $db->prepare('DELETE FROM ' . sriQ('TOURNAMENT') . ' WHERE ' .
+                    sriQ('賽號') . '=?')->execute([$tourNo]);
+            }
+            if ($linkChanged) {
+                $db->prepare('UPDATE ' . sriQ('TOURNAMENT') . ' SET ' .
+                    sriQ('戰績表') . '=? WHERE ' . sriQ('賽號') . '=?')->execute([$originalLink, $tourNo]);
+            }
+            if ($backup !== '') {
+                $db->exec('DROP TABLE ' . sriQ($backup));
+                $backup = '';
+            }
+        } catch (Throwable $rollbackError) {
+            $restoreError = $rollbackError;
+        }
+        if ($restoreError !== null) {
+            throw new RuntimeException('Sched 匯入失敗，且還原 GAME 時發生錯誤：' .
+                $restoreError->getMessage() . '。備份表 ' . $backup .
+                ' 已保留，請勿再次匯入，先由管理員恢復資料。', 0, $e);
+        }
+        throw $e;
+    } finally {
+        try {
+            $unlock = $db->prepare('SELECT RELEASE_LOCK(?)');
+            $unlock->execute([$lockName]);
+        } catch (Throwable $ignored) {
+            // 關閉 MySQL 連線時亦會釋放命名鎖。
         }
     }
 }
@@ -448,12 +512,12 @@ try {
     if ($isPost && ($_POST['action'] ?? '') === 'import') {
         if (!hash_equals($csrf, (string)($_POST['csrf'] ?? ''))) throw new RuntimeException('表單驗證失效，請重新整理再試。');
         if (!hash_equals($fingerprint, (string)($_POST['fingerprint'] ?? ''))) throw new RuntimeException('Sched 比賽內容已變更，請重新檢查最新對局再匯入。');
-        if ($existing !== null) throw new RuntimeException('此 Sched 比賽已匯入賽號 ' . $existing['rank_tournament_id'] . '。');
         if ($gameErrors) throw new RuntimeException('Sched 仍有未完成或無法轉換的對局，請先修正後重新檢查。');
         if ((string)$src['game_type'] !== '五子') throw new RuntimeException('此組別不是五子棋，不可匯入連珠排名系統。');
         $map = sriValidateMap($snapshot['players'], $rankPlayers, $postedMap);
-        $mode = (string)($_POST['target_mode'] ?? 'new');
-        $chosenNo = $mode === 'existing' ? (int)($_POST['existing_tour_no'] ?? 0) : 0;
+        $mode = $existing !== null ? 'existing' : (string)($_POST['target_mode'] ?? 'new');
+        $chosenNo = $existing !== null ? (int)$existing['rank_tournament_id'] :
+            ($mode === 'existing' ? (int)($_POST['existing_tour_no'] ?? 0) : 0);
         $details = [];
         if ($mode === 'new') {
             $fields = [
@@ -474,8 +538,10 @@ try {
         $chosenNo = (int)$importResult['tour_no'];
         $count = (int)$importResult['count'];
         $_SESSION['rank_sched_import_flash'] = 'Sched 比賽 #' . $sourceId .
-            ($mode === 'existing' ? ' 已匯入現有賽號 ' : ' 已建立並匯入賽號 ') .
-            $chosenNo . '，共新增 ' . $count . ' 筆 GAME。';
+            ($mode === 'existing' ? ' 已同步更新排名賽號 ' : ' 已建立並匯入排名賽號 ') .
+            $chosenNo . '。舊對局 ' . (int)$importResult['old_count'] .
+            ' 筆，最新匯入 ' . $count .
+            ' 筆 GAME。等級分不會自動重算，請執行「一鍵重建正式台灣排名」。';
         header('Location: ?id=' . $sourceId);
         exit;
     }
@@ -496,7 +562,7 @@ if (isset($_SESSION['rank_sched_import_flash'])) {
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
 <link rel="stylesheet" href="sched-import.css?v=5">
-<script src="sched-import.js?v=3" defer></script>
+<script src="sched-import.js?v=4" defer></script>
 </head>
 <body>
 <div class="app">
@@ -536,12 +602,12 @@ if (isset($_SESSION['rank_sched_import_flash'])) {
   <span>可匯入 GAME：<b><?= count($games) ?></b> 筆</span>
 </div>
 <?php if ($existing): ?>
-<div class="sri-alert sri-success">此 Sched 比賽已匯入至排名賽號 <?= sriH($existing['rank_tournament_id']) ?>，不可重複匯入。
+<div class="sri-alert sri-success">此 Sched 比賽已對應排名賽號 <?= sriH($existing['rank_tournament_id']) ?>，可重新匯入並完全取代該賽號的舊 GAME。
 <a href="swiss.php?TOUR=<?= (int)$existing['rank_tournament_id'] ?>">查看排名戰績</a></div>
 <?php endif; ?>
 <?php if ($gameErrors): ?><div class="sri-alert sri-error"><strong>無法匯入，請先處理：</strong><ul><?php foreach ($gameErrors as $detail): ?><li><?= sriH($detail) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
 <?php if ($warnings): ?><div class="sri-alert sri-warning"><strong>提醒：</strong><ul><?php foreach ($warnings as $detail): ?><li><?= sriH($detail) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
-<p class="sri-muted">正式對局依先手方寫入 P1，勝負換算為排名系統的 2 分制。輪空寫為特殊紀錄；未完成與無法轉換的成績會阻止匯入。此步驟不會修改來源資料。</p>
+<p class="sri-muted">正式對局依先手方寫入 P1，勝負換算為排名系統的 2 分制。輪空寫為特殊紀錄；未完成與無法轉換的成績會阻止匯入。重匯時會完整刪除該排名賽號的舊 GAME 再重新建立，其他賽號不受影響。此步驟不修改 Sched 來源及正式排名分數；完成後請重新重建等級分。</p>
 <details class="sri-game-preview">
 <summary>查看將匯入的 <?= count($games) ?> 筆對局</summary>
 <div class="sri-table-scroll"><table class="sri-table"><thead><tr><th>輪次</th><th>先手／特殊</th><th>後手／輪空棋士</th><th>勝負（P1 得分）</th><th>備註</th></tr></thead><tbody>
@@ -591,6 +657,11 @@ foreach ($games as $game):
 </section>
 <section class="sri-panel">
 <h2>4. 匯入比賽</h2>
+<?php if ($existing): ?>
+<div class="sri-alert sri-warning">重新匯入時，將刪除排名賽號 <?= (int)$existing['rank_tournament_id'] ?> 的全部舊 GAME，再以目前 Sched 已完成對局重新建立；此操作不會修改該比賽的賽名、日期、規則等設定。</div>
+<input type="hidden" name="target_mode" value="existing">
+<input type="hidden" name="existing_tour_no" value="<?= (int)$existing['rank_tournament_id'] ?>">
+<?php else: ?>
 <div class="sri-target-options" role="group" aria-label="匯入方式">
   <label><input type="radio" name="target_mode" value="new" <?= ($_POST['target_mode'] ?? 'new') !== 'existing' ? 'checked' : '' ?>> 新增比賽</label>
   <label><input type="radio" name="target_mode" value="existing" <?= ($_POST['target_mode'] ?? '') === 'existing' ? 'checked' : '' ?>> 匯入至現有比賽</label>
@@ -604,7 +675,7 @@ foreach ($games as $game):
     <label>比賽等級 <select name="level"><?php for ($i = 0; $i <= 6; $i++): ?><option value="<?= $i ?>" <?= (string)($_POST['level'] ?? '0') === (string)$i ? 'selected' : '' ?>><?= $i ?><?= $i === 0 ? '（不計等級分）' : '' ?></option><?php endfor; ?></select></label>
     <label>棋譜 <input type="text" name="record_link" value="<?= sriH($_POST['record_link'] ?? '') ?>"></label>
     <label>戰績 <input type="text" name="score_link" id="sri-score-link" value="<?= sriH($_POST['score_link'] ?? (sriDate($start) ? substr(str_replace('-', '', $start), 2) : '')) ?>" placeholder="YYMMDD" inputmode="numeric" pattern="[0-9]{6}" required></label>
-    <label>戰績表 <input type="text" name="schedule_link" value="<?= sriH($_POST['schedule_link'] ?? (string)$sourceId) ?>"></label>
+    <label>戰績表（Sched 編號） <input type="text" name="schedule_link" value="<?= (int)$sourceId ?>" readonly></label>
     <label>地點 <input type="text" name="venue" value="<?= sriH($_POST['venue'] ?? '') ?>"></label>
     <label>規則 <input type="text" name="rule_name" list="sri-rule-options" value="<?= sriH($_POST['rule_name'] ?? '') ?>" autocomplete="off"></label>
     <label>賽制 <input type="text" name="system_name" list="sri-system-options" value="<?= sriH($_POST['system_name'] ?? $source['system_type']) ?>" required autocomplete="off"></label>
@@ -625,7 +696,8 @@ foreach ($games as $game):
   </label>
   <p id="sri-tour-search-status" class="sri-muted" role="status" aria-live="polite"></p>
 </div>
-<button type="submit" class="btn primary" id="sri-submit" <?= $existing || $gameErrors || $source['game_type'] !== '五子' ? 'disabled' : '' ?>>匯入比賽與對局</button>
+<?php endif; ?>
+<button type="submit" class="btn primary" id="sri-submit" <?= $gameErrors || $source['game_type'] !== '五子' ? 'disabled' : '' ?>><?= $existing ? '重新匯入並取代舊對局' : '匯入比賽與對局' ?></button>
 </section>
 </form>
 <?php endif; ?>
