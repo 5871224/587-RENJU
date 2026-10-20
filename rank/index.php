@@ -592,9 +592,17 @@ $totalRecords = array_sum($counts);
         <?php endif; ?>
 
         <?php if ($rows && $columns): ?>
-        <div class="table-wrap"><table class="data"><thead><tr><?php foreach ($columns as $column): ?><th><?= h(adminColumnLabel($current['table'], $column)) ?></th><?php endforeach; ?><th>操作</th></tr></thead><tbody>
+        <div class="table-wrap"><table class="data"><thead><tr>
+        <?php foreach ($columns as $column):
+            $inlineOptions = $current['table'] === 'SITE_NOTICE' ? siteNoticeFieldOptions($column) : null;
+            $inlineType = $current['table'] === 'SITE_NOTICE' ? inputTypeForColumn((string)($columnMeta[$column]['Type'] ?? '')) : 'text';
+        ?>
+            <th data-column="<?= h($column) ?>" data-input-type="<?= h($inlineType) ?>"
+                <?php if ($inlineOptions !== null): ?>data-options="<?= h(json_encode($inlineOptions, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) ?>"<?php endif; ?>
+                <?php if ($current['table'] === 'SITE_NOTICE' && $column === 'id'): ?>data-readonly="1"<?php endif; ?>><?= h(adminColumnLabel($current['table'], $column)) ?></th>
+        <?php endforeach; ?><th>操作</th></tr></thead><tbody>
         <?php foreach ($rows as $row): $rowKey = encodeRowKey($row, $primaryKeys); ?>
-            <tr><?php foreach ($columns as $column): ?><td><?= h(adminCellValue($current['table'], $column, $row[$column] ?? '')) ?></td><?php endforeach; ?><td class="actions-cell">
+            <tr><?php foreach ($columns as $column): ?><td data-raw-value="<?= h($row[$column] ?? '') ?>"><?= h(adminCellValue($current['table'], $column, $row[$column] ?? '')) ?></td><?php endforeach; ?><td class="actions-cell">
                 <a class="action-link" href="<?= h(listUrl($view, $q, $searchField, ['edit' => $rowKey])) ?>">修改</a>
                 <form class="delete-form" method="post" onsubmit="return confirm('確定要刪除這筆資料嗎？此動作無法復原。')"><input type="hidden" name="action" value="delete"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><input type="hidden" name="original" value="<?= h($rowKey) ?>"><button class="delete-link" type="submit">刪除</button></form>
                 <?php if ($current['table'] === 'PLAYER' && isset($row['代號'])): ?><a class="action-link" href="player.php?PLAYER=<?= rawurlencode((string)$row['代號']) ?>">棋士頁</a><?php endif; ?>
