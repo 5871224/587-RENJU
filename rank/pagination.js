@@ -98,15 +98,40 @@
     document.body.appendChild(form);
 
     dataCells.forEach(function(cell,index){
-      const column=headers[index].textContent.trim();
-      const value=cell.textContent;
-      const input=document.createElement('input');
-      input.type='text';
+      const header=headers[index];
+      const column=header.dataset.column||header.textContent.trim();
+      const value=cell.hasAttribute('data-raw-value')?cell.getAttribute('data-raw-value'):cell.textContent;
+      let options=null;
+      if(header.hasAttribute('data-options')){
+        try{options=JSON.parse(header.dataset.options);}catch(e){}
+      }
+      let input;
+      if(options&&typeof options==='object'&&!Array.isArray(options)){
+        input=document.createElement('select');
+        Object.entries(options).forEach(function(entry){
+          const option=document.createElement('option');
+          option.value=entry[0];
+          option.textContent=entry[1];
+          input.appendChild(option);
+        });
+        if(!Object.prototype.hasOwnProperty.call(options,String(value))){
+          const option=document.createElement('option');
+          option.value=String(value);
+          option.textContent=String(value);
+          input.appendChild(option);
+        }
+      }else{
+        input=document.createElement('input');
+        const inputType=header.dataset.inputType||'text';
+        input.type=['text','number','date','datetime-local'].includes(inputType)?inputType:'text';
+        if(input.type==='number')input.step='any';
+        if(header.dataset.readonly==='1')input.readOnly=true;
+      }
       input.className='inline-edit-input';
       input.name='field['+column+']';
-      input.value=value;
+      input.value=input.type==='datetime-local'?String(value).replace(' ','T').slice(0,16):value;
       input.setAttribute('form',form.id);
-      input.setAttribute('aria-label',column);
+      input.setAttribute('aria-label',header.textContent.trim());
       input.autocomplete='off';
       cell.textContent='';
       cell.appendChild(input);
