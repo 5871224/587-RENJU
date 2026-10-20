@@ -582,7 +582,7 @@ $totalRecords = array_sum($counts);
                 </div>
             <?php endforeach; ?>
             </div>
-            <div class="edit-actions"><button class="btn primary" type="submit" onclick="return confirm('確定要新增這筆資料嗎？')">新增資料</button><a class="btn" href="<?= h(listUrl($view, $q, $searchField)) ?>">取消</a></div>
+            <div class="edit-actions"><button class="btn primary" type="submit" >新增資料</button><a class="btn" href="<?= h(listUrl($view, $q, $searchField)) ?>">取消</a></div>
         </form>
         <?php endif; ?>
 
@@ -613,7 +613,7 @@ $totalRecords = array_sum($counts);
                 </div>
             <?php endforeach; ?>
             </div>
-            <div class="edit-actions"><button class="btn primary" type="submit" onclick="return confirm('確定要更新這筆資料嗎？')">儲存修改</button><a class="btn" href="<?= h(listUrl($view, $q, $searchField)) ?>">取消</a></div>
+            <div class="edit-actions"><button class="btn primary" type="submit" >儲存修改</button><a class="btn" href="<?= h(listUrl($view, $q, $searchField)) ?>">取消</a></div>
         </form>
         <?php endif; ?>
 
@@ -642,6 +642,6 @@ $totalRecords = array_sum($counts);
 <?php endif; ?>
 </main>
 </div>
-<script src="pagination.js?v=20261020"></script>
+<script src="pagination.js?v=20261020b"></script>
 </body>
 </html>
