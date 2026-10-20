@@ -91,8 +91,7 @@
     hiddenField(form,'q',params.get('q')||'');
     hiddenField(form,'field_search',params.get('field_search')||'');
     hiddenField(form,'original',token);
-    form.addEventListener('submit',function(e){
-      if(!confirm('確定要更新這筆資料嗎？')){e.preventDefault();return;}
+    form.addEventListener('submit',function(){
       saveReturnScroll();
     });
     document.body.appendChild(form);
