@@ -616,6 +616,6 @@ $totalRecords = array_sum($counts);
 <?php endif; ?>
 </main>
 </div>
-<script src="pagination.js?v=20260827"></script>
+<script src="pagination.js?v=20261020"></script>
 </body>
 </html>
