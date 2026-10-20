@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=UTF-8');
-header('Cache-Control: public, max-age=60, stale-while-revalidate=300');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
 require_once __DIR__ . '/db.php';
 
@@ -15,32 +15,35 @@ try {
     $pdo = connectDatabase('renjuorg_587');
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
+    // 首頁與 /rank/?view=site-notices 共用 SITE_NOTICE 作為唯一資料來源。
+    // 連結網址若有設定，以自訂網址為主；否則用關聯賽號連往賽事資料頁。
     $competitionSql = "
         SELECT
             id,
-            DATE_FORMAT(published_date, '%Y-%m-%d') AS published_date,
+            DATE_FORMAT(notice_date, '%Y-%m-%d') AS published_date,
             title,
-            url,
-            is_featured
-        FROM HOME_COMPETITION_INFO
-        WHERE is_active = 1
-        ORDER BY
-            CASE WHEN published_date IS NULL THEN 1 ELSE 0 END,
-            published_date DESC,
-            sort_order DESC,
-            id DESC
+            CASE
+                WHEN url IS NOT NULL AND TRIM(url) <> '' THEN TRIM(url)
+                WHEN tour_id IS NOT NULL AND tour_id > 0
+                    THEN CONCAT('/riftw/tourb.php?TOUR=', tour_id)
+                ELSE NULL
+            END AS url,
+            is_pinned AS is_featured
+        FROM SITE_NOTICE
+        WHERE is_visible = 1 AND type = 'TOURNAMENT'
+        ORDER BY is_pinned DESC, notice_date DESC, sort_order DESC, id DESC
         LIMIT {$limit}
     ";
 
     $updateSql = "
         SELECT
             id,
-            DATE_FORMAT(info_date, '%Y-%m-%d') AS info_date,
-            content,
-            url
-        FROM HOME_UPDATE_INFO
-        WHERE is_active = 1
-        ORDER BY info_date DESC, id DESC
+            DATE_FORMAT(notice_date, '%Y-%m-%d') AS info_date,
+            title AS content,
+            NULLIF(TRIM(url), '') AS url
+        FROM SITE_NOTICE
+        WHERE is_visible = 1 AND type IN ('UPDATE', 'NEWS')
+        ORDER BY is_pinned DESC, notice_date DESC, sort_order DESC, id DESC
         LIMIT {$limit}
     ";
 
@@ -48,10 +51,10 @@ try {
     $updates = $pdo->query($updateSql)->fetchAll();
 
     $competitionTotal = (int) $pdo->query(
-        'SELECT COUNT(*) FROM HOME_COMPETITION_INFO WHERE is_active = 1'
+        "SELECT COUNT(*) FROM SITE_NOTICE WHERE is_visible = 1 AND type = 'TOURNAMENT'"
     )->fetchColumn();
     $updateTotal = (int) $pdo->query(
-        'SELECT COUNT(*) FROM HOME_UPDATE_INFO WHERE is_active = 1'
+        "SELECT COUNT(*) FROM SITE_NOTICE WHERE is_visible = 1 AND type IN ('UPDATE', 'NEWS')"
     )->fetchColumn();
 
     echo json_encode([
