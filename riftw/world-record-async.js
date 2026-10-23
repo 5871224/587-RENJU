@@ -12,16 +12,13 @@
         const submit = form && form.querySelector('button[type="submit"]');
         if (!form || !results || !loading || !submit) return;
 
-        const normalButton = submit.innerHTML;
         let request = null;
         let serial = 0;
 
         function setLoading(active) {
             loading.hidden = !active;
             submit.disabled = active;
-            submit.innerHTML = active
-                ? '<span class="wr-spinner-small" aria-hidden="true"></span> 查詢中…'
-                : normalButton;
+            // Spinner stays in a fixed viewport overlay, never inside the form button.
             results.setAttribute('aria-busy', active ? 'true' : 'false');
             results.classList.toggle('wr-results-busy', active);
         }
