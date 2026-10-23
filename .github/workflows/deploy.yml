@@ -99,6 +99,7 @@ jobs:
               'riftw/record.php',
               'riftw/record-queries.php',
               'riftw/world-record.php',
+              'riftw/record-sticky-header.js',
               'menu.html',
               'riftw/player.php',
               'riftw/player.css',
