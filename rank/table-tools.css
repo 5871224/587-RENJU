@@ -57,17 +57,49 @@ table.rank-enhanced > thead > tr > th.rank-sortable:focus-visible { outline:2px 
 .rank-column-popover button.rank-filter-btn {min-height:34px;border:1px solid #aebfd1;border-radius:7px;padding:6px 12px;background:#fff;color:#24445f;cursor:pointer;font-weight:700}
 .rank-column-popover button.rank-filter-apply {background:#1769aa;color:#fff;border-color:#1769aa}
 .rank-column-popover .rank-filter-description {margin-top:7px;color:#64748b;font-size:12px}
-.icon-action {
-  display:inline-flex !important;align-items:center;justify-content:center;
-  flex:0 0 auto;width:31px;height:31px;min-width:31px;padding:5px !important;
-  border:1px solid #b6c9d8 !important;border-radius:7px !important;
-  background:#fff !important;color:#245c78 !important;text-decoration:none !important;
-  line-height:1;cursor:pointer;vertical-align:middle
+/* Shared SVG actions: anchors and buttons must ignore the site's global
+   button min-height:40px rule, otherwise edit and delete have different sizes. */
+:where(a, button).icon-action {
+  --rank-action-size: 32px;
+  --rank-icon-size: 17px;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--rank-action-size);
+  width: var(--rank-action-size) !important;
+  height: var(--rank-action-size) !important;
+  min-width: var(--rank-action-size) !important;
+  min-height: var(--rank-action-size) !important;
+  max-width: var(--rank-action-size) !important;
+  max-height: var(--rank-action-size) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid #b6c9d8 !important;
+  border-radius: 7px !important;
+  background: #fff !important;
+  color: #245c78 !important;
+  font-size: 0 !important;
+  line-height: 1 !important;
+  text-decoration: none !important;
+  cursor: pointer;
+  vertical-align: middle;
 }
-.icon-action svg {display:block;pointer-events:none}
+:where(a, button).icon-action svg {
+  box-sizing: content-box;
+  display: block;
+  flex: 0 0 var(--rank-icon-size);
+  width: var(--rank-icon-size) !important;
+  height: var(--rank-icon-size) !important;
+  min-width: var(--rank-icon-size) !important;
+  min-height: var(--rank-icon-size) !important;
+  max-width: var(--rank-icon-size) !important;
+  max-height: var(--rank-icon-size) !important;
+  pointer-events: none;
+}
 .icon-action:hover {background:#eaf3fc !important;border-color:#70a6d0 !important}
 .icon-action:focus-visible {outline:2px solid #1769aa;outline-offset:2px}
 .icon-action--danger {color:#b42318 !important;border-color:#e3b3ae !important}
 .icon-action--danger:hover {background:#fff0ee !important;border-color:#d58077 !important}
 .actions-cell,.swiss-record-actions {align-items:center;gap:7px}
-.actions-cell form,.swiss-record-actions form {margin:0}
+.actions-cell form,.swiss-record-actions form {display:inline-flex;align-items:center;margin:0}
