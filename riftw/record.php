@@ -35,6 +35,7 @@ function changeRecord(value) {
 .record-pagination .muted {color:#64748b;}
 @media(max-width:600px) {.record-shell {padding:10px 12px 28px;}.record-select-line {align-items:stretch;flex-direction:column;gap:6px;}.record-select-line select {width:100%;min-width:0;}.record-pagination {justify-content:center;}}
 </style>
+<script src="record-sticky-header.js?v=20261023a" defer></script>
 </head>
 <body>
 <div id="myDiv"></div>
@@ -98,23 +99,23 @@ function renderSelectedRecord(string $html, string $record, int $requestedPage):
         return strpos($row, '<TD>　</TD>') === false;
     }));
     $total = count($dataRows);
-    $pageCount = max(1, (int)ceil($total / 50));
+    $pageCount = max(1, (int)ceil($total / 100));
     $page = min($requestedPage, $pageCount);
-    $offset = ($page - 1) * 50;
-    $pageRows = array_slice($dataRows, $offset, 50);
+    $offset = ($page - 1) * 100;
+    $pageRows = array_slice($dataRows, $offset, 100);
     $ordinal = in_array($record, ['den-average', 'gender', 'zodiac', 'meijin-history'], true) ? '序號' : '排名';
     if ($record !== 'leader') {
         $heading = preg_replace('~<TR([^>]*)>~i', '<TR$1><TH>' . $ordinal . '</TH>', $heading, 1);
     }
     $tableOpen = $record === 'leader' ? $table[1] : preg_replace('~<colgroup>~i', '<colgroup><col style="width:60px">', $table[1], 1);
-    echo '<div class="record-table-wrap">' . $tableOpen;
+    echo '<div class="record-table-wrap" data-record-sticky>' . $tableOpen;
     echo $heading;
     foreach ($pageRows as $i => $row) {
         if ($record === 'leader') echo $row;
         else echo preg_replace('~<TR([^>]*)>~i', '<TR$1><TD>' . ($offset + $i + 1) . '</TD>', $row, 1);
     }
     echo $table[3] . '</div>';
-    echo '<div class="record-pagination"><span class="muted">共 ' . $total . ' 筆，每頁 50 筆</span><nav aria-label="紀錄分頁">';
+    echo '<div class="record-pagination"><span class="muted">共 ' . $total . ' 筆，每頁 100 筆</span><nav aria-label="紀錄分頁">';
     if ($page > 1) echo '<a href="' . recordEscape(recordPageLink($record, $page - 1)) . '">上一頁</a>';
     $first = max(1, $page - 2);
     $last = min($pageCount, $page + 2);
