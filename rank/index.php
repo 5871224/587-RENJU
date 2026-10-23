@@ -604,7 +604,7 @@ $totalRecords = array_sum($counts);
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>台灣連珠排名管理</title>
 <link rel="stylesheet" href="../renju.css">
-<link rel="stylesheet" href="admin.css?v=20260820">
+<link rel="stylesheet" href="admin.css?v=20261023c">
 <link rel="stylesheet" href="pagination.css?v=20261023b">
 <style>.edit-field:has(textarea){grid-column:1/-1}.edit-field textarea{display:block;width:100%;min-height:190px;resize:vertical;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:14px/1.55 Consolas,monospace}.edit-field textarea[name*="content_html"]{min-height:420px}</style>
 <link rel="stylesheet" href="table-tools.css?v=20261023a">
@@ -783,7 +783,7 @@ $totalRecords = array_sum($counts);
                     if ($current['table'] === 'SITE_RESOURCE' && $column === 'id'): ?>
                     <td data-raw-value="<?= (int)$row['id'] ?>" class="resource-drag-cell">
                         <button class="resource-drag-handle" type="button" aria-label="拖曳以調整排序" title="拖曳調整排序">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="8" cy="5" r="1.6"/><circle cx="16" cy="5" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="8" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/></svg>
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 7h12M6 12h12M6 17h12"/></svg>
                         </button>
                     </td>
                     <?php else: ?>
