@@ -290,7 +290,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
 <link rel="stylesheet" href="player-transfer.css?v=20260827">
-<link rel="stylesheet" href="table-tools.css?v=20261023a">
+<link rel="stylesheet" href="table-tools.css?v=20261023c">
 </head>
 <body>
 <div class="app">

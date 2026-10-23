@@ -563,7 +563,7 @@ if (isset($_SESSION['rank_sched_import_flash'])) {
 <link rel="stylesheet" href="admin.css?v=20260820">
 <link rel="stylesheet" href="sched-import.css?v=5">
 <script src="sched-import.js?v=4" defer></script>
-<link rel="stylesheet" href="table-tools.css?v=20261023a">
+<link rel="stylesheet" href="table-tools.css?v=20261023c">
 </head>
 <body>
 <div class="app">

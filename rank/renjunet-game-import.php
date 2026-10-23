@@ -53,7 +53,7 @@ foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
 <link rel="stylesheet" href="renjunet-game-import.css?v=3">
-<link rel="stylesheet" href="table-tools.css?v=20261023a">
+<link rel="stylesheet" href="table-tools.css?v=20261023c">
 </head>
 <body>
 <div class="app">

@@ -88,7 +88,7 @@ if ($tour > 0) {
 <link rel="stylesheet" href="admin.css?v=20260828a">
 <link rel="stylesheet" href="swiss.css?v=20260901c">
 <link rel="stylesheet" href="swiss-admin-ui.css?v=20260828a">
-<link rel="stylesheet" href="table-tools.css?v=20261023a">
+<link rel="stylesheet" href="table-tools.css?v=20261023c">
 </head>
 <body>
 <div class="app">

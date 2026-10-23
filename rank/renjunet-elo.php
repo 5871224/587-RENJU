@@ -105,7 +105,7 @@ $runHistory = $MYSQL->query(
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260825">
 <link rel="stylesheet" href="renjunet-elo.css?v=20260827">
-<link rel="stylesheet" href="table-tools.css?v=20261023a">
+<link rel="stylesheet" href="table-tools.css?v=20261023c">
 </head>
 <body class="rn-standalone">
 <header class="topbar-simple"><strong>RenjuNet Elo</strong><a href="./">← 排名管理首頁</a><a href="?">重新整理</a></header>
