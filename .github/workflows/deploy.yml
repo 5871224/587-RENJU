@@ -67,6 +67,8 @@ jobs:
                'rank/pagination.css',
                'rank/server-pagination.php',
                'rank/table-tools.js',
+               'rank/bottom-scroll.js',
+               'rank/inline-create.js',
                'rank/table-tools.css',
                'rank/action-icons.php',
               'rank/topbar.php',
