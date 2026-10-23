@@ -20,6 +20,23 @@ function wrLink(array $filters, int $page): string {
 function wrLabel(array $player): string {
     return trim((string)$player['surname'] . ' ' . (string)$player['name']);
 }
+function wrPlayerMatches(array $player, string $keyword): bool {
+    $candidates = [
+        wrLabel($player),
+        trim((string)$player['name'] . ' ' . (string)$player['surname']),
+        (string)($player['native_name'] ?? ''),
+        (string)($player['disp_id'] ?? ''),
+    ];
+    foreach ($candidates as $candidate) {
+        if ($candidate === '') continue;
+        if (function_exists('mb_stripos')) {
+            if (mb_stripos($candidate, $keyword, 0, 'UTF-8') !== false) return true;
+        } elseif (stripos($candidate, $keyword) !== false) {
+            return true;
+        }
+    }
+    return false;
+}
 
 /**
  * RenjuNet uses English country/region names and frequently three-letter abbreviations.
@@ -750,20 +767,11 @@ function wrBuildQuery(string $color, array $baseConditions, array $baseParams): 
     if ($color === 'white') return [$white, $baseParams];
     return [$black . ' UNION ALL ' . $white, array_merge($baseParams, $baseParams)];
 }
-function wrAggregate(PDO $db, string $source, array $params, int $country, string $playerName): array {
-    $filters = [];
-    if ($country > 0) {
-        $filters[] = 'P.country_id = ?';
-        $params[] = $country;
-    }
-    if ($playerName !== '') {
-        $filters[] = '(LOCATE(?, CONCAT_WS(\' \', P.surname, P.name)) > 0'
-            . ' OR LOCATE(?, CONCAT_WS(\' \', P.name, P.surname)) > 0'
-            . ' OR LOCATE(?, COALESCE(P.native_name, \'\')) > 0'
-            . ' OR LOCATE(?, P.disp_id) > 0)';
-        array_push($params, $playerName, $playerName, $playerName, $playerName);
-    }
-    $extra = $filters ? ' WHERE ' . implode(' AND ', $filters) : '';
+function wrAggregate(PDO $db, string $source, array $params, int $country): array {
+    // The player's name must not narrow the underlying ranking query.
+    // Assign ranks from the complete filtered dataset first, then search names.
+    $extra = $country > 0 ? ' WHERE P.country_id = ?' : '';
+    if ($country > 0) $params[] = $country;
     $sql = 'SELECT X.pid, COUNT(*) AS games, SUM(X.points>1) AS wins, '
         . 'SUM(X.points=1) AS draws, SUM(X.points<1) AS losses, '
         . 'SUM(X.points)/2 AS points, P.surname, P.name, P.native_name, P.disp_id, '
@@ -962,7 +970,7 @@ try {
             array_push($params, ...$openings);
         }
         [$source, $sourceParams] = wrBuildQuery($color, $conditions, $params);
-        $all = wrAggregate($MYSQL, $source, $sourceParams, $country, $playerName);
+        $all = wrAggregate($MYSQL, $source, $sourceParams, $country);
         $qualified = array_filter($all, static fn($item) => (int)$item['games'] >= $minGames);
         if (str_starts_with($record, 'streak-')) {
             $rows = wrStreak($MYSQL, $source, $sourceParams, $qualified, $record);
@@ -978,6 +986,17 @@ try {
                     ?: ((int)$b['games'] <=> (int)$a['games'])
                     ?: ((int)$a['pid'] <=> (int)$b['pid']);
             });
+        }
+        // Keep each original rank before applying a name-only display filter.
+        // Country, date, color, opening, rule and rating filters still define
+        // the ranking cohort, so the search only hides nonmatching players.
+        foreach ($rows as $index => &$rankingRow) {
+            $rankingRow['rank'] = $index + 1;
+        }
+        unset($rankingRow);
+        if ($playerName !== '') {
+            $rows = array_values(array_filter($rows, static fn($player) =>
+                wrPlayerMatches($player, $playerName)));
         }
         $total = count($rows);
         $pages = max(1, (int)ceil($total / 100));
@@ -1248,7 +1267,7 @@ $status = $hasRated && $hasUnrated ? '部分計入排名' : ($hasRated ? '計入
     $playerHref='https://www.renju.net/people/'.rawurlencode($disp).'/';
 ?>
 <tr>
-<td><?= ($page-1)*100+$i+1 ?></td>
+<td><?= (int)$r['rank'] ?></td>
 <td><?= wrH(wrCountryName($r['country_name']??'', $r['country_abbr']??'')) ?></td>
 <td class="wr-name"><span class="wr-name-pair"><a href="<?= wrH($playerHref) ?>" target="_blank" rel="noopener noreferrer"><?= wrH($roman!==''?$roman:('#'.(int)$r['pid'])) ?></a><?php if($native!=='' && strcasecmp($native,$roman)!==0): ?><span class="wr-native"><?= wrH($native) ?></span><?php endif; ?></span></td>
 <?php if(in_array($record,['score','wins','draws'],true)):
