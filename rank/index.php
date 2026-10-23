@@ -605,7 +605,7 @@ $totalRecords = array_sum($counts);
 <title>台灣連珠排名管理</title>
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20261023c">
-<link rel="stylesheet" href="pagination.css?v=20261023b">
+<link rel="stylesheet" href="pagination.css?v=20261023d">
 <style>.edit-field:has(textarea){grid-column:1/-1}.edit-field textarea{display:block;width:100%;min-height:190px;resize:vertical;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:14px/1.55 Consolas,monospace}.edit-field textarea[name*="content_html"]{min-height:420px}</style>
 <link rel="stylesheet" href="table-tools.css?v=20261023a">
 </head>
