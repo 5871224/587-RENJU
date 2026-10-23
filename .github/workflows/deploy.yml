@@ -200,7 +200,7 @@ jobs:
 
           # Exercise the new world-record database queries with a date range
           # expected to return zero games, so smoke tests stay inexpensive.
-          for metric in score gain streak-win; do
+          for metric in score wins streak-win; do
             world_body="$(mktemp)"
             world_url="$base/riftw/world-record.php?record=$metric&from=2099-01-01&to=2099-01-01"
             world_code="$(curl -k -sS -o "$world_body" -w '%{http_code}' --max-time 45 "$world_url" || true)"
