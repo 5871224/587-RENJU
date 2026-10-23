@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded',wrUpdateLabel);
 <?php if (in_array($record,['score','wins','draws'],true)): ?>
 <th>勝</th><th>和</th><th>負</th><th>局數</th><th><?= wrH(['score'=>'得分率','wins'=>'勝率','draws'=>'和棋率'][$record]) ?></th>
 <?php elseif ($record === 'games'): ?>
-<th>局數</th><th>年平均</th>
+<th>局數</th><th>勝</th><th>和</th><th>負</th>
 <?php elseif ($record === 'gain'): ?>
 <th>賽事積分</th><th>該賽局數</th><th>賽事</th>
 <?php else: ?>
@@ -368,7 +368,7 @@ document.addEventListener('DOMContentLoaded',wrUpdateLabel);
 <td><?= (int)$r['wins'] ?></td><td><?= (int)$r['draws'] ?></td><td><?= (int)$r['losses'] ?></td>
 <td><?= (int)$r['games'] ?></td><td><?= number_format($rate,2) ?>%</td>
 <?php elseif($record==='games'): ?>
-<td><?= (int)$r['games'] ?></td><td><?= number_format((int)$r['games']/5,1) ?></td>
+<td><?= (int)$r['games'] ?></td><td><?= (int)$r['wins'] ?></td><td><?= (int)$r['draws'] ?></td><td><?= (int)$r['losses'] ?></td>
 <?php elseif($record==='gain'): ?>
 <td><?= number_format((float)$r['tour_points'],1) ?></td><td><?= (int)$r['tour_games'] ?></td>
 <td><a href="https://www.renju.net/tournament/<?= (int)$r['tour'] ?>/" target="_blank" rel="noopener noreferrer">#<?= (int)$r['tour'] ?> ↗</a></td>
