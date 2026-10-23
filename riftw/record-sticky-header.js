@@ -7,7 +7,12 @@
 (function () {
     'use strict';
 
+    let cleanupPrevious = null;
     function initStickyRecordHeader() {
+        if (cleanupPrevious) {
+            cleanupPrevious();
+            cleanupPrevious = null;
+        }
         const wrapper = document.querySelector('[data-record-sticky]');
         const table = wrapper && wrapper.querySelector('table');
         if (!table) return;
@@ -105,14 +110,23 @@
         window.addEventListener('scroll', scheduleRefresh, { passive: true });
         window.addEventListener('resize', scheduleRefresh, { passive: true });
         wrapper.addEventListener('scroll', scheduleRefresh, { passive: true });
+        let resizeObserver = null;
         if (typeof ResizeObserver !== 'undefined') {
-            const resizeObserver = new ResizeObserver(scheduleRefresh);
+            resizeObserver = new ResizeObserver(scheduleRefresh);
             resizeObserver.observe(wrapper);
             resizeObserver.observe(table);
         }
+        cleanupPrevious = function () {
+            window.removeEventListener('scroll', scheduleRefresh);
+            window.removeEventListener('resize', scheduleRefresh);
+            wrapper.removeEventListener('scroll', scheduleRefresh);
+            if (resizeObserver) resizeObserver.disconnect();
+            overlay.remove();
+        };
         scheduleRefresh();
     }
 
+    window.recordStickyInit = initStickyRecordHeader;
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initStickyRecordHeader);
     } else {
