@@ -21,7 +21,7 @@ function changeRecord(value) {
 .record-shell {max-width:1100px;margin:0 auto;padding:12px 18px 36px;box-sizing:border-box;}
 .record-select-line {display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0 22px;}
 .record-select-line label {font-weight:600;white-space:nowrap;}
-.record-select-line select {font:inherit;min-width:260px;max-width:100%;padding:10px 36px 10px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#182432;}
+.record-select-line select {font:inherit;min-width:460px;max-width:100%;padding:10px 36px 10px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#182432;}
 .record-title {margin:8px 0 4px;}
 .record-description {color:#586579;margin-bottom:16px;}
 .record-table-wrap {width:100%;overflow-x:auto;}
@@ -64,7 +64,7 @@ $recordOptions = [
     'challenge-young' => ['英雄出少年', '名人賽挑戰賽出賽最小年紀'],
     'challenge-old' => ['薑是老的辣', '名人賽挑戰賽出賽最大年紀'],
     'meijin-history' => ['一舉成名', '名人賽挑戰賽對戰組合及各屆名人年紀'],
-    'leader' => ['五林盟主', '歷年累計排名第一的日數'],
+    'leader' => ['五林盟主', '歷年排名第一'],
     'peak' => ['登峰造極', '史上最高績分，每人取最高一次'],
 ];
 $selected = (string)($_GET['record'] ?? 'score');
@@ -135,12 +135,11 @@ function renderSelectedRecord(string $html, string $record, int $requestedPage):
 <label for="record-picker">選擇紀錄</label>
 <select id="record-picker" onchange="changeRecord(this.value)">
 <?php foreach ($recordOptions as $key => $option): ?>
-<option value="<?= recordEscape($key) ?>" <?= $key === $selected ? 'selected' : '' ?>><?= recordEscape($option[0]) ?></option>
+<option value="<?= recordEscape($key) ?>" <?= $key === $selected ? 'selected' : '' ?>><?= recordEscape($option[0] . ' - ' . $option[1]) ?></option>
 <?php endforeach; ?>
 </select>
 </div>
 <h2 class="record-title"><?= recordEscape($recordOptions[$selected][0]) ?></h2>
-<div class="record-description"><?= recordEscape($recordOptions[$selected][1]) ?></div>
 <?php
 ob_start();
 switch ($selected) {
@@ -549,8 +548,8 @@ ON M.名人=P2.代號");
      }
 
 
-     // 同一人可能多次登頂：依棋士代號彙整累計領頭日數後排序。
-     $leaderTotals = [];
+     // 保留原先每次登頂的順序、日期與連續領頭天數，不彙整同一棋士。
+     echo "<H2>五林盟主</H2>（歷年排名第一）<BR/><TABLE class='rank'><colgroup><col width='100'><col width='120'><col width='100'></colgroup><TR><TH>棋士</TH><TH>登頂日</TH><TH>領頭日數</TH></TR>";
      foreach ($leaderSegments as $segment) {
           if ($segment['playerId'] === null) continue;
           $id = (int)$segment['playerId'];
@@ -580,7 +579,7 @@ ON M.名人=P2.代號");
      case 'peak':
           
           $statement = $MYSQL->query("SELECT P.代號, P.姓名, R.績分, T.結束
-          FROM RANK R
+          FROM `RANK` R
           INNER JOIN PLAYER P ON P.代號=R.代號 AND P.顯示=1
           INNER JOIN TOURNAMENT T ON T.賽號=R.比賽
           WHERE R.勝+R.和+R.負>=15 AND R.績分 IS NOT NULL
