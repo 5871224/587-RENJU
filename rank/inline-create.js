@@ -12,6 +12,7 @@
     function focusRow(row) {
       if (!row) return;
       const field = row.querySelector('input:not([readonly]):not([disabled]), select:not([disabled]), textarea:not([disabled])');
+      row.style.scrollMarginTop = '110px';
       row.scrollIntoView({block: 'nearest', behavior: 'auto'});
       if (field) field.focus({preventScroll: true});
       window.dispatchEvent(new Event('rank-table-resize'));
