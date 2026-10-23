@@ -48,9 +48,12 @@ function tmRuleLabel(string $raw): string {
     return '';
 }
 function tmGroupName(string $text): string {
-    if (preg_match('/[國国]手/u', $text)) return '國手';
+    if (str_contains($text, '日規組')) return '日規';
+    if (str_contains($text, '晉段組')) return '晉段';
+    if (preg_match('/[國国]手組/u', $text)) return '國手';
     if (str_contains($text, '晉段')) return '晉段';
     if (str_contains($text, '日規')) return '日規';
+    if (preg_match('/[國国]手/u', $text)) return '國手';
     if (str_contains($text, '公開')) return '公開';
     if (preg_match('/(?:^|[^\pL])((?:QT|BT|AT|WT)|[ABCＤＣＢＡ甲乙丙丁])組?/iu', $text, $m)) return strtoupper($m[1]);
     if (preg_match('/([\p{Han}]{1,5}組)/u', $text, $m)) return $m[1];
