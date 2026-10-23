@@ -1,6 +1,6 @@
 (function(){
   'use strict';
-  const root=window.RankTableTools={enhance:enhance};
+  window.RankTableTools={enhance:enhance};
   const collator=new Intl.Collator('zh-Hant',{numeric:true,sensitivity:'base'});
   const wrappers='.table-wrap,.swiss-scroll,.sri-table-scroll,.rgi-scroll,.rr-table-wrap,.rn-table-wrap,.swiss-modal-table';
   let currentPopup=null;
@@ -52,6 +52,7 @@
     if(!uniform||table.closest('.swiss-modal-table'))return null;
     const filters=new Map();
     const kinds=headers.map((_,i)=>kindOf(initialRows,i));
+    const originalIndex=new Map(initialRows.map((row,index)=>[row,index]));
     const state={column:-1,direction:'asc',filters:filters};
     const onChange=settings&&settings.onChange;
     function filteredAndSorted(){
@@ -78,7 +79,7 @@
         const col=state.column,dir=state.direction;
         visible.sort((a,b)=>{
           const cmp=compare(cellText(a,col),cellText(b,col),kinds[col]);
-          return (dir==='desc'?-cmp:cmp)||initialRows.indexOf(a)-initialRows.indexOf(b);
+          return (dir==='desc'?-cmp:cmp)||originalIndex.get(a)-originalIndex.get(b);
         });
       }
       // 保留不符合條件的列：清除篩選即可還原，不破壞編輯表單。
