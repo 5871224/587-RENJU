@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/swiss-lib.php';
+require_once __DIR__ . '/action-icons.php';
 
 function swissTooltip(string $key): string {
     $tips = [
@@ -95,11 +96,11 @@ function swissRenjuScoreLink($label, $gameId): string {
 
 function swissRecordEditButton(string $kind, int $recordId, int $tour, int $playerId, string $playerName, array $fields = []): string {
     if ($recordId <= 0 || $tour <= 0 || $playerId <= 0) return '';
-    $html = '<button type="button" class="swiss-record-edit" data-kind="' . swissH($kind) . '" data-id="' . $recordId . '" data-tour="' . $tour . '" data-player="' . $playerId . '" data-player-name="' . swissH($playerName) . '"';
+    $html = '<button type="button" class="swiss-record-edit icon-action" aria-label="修改" title="修改" data-kind="' . swissH($kind) . '" data-id="' . $recordId . '" data-tour="' . $tour . '" data-player="' . $playerId . '" data-player-name="' . swissH($playerName) . '"';
     foreach ($fields as $name => $value) {
         $html .= ' data-' . swissH((string)$name) . '="' . swissH((string)$value) . '"';
     }
-    return $html . '>修改</button>';
+    return $html . '>' . rankActionIcon('edit') . '</button>';
 }
 
 function swissRenderHistory(array $data, array $opt): string {
@@ -148,7 +149,7 @@ function swissRenderHistory(array $data, array $opt): string {
                 'title' => (string)($row['頭銜'] ?? ''),
             ]);
             $html .= '<form class="inline-delete" method="post" action="' . swissH($prefix . 'swiss-record-delete.php') . '" onsubmit="return confirm(\'確定要刪除這筆歷程嗎？\')">';
-            $html .= '<input type="hidden" name="type" value="SUMMARY"><input type="hidden" name="TOUR" value="' . $recordTour . '"><input type="hidden" name="id" value="' . $recordId . '"><button type="submit" class="link-danger">刪除</button></form></td>';
+            $html .= '<input type="hidden" name="type" value="SUMMARY"><input type="hidden" name="TOUR" value="' . $recordTour . '"><input type="hidden" name="id" value="' . $recordId . '"><button type="submit" class="link-danger icon-action icon-action--danger" title="刪除" aria-label="刪除">' . rankActionIcon('delete') . '</button></form></td>';
         }
         $html .= '</tr>';
     }
@@ -185,7 +186,7 @@ function swissRenderPromotions(array $data, array $opt): string {
                 'rank' => (string)($row['段位'] ?? ''),
                 'reason' => (string)($row['原因'] ?? ''),
             ]);
-            $html .= '<form class="inline-delete" method="post" action="' . swissH($prefix . 'swiss-record-delete.php') . '" onsubmit="return confirm(\'確定要刪除這筆段級紀錄嗎？\')"><input type="hidden" name="type" value="DEN"><input type="hidden" name="TOUR" value="' . $recordTour . '"><input type="hidden" name="id" value="' . $recordId . '"><button type="submit" class="link-danger">刪除</button></form></td>';
+            $html .= '<form class="inline-delete" method="post" action="' . swissH($prefix . 'swiss-record-delete.php') . '" onsubmit="return confirm(\'確定要刪除這筆段級紀錄嗎？\')"><input type="hidden" name="type" value="DEN"><input type="hidden" name="TOUR" value="' . $recordTour . '"><input type="hidden" name="id" value="' . $recordId . '"><button type="submit" class="link-danger icon-action icon-action--danger" title="刪除" aria-label="刪除">' . rankActionIcon('delete') . '</button></form></td>';
         }
         $html .= '</tr>';
     }
