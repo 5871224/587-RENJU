@@ -888,7 +888,25 @@ try {
         ) UsedCountries ON UsedCountries.country_id = C.id
         ORDER BY C.name
     ")->fetchAll(PDO::FETCH_ASSOC);
-    $rules = $MYSQL->query('SELECT id, name FROM RENJUNET_RULE ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
+    // 規則清單只列出實際出現在有效 RenjuNet 計分對局的規則。
+    // 與下方紀錄統計採用相同的比賽資格及棋局有效性條件。
+    $rules = $MYSQL->query("
+        SELECT R.id, R.name
+        FROM RENJUNET_RULE R
+        WHERE EXISTS (
+            SELECT 1
+            FROM RENJUNET_GAME G
+            INNER JOIN RENJUNET_TOURNAMENT T ON T.id = G.tournament_id
+            WHERE G.rule_id = R.id
+              AND T.rated = 1
+              AND T.end_date IS NOT NULL
+              AND G.black_player_id > 0
+              AND G.white_player_id > 0
+              AND G.black_player_id <> G.white_player_id
+              AND G.black_result IN (0, 0.5, 1)
+        )
+        ORDER BY R.name
+    ")->fetchAll(PDO::FETCH_ASSOC);
     $openingOptions = $MYSQL->query('SELECT id, abbr, name FROM RENJUNET_OPENING ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
     $stamp = $MYSQL->query('SELECT database_date FROM RENJUNET_IMPORT ORDER BY imported_at DESC, id DESC LIMIT 1')->fetchColumn();
     $sourceDate = is_string($stamp) ? $stamp : '';
