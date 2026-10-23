@@ -193,6 +193,57 @@ function recordDenFirstFive(array $rows, string $mode): array
             : strcmp((string)$a[$key], (string)$b[$key]);
         return $comparison ?: ((int)$a['代號'] <=> (int)$b['代號']);
     });
+    $counts = [];
+    $out = [];
+    $index = 0;
+    $size = count($rows);
+    while ($index < $size) {
+        $first = $rows[$index];
+        $grade = (string)$first['段位'];
+        $key = $mode === 'young' ? '天數' : '日期';
+        $pivot = (string)$first[$key];
+        $group = [];
+        while ($index < $size && $rows[$index]['段位'] === $grade
+               && (string)$rows[$index][$key] === $pivot) {
+            $group[] = $rows[$index++];
+        }
+        $prior = count($counts[$grade] ?? []);
+        if ($prior < 5) {
+            foreach ($group as $record) {
+                $out[] = [
+                    '姓名'=>$record['姓名'],
+                    '性別'=>((int)$record['性別'] === 1 ? '男' : '女'),
+                    '段位'=>$record['段位'],
+                    '日期'=>$record['日期'],
+                    '年紀'=>$record['年紀'],
+                ];
+            }
+        }
+        foreach ($group as $record) {
+            if ($record['姓名'] !== null) $counts[$grade][$record['姓名']] = true;
+        }
+    }
+    return $out;
+}
+
+
+function recordDenAll(array $rows, string $mode): array
+{
+    if ($mode === 'young') {
+        $rows = array_values(array_filter($rows, static fn($r) =>
+            $r['天數'] !== null && $r['生日'] !== null && $r['生日'] !== '0000-00-00'));
+    }
+    usort($rows, static function ($a, $b) use ($mode) {
+        $order = (int)$a['段序'] <=> (int)$b['段序'];
+        if ($order) return $order;
+        $key = $mode === 'young' ? '天數' : '日期';
+        $gradeCmp = strcmp((string)$a['段位'], (string)$b['段位']);
+        if ($gradeCmp) return $gradeCmp;
+        $comparison = $mode === 'young'
+            ? ((int)$a[$key] <=> (int)$b[$key])
+            : strcmp((string)$a[$key], (string)$b[$key]);
+        return $comparison ?: ((int)$a['代號'] <=> (int)$b['代號']);
+    });
     // 每位棋士在各段位只取第一筆取得紀錄，保留所有人而非前五名。
     $seen = [];
     $out = [];
@@ -211,7 +262,7 @@ function recordDenFirstFive(array $rows, string $mode): array
     return $out;
 }
 
-function recordDenBoards($db): array
+function recordDenBoards($db, bool $all = false): array
 {
     $rows = $db->query("SELECT D.代號, D.姓名, D.段位, D.日期, P.性別, P.生日,
             LOCATE(SUBSTRING(D.段位,1,1),'初二三四五六七八九') AS 段序,
@@ -219,7 +270,7 @@ function recordDenBoards($db): array
             CASE WHEN P.生日>0 THEN DATEDIFF(D.日期,P.生日)/365.25 ELSE NULL END AS 年紀
           FROM DEN D LEFT JOIN PLAYER P ON D.代號=P.代號
           WHERE LOCATE(SUBSTRING(D.段位,1,1),'初二三四五六七八九')>0")->fetchAll(PDO::FETCH_ASSOC);
-    return ['early'=>recordDenFirstFive($rows,'early'), 'young'=>recordDenFirstFive($rows,'young')];
+    return ['early'=>($all ? recordDenAll($rows,'early') : recordDenFirstFive($rows,'early')), 'young'=>($all ? recordDenAll($rows,'young') : recordDenFirstFive($rows,'young'))];
 }
 
 function recordMeijinAgeBoards($db): array
