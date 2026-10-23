@@ -748,7 +748,7 @@ $totalRecords = array_sum($counts);
             $inlineOptions = siteContentFieldOptions($current['table'], $column);
             $inlineType = $current['table'] === 'SITE_NOTICE' ? inputTypeForColumn((string)($columnMeta[$column]['Type'] ?? '')) : 'text';
         ?>
-            <th data-column="<?= h($column) ?>" data-input-type="<?= h($inlineType) ?>"
+            <th data-column="<?= h($column) ?>" data-input-type="<?= h($inlineType) ?>"<?= $current['table'] === 'SITE_RESOURCE' && $column === 'id' ? ' data-no-sort="1"' : '' ?>
                 <?php if ($inlineOptions !== null): ?>data-options="<?= h(json_encode($inlineOptions, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) ?>"<?php endif; ?>
                 <?php if (in_array($current['table'], ['SITE_RESOURCE','SITE_RULE_ITEM'], true) || ($current['table'] === 'SITE_NOTICE' && $column === 'id')): ?>data-readonly="1"<?php endif; ?>><?= $current['table'] === 'SITE_RESOURCE' && $column === 'id' ? '排序' : h(adminColumnLabel($current['table'], $column)) ?></th>
         <?php endforeach; ?><th>操作</th></tr></thead><tbody>
