@@ -1,10 +1,93 @@
 /* 所有後台表格共用：固定欄標題、雙擊篩選與操作圖示。 */
 .rank-table-scroll {
-  overflow: auto !important;
-  max-height: min(72vh, 720px) !important;
-  scrollbar-gutter: stable;
-  overscroll-behavior: contain;
+  /* Do not turn a table into a second vertically scrolling viewport. */
+  overflow: visible !important;
+  max-height: none !important;
 }
+.rank-viewport-wrap {
+  width: 100%;
+  max-width: 100%;
+  max-height: none !important;
+  overflow-x: clip !important;
+  overflow-y: visible !important;
+  position: relative;
+  /* A floating synchronized scrollbar controls horizontal movement. */
+}
+.rank-viewport-wrap > table {
+  margin: 0;
+}
+.rank-viewport-scroll {
+  position: fixed;
+  z-index: 60;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 19px;
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-gutter: stable;
+  overscroll-behavior-x: contain;
+  background: #eef3f8;
+  border-top: 1px solid #cbd9e5;
+}
+.rank-viewport-scroll[hidden] { display: none !important; }
+.rank-viewport-scroll-content { height: 1px; pointer-events: none; }
+body.rank-bottom-scroll-active {
+  padding-bottom: 24px;
+  overflow-x: clip;
+}
+body.swiss-modal-lock .rank-viewport-scroll { display: none !important; }
+/* Modal tables keep their own intentional horizontal overflow. */
+.swiss-modal-table.rank-table-scroll {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+table.data .rank-inline-create-row > td {
+  background: #f1f8ff;
+  border-top: 2px solid #92bce0;
+  vertical-align: top;
+}
+table.data .rank-inline-create-row :is(input, select, textarea) {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 120px;
+  min-height: 36px;
+  margin: 0;
+  padding: 7px 9px;
+  border: 1px solid #b8c9d9;
+  border-radius: 7px;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+  font-size: 13px;
+}
+table.data .rank-inline-create-row textarea {
+  resize: vertical;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  min-width: 250px;
+}
+table.data .rank-inline-create-row .rank-inline-auto {
+  display: inline-block;
+  min-width: 70px;
+  color: #64748b;
+  padding: 8px 2px;
+  font-size: 12px;
+}
+table.data .rank-inline-create-row .rank-inline-create-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+table.data .rank-inline-create-row .rank-inline-create-actions .btn {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
 table.rank-enhanced { border-collapse: separate; border-spacing: 0; }
 table.rank-enhanced > thead > tr > th {
   position: sticky !important;
