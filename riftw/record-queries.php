@@ -53,7 +53,7 @@ function recordRateBoards($db, string $today, string $fiveYearsAgo): array
             }
             return (int)$a['代號'] <=> (int)$b['代號'];
         });
-        $empty[$group] = array_slice($copy, 0, 10);
+        $empty[$group] = $copy;
         // 舊版三張比例表的模板都讀取「勝率」，維持相同輸出鍵名。
         if ($group !== 'games') {
             $rateField = $group === 'score' ? '得分率' : ($group === 'draws' ? '和棋率' : '勝率');
@@ -68,11 +68,12 @@ function recordRateBoards($db, string $today, string $fiveYearsAgo): array
 
 function recordConsecutiveBoards($db): array
 {
-    $thresholds = ['win'=>8, 'unbeaten'=>14, 'draw'=>5, 'nondraw'=>48];
+    $thresholds = ['win'=>1, 'unbeaten'=>1, 'draw'=>1, 'nondraw'=>1];
     $boards = array_fill_keys(array_keys($thresholds), []);
     $streaks = [];
     $lastPlayer = null;
     $lastName = '';
+    $players = [];
     $flush = static function ($playerId, $name) use (&$streaks, &$boards, $thresholds) {
         if ($playerId === null) return;
         foreach ($thresholds as $key => $minimum) {
@@ -107,6 +108,7 @@ function recordConsecutiveBoards($db): array
     $query = $db->query($sql);
     while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
         $playerId = (int)$row['代號'];
+        $players[$playerId] = (string)$row['姓名'];
         if ($lastPlayer !== $playerId) {
             $flush($lastPlayer, $lastName);
             $lastPlayer = $playerId;
@@ -149,14 +151,30 @@ function recordConsecutiveBoards($db): array
                 ?: strcmp((string)$a['sortEnd'], (string)$b['sortEnd'])
                 ?: ($a['playerId'] <=> $b['playerId']);
         });
+        // 每位棋士僅保留歷史最佳一次，沒有達成該項連續紀錄者也列為 0。
+        $unique = [];
+        $seen = [];
+        foreach ($rows as $entry) {
+            $id = (int)$entry['playerId'];
+            if (isset($seen[$id])) continue;
+            $seen[$id] = true;
+            $unique[] = $entry;
+        }
+        foreach ($players as $id => $name) {
+            if (isset($seen[$id])) continue;
+            $unique[] = [
+                '姓名' => $name, '連勝' => 0, '開始' => '—', '結束' => '—',
+                'sortEnd' => '', 'playerId' => $id
+            ];
+        }
+        $rows = $unique;
     }
     unset($rows);
     return $boards;
 }
 
 /**
- * 舊版條件是「同段位、日期/年齡嚴格較早的 DISTINCT 姓名未滿 5 人」；
- * 不能簡單 LIMIT 5，因為第 5 名同日或同年齡時有並列。
+ * 依各段位計算所有棋士首次取得日期／最小年紀，並保留段位內完整排行。
  */
 function recordDenFirstFive(array $rows, string $mode): array
 {
@@ -175,35 +193,20 @@ function recordDenFirstFive(array $rows, string $mode): array
             : strcmp((string)$a[$key], (string)$b[$key]);
         return $comparison ?: ((int)$a['代號'] <=> (int)$b['代號']);
     });
-    $counts = [];
+    // 每位棋士在各段位只取第一筆取得紀錄，保留所有人而非前五名。
+    $seen = [];
     $out = [];
-    $index = 0;
-    $size = count($rows);
-    while ($index < $size) {
-        $first = $rows[$index];
-        $grade = (string)$first['段位'];
-        $key = $mode === 'young' ? '天數' : '日期';
-        $pivot = (string)$first[$key];
-        $group = [];
-        while ($index < $size && $rows[$index]['段位'] === $grade
-               && (string)$rows[$index][$key] === $pivot) {
-            $group[] = $rows[$index++];
-        }
-        $prior = count($counts[$grade] ?? []);
-        if ($prior < 5) {
-            foreach ($group as $record) {
-                $out[] = [
-                    '姓名'=>$record['姓名'],
-                    '性別'=>((int)$record['性別'] === 1 ? '男' : '女'),
-                    '段位'=>$record['段位'],
-                    '日期'=>$record['日期'],
-                    '年紀'=>$record['年紀'],
-                ];
-            }
-        }
-        foreach ($group as $record) {
-            if ($record['姓名'] !== null) $counts[$grade][$record['姓名']] = true;
-        }
+    foreach ($rows as $record) {
+        $identity = (string)$record['段位'] . ':' . (string)$record['代號'];
+        if (isset($seen[$identity])) continue;
+        $seen[$identity] = true;
+        $out[] = [
+            '姓名' => $record['姓名'],
+            '性別' => ((int)$record['性別'] === 1 ? '男' : '女'),
+            '段位' => $record['段位'],
+            '日期' => $record['日期'],
+            '年紀' => $record['年紀'],
+        ];
     }
     return $out;
 }
@@ -259,7 +262,7 @@ function recordMeijinAgeBoards($db): array
                     : ((float)$b['年紀'] <=> (float)$a['年紀']))
                     ?: ($a['tour'] <=> $b['tour']);
             });
-            $boards[$key] = array_slice($boards[$key], 0, 5);
+            $boards[$key] = array_values($boards[$key]);
         }
     }
     return $boards;
