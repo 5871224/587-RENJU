@@ -41,7 +41,7 @@ function wrPagedAggregate($db, string $source, array $sourceParams, string $reco
         . 'GROUP BY X.pid, P.surname, P.name, P.native_name, P.disp_id, P.country_id, C.name, C.abbr '
         . 'HAVING COUNT(*) >= ?';
     $ranked = 'SELECT A.*, '
-        . 'ROW_NUMBER() OVER (ORDER BY ' . $order . ') AS rank, '
+        . 'ROW_NUMBER() OVER (ORDER BY ' . $order . ') AS world_rank, '
         . 'ROW_NUMBER() OVER (PARTITION BY A.region_key ORDER BY ' . $order . ') AS region_rank '
         . 'FROM (' . $aggregate . ') A';
 
@@ -73,7 +73,7 @@ function wrPagedAggregate($db, string $source, array $sourceParams, string $reco
 
     $offset = ($page - 1) * 100;
     $sql = 'SELECT B.*, COUNT(*) OVER() AS filtered_total '
-        . $baseSql . ' ORDER BY B.rank LIMIT ? OFFSET ?';
+        . $baseSql . ' ORDER BY B.world_rank LIMIT ? OFFSET ?';
     $statement = $execute($db, $sql, array_merge($params, [100, $offset]));
     $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
     $statement->closeCursor();
@@ -90,7 +90,7 @@ function wrPagedAggregate($db, string $source, array $sourceParams, string $reco
     }
     $total = $rows ? (int)$rows[0]['filtered_total'] : ($total ?? 0);
     foreach ($rows as &$row) {
-        $row['rank'] = (int)$row['rank'];
+        $row['rank'] = (int)$row['world_rank'];
         $row['region_rank'] = (int)$row['region_rank'];
     }
     unset($row);
