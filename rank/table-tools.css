@@ -1,0 +1,73 @@
+/* 所有後台表格共用：固定欄標題、雙擊篩選與操作圖示。 */
+.rank-table-scroll {
+  overflow: auto !important;
+  max-height: min(72vh, 720px) !important;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+table.rank-enhanced { border-collapse: separate; border-spacing: 0; }
+table.rank-enhanced > thead > tr > th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 4 !important;
+  background: #edf4f9;
+  background-clip: padding-box;
+  box-shadow: inset 0 -1px #cbd9e5;
+}
+table.rank-enhanced > thead > tr > th.rank-sortable {
+  cursor: pointer;
+  user-select: none;
+  padding-right: 25px !important;
+}
+table.rank-enhanced > thead > tr > th.rank-sortable::after {
+  content: '↕';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: #94a3b8;
+}
+table.rank-enhanced > thead > tr > th.rank-sortable[data-sort-dir="asc"]::after { content: '▲';color:#1769aa }
+table.rank-enhanced > thead > tr > th.rank-sortable[data-sort-dir="desc"]::after { content: '▼';color:#1769aa }
+table.rank-enhanced > thead > tr > th.rank-filtered { background:#dfecf9 !important;color:#124c7f }
+table.rank-enhanced > thead > tr > th.rank-filtered::before {
+  content:'•';position:absolute;right:18px;top:0;color:#1769aa;font-size:14px;
+}
+table.rank-enhanced > thead > tr > th.rank-sortable:hover { background:#e1edf8 }
+table.rank-enhanced > thead > tr > th.rank-sortable:focus-visible { outline:2px solid #1769aa;outline-offset:-2px }
+.rank-column-popover {
+  position:fixed; z-index:110000; width:min(330px,calc(100vw - 24px)); max-height:min(530px,calc(100vh - 24px));
+  overflow:auto; padding:14px; border:1px solid #b7c9dc; border-radius:10px;
+  box-shadow:0 12px 40px rgba(15,23,42,.2); background:#fff;color:#172033;
+  font:14px/1.45 Arial,"Microsoft JhengHei",sans-serif;text-align:left;
+}
+.rank-column-popover * {box-sizing:border-box}
+.rank-column-popover .rank-filter-head {display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.rank-column-popover .rank-filter-title {font-weight:800;overflow-wrap:anywhere}
+.rank-column-popover .rank-filter-close {border:0;background:transparent;cursor:pointer;font-size:23px;line-height:1;color:#64748b}
+.rank-column-popover label.rank-filter-label {display:block;margin:9px 0 4px;font-weight:700;font-size:12px;color:#475569}
+.rank-column-popover input[type=search],.rank-column-popover select {
+  width:100%;height:36px;padding:6px 9px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#172033;font:inherit
+}
+.rank-column-popover .rank-filter-options {margin-top:5px;max-height:170px;overflow:auto;border:1px solid #dbe4ee;border-radius:7px;padding:5px 8px}
+.rank-column-popover .rank-filter-choice {display:flex;gap:8px;align-items:center;padding:4px 0;word-break:break-all;cursor:pointer}
+.rank-column-popover .rank-filter-choice input {flex:none}
+.rank-column-popover .rank-filter-actions {display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:13px}
+.rank-column-popover button.rank-filter-btn {min-height:34px;border:1px solid #aebfd1;border-radius:7px;padding:6px 12px;background:#fff;color:#24445f;cursor:pointer;font-weight:700}
+.rank-column-popover button.rank-filter-apply {background:#1769aa;color:#fff;border-color:#1769aa}
+.rank-column-popover .rank-filter-description {margin-top:7px;color:#64748b;font-size:12px}
+.icon-action {
+  display:inline-flex !important;align-items:center;justify-content:center;
+  flex:0 0 auto;width:31px;height:31px;min-width:31px;padding:5px !important;
+  border:1px solid #b6c9d8 !important;border-radius:7px !important;
+  background:#fff !important;color:#245c78 !important;text-decoration:none !important;
+  line-height:1;cursor:pointer;vertical-align:middle
+}
+.icon-action svg {display:block;pointer-events:none}
+.icon-action:hover {background:#eaf3fc !important;border-color:#70a6d0 !important}
+.icon-action:focus-visible {outline:2px solid #1769aa;outline-offset:2px}
+.icon-action--danger {color:#b42318 !important;border-color:#e3b3ae !important}
+.icon-action--danger:hover {background:#fff0ee !important;border-color:#d58077 !important}
+.actions-cell,.swiss-record-actions {align-items:center;gap:7px}
+.actions-cell form,.swiss-record-actions form {margin:0}
