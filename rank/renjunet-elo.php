@@ -105,7 +105,7 @@ $runHistory = $MYSQL->query(
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260825">
 <link rel="stylesheet" href="renjunet-elo.css?v=20260827">
-<link rel="stylesheet" href="table-tools.css?v=20261023c">
+<link rel="stylesheet" href="table-tools.css?v=20261023e">
 </head>
 <body class="rn-standalone">
 <header class="topbar-simple"><strong>RenjuNet Elo</strong><a href="./">← 排名管理首頁</a><a href="?">重新整理</a></header>
@@ -204,6 +204,7 @@ $runHistory = $MYSQL->query(
 </<?= $rnEmbedded ? 'div' : 'main' ?>>
 <?php if (!$rnEmbedded): ?>
 <script src="table-tools.js?v=20261023a"></script>
+<script src="bottom-scroll.js?v=20261023a"></script>
 </body>
 </html>
 <?php endif; ?>
