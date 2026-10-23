@@ -837,7 +837,7 @@ $totalRecords = array_sum($counts);
 </main>
 </div>
 <script src="table-tools.js?v=20261023e"></script>
-<script src="inline-create.js?v=20261023a"></script>
+<script src="inline-create.js?v=20261023b"></script>
 <script src="bottom-scroll.js?v=20261023a"></script>
 <script src="pagination.js?v=20261023d"></script>
 <?php if (in_array($view, ['site-resources','site-rules'], true)): ?><script src="resource-drag.js?v=20261023d"></script><?php endif; ?>
