@@ -43,7 +43,7 @@ try {
             $stmt->execute([$slug]);
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $item) {
                 $name = htmlspecialchars((string)$item['title'], ENT_QUOTES, 'UTF-8');
-                $body .= '<h3>◎' . $name . '</h3><div class="site-rule-plain-text">' .
+                $body .= '<h3>' . $name . '</h3><div class="site-rule-plain-text">' .
                     nl2br(htmlspecialchars((string)$item['content_text'], ENT_QUOTES, 'UTF-8'), false) . '</div>';
             }
         }
