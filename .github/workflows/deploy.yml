@@ -99,6 +99,9 @@ jobs:
               'riftw/record.php',
               'riftw/record-queries.php',
               'riftw/world-record.php',
+              'riftw/world-record-results.php',
+              'riftw/world-record-paged.php',
+              'riftw/world-record-async.js',
               'riftw/record-sticky-header.js',
               'menu.html',
               'riftw/player.php',
@@ -203,10 +206,10 @@ jobs:
           # expected to return zero games, so smoke tests stay inexpensive.
           for metric in score wins streak-win; do
             world_body="$(mktemp)"
-            world_url="$base/riftw/world-record.php?record=$metric&from=2099-01-01&to=2099-01-01"
+            world_url="$base/riftw/world-record.php?part=results&record=$metric&from=2099-01-01&to=2099-01-01"
             world_code="$(curl -k -sS -o "$world_body" -w '%{http_code}' --max-time 45 "$world_url" || true)"
             echo "/riftw/world-record.php $metric smoke -> $world_code"
-            if [ "$world_code" != '200' ] || ! grep -q '世界紀錄' "$world_body" || grep -q '世界紀錄查詢失敗' "$world_body"; then
+            if [ "$world_code" != '200' ] || ! grep -q '世界排名' "$world_body" || grep -q '世界紀錄查詢失敗' "$world_body"; then
               echo "World-record smoke test failed: $metric" >&2
               failed=1
             fi
@@ -216,10 +219,10 @@ jobs:
           # Confirm the new all-games path and English/native player search can execute.
           for mode in all rated; do
             world_body="$(mktemp)"
-            world_url="$base/riftw/world-record.php?record=score&rated=$mode&player=SmokeNotFound&from=2099-01-01&to=2099-01-01"
+            world_url="$base/riftw/world-record.php?part=results&record=score&rated=$mode&player=SmokeNotFound&from=2099-01-01&to=2099-01-01"
             world_code="$(curl -k -sS -o "$world_body" -w '%{http_code}' --max-time 45 "$world_url" || true)"
             echo "/riftw/world-record.php $mode + name search -> $world_code"
-            if [ "$world_code" != '200' ] || ! grep -q 'name="player"' "$world_body" || grep -q '世界紀錄查詢失敗' "$world_body"; then
+            if [ "$world_code" != '200' ] || ! grep -q '世界排名' "$world_body" || grep -q '世界紀錄查詢失敗' "$world_body"; then
               echo "World-record mode/search smoke test failed: $mode" >&2
               failed=1
             fi
