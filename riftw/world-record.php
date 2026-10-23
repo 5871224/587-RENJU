@@ -1134,17 +1134,16 @@ if ($isResultsRequest) {
 .wr-pagination nav a,.wr-pagination nav strong{border:1px solid #c8d4e1;min-width:34px;padding:7px 9px;text-align:center;border-radius:7px;box-sizing:border-box;text-decoration:none;background:white;color:#284058}
 .wr-pagination nav strong{background:#dfeaf5}
 .wr-error{color:#a32b2b}
-.wr-loading{display:flex;gap:12px;align-items:center;justify-content:center;margin:24px auto;padding:27px 12px;color:#41627e;font-size:15px;font-weight:600}
+.wr-loading{position:fixed;inset:0;z-index:3000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;margin:0;padding:0;background:rgba(245,248,252,.72);color:#274c6c;font-size:14px;font-weight:600;box-sizing:border-box}
 .wr-loading[hidden]{display:none!important}
-.wr-spinner{display:inline-block;box-sizing:border-box;width:25px;height:25px;border:3px solid #c6dcee;border-top-color:#2474b7;border-radius:50%;animation:wr-spin .7s linear infinite}
-.wr-spinner-small{display:inline-block;box-sizing:border-box;width:15px;height:15px;border:2px solid #ffffff80;border-top-color:#fff;border-radius:50%;animation:wr-spin .7s linear infinite}
+.wr-spinner{display:block;box-sizing:border-box;width:44px;height:44px;border:4px solid #ccdfed;border-top-color:#2474b7;border-radius:50%;animation:wr-spin .7s linear infinite}
 @keyframes wr-spin{to{transform:rotate(360deg)}}
-@media(prefers-reduced-motion:reduce){.wr-spinner,.wr-spinner-small{animation-duration:1.6s}}
+@media(prefers-reduced-motion:reduce){.wr-spinner{animation-duration:1.6s}}
 @media(max-width:900px){.wr-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.wr-main{padding:12px}.wr-filters{grid-template-columns:1fr}.wr-filter-openings .wr-opening-panel{width:100%;max-width:100%}.wr-pagination{justify-content:center}}
 </style>
 <script src="record-sticky-header.js?v=20261023b" defer></script>
-<script src="world-record-async.js?v=20261023a" defer></script>
+<script src="world-record-async.js?v=20261024a" defer></script>
 <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 <script>
 $(function(){ $.ajax({url:"https://587.renju.org.tw/menu.html",async:false,success:function(text){$("#myDiv").html(text);}}); });
@@ -1315,10 +1314,11 @@ $status = $hasRated && $hasUnrated ? '部分計入排名' : ($hasRated ? '計入
 </label>
 <div class="wr-form-action"><button class="wr-action wr-action-primary" type="submit">查詢</button><a class="wr-action" href="world-record.php">清除篩選</a></div>
 </form>
-<div id="wr-loading" class="wr-loading" role="status" aria-live="polite">
-<span class="wr-spinner" aria-hidden="true"></span><span>查詢中，正在載入排名…</span>
-</div>
 <section id="world-record-results" aria-live="polite"></section>
 <noscript><p class="wr-error">此頁需要 JavaScript 顯示查詢結果。</p><a href="world-record.php?part=results">查看預設排名</a></noscript>
 
-</main></body></html>
+</main>
+<div id="wr-loading" class="wr-loading" role="status" aria-live="polite">
+<span class="wr-spinner" aria-hidden="true"></span><span>查詢中…</span>
+</div>
+</body></html>
