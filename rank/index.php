@@ -2,6 +2,7 @@
 require_once __DIR__ . '/login.php';
 require_once __DIR__ . '/swiss-lib.php';
 require_once __DIR__ . '/swiss-sequence.php';
+require_once __DIR__ . '/action-icons.php';
 require_once dirname(__DIR__) . '/site-content-lib.php';
 
 function h($value): string {
@@ -502,6 +503,7 @@ $totalRecords = array_sum($counts);
 <link rel="stylesheet" href="admin.css?v=20260820">
 <link rel="stylesheet" href="pagination.css?v=20260827">
 <style>.edit-field:has(textarea){grid-column:1/-1}.edit-field textarea{display:block;width:100%;min-height:190px;resize:vertical;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:14px/1.55 Consolas,monospace}.edit-field textarea[name*="content_html"]{min-height:420px}</style>
+<link rel="stylesheet" href="table-tools.css?v=20261023a">
 </head>
 <body>
 <div class="app">
@@ -692,8 +694,8 @@ $totalRecords = array_sum($counts);
         <?php endforeach; ?><th>操作</th></tr></thead><tbody>
         <?php foreach ($rows as $row): $rowKey = encodeRowKey($row, $primaryKeys); ?>
             <tr><?php foreach ($columns as $column): ?><td data-raw-value="<?= h($row[$column] ?? '') ?>"><?= h(adminCellValue($current['table'], $column, $row[$column] ?? '')) ?></td><?php endforeach; ?><td class="actions-cell">
-                <a class="action-link" href="<?= h(listUrl($view, $q, $searchField, ['edit' => $rowKey])) ?>">修改</a>
-                <form class="delete-form" method="post" onsubmit="return confirm('確定要刪除這筆資料嗎？此動作無法復原。')"><input type="hidden" name="action" value="delete"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><input type="hidden" name="original" value="<?= h($rowKey) ?>"><button class="delete-link" type="submit">刪除</button></form>
+                <a class="action-link icon-action" href="<?= h(listUrl($view, $q, $searchField, ['edit' => $rowKey])) ?>" title="修改" aria-label="修改"><?= rankActionIcon('edit') ?></a>
+                <form class="delete-form" method="post" onsubmit="return confirm('確定要刪除這筆資料嗎？此動作無法復原。')"><input type="hidden" name="action" value="delete"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><input type="hidden" name="original" value="<?= h($rowKey) ?>"><button class="delete-link icon-action icon-action--danger" type="submit" title="刪除" aria-label="刪除"><?= rankActionIcon('delete') ?></button></form>
                 <?php if ($current['table'] === 'PLAYER' && isset($row['代號'])): ?><a class="action-link" href="player.php?PLAYER=<?= rawurlencode((string)$row['代號']) ?>">棋士頁</a><?php endif; ?>
                 <?php if ($current['table'] === 'SUMMARY' && isset($row['代號'])): ?><a class="action-link" href="../riftw/player.php?PLAYER=<?= rawurlencode((string)$row['代號']) ?>">棋士頁</a><?php endif; ?>
                 <?php if ($current['table'] === 'TOURNAMENT' && isset($row['賽號'])): ?><a class="action-link" href="swiss.php?TOUR=<?= rawurlencode((string)$row['賽號']) ?>">戰績</a><?php endif; ?>
@@ -705,6 +707,7 @@ $totalRecords = array_sum($counts);
 <?php endif; ?>
 </main>
 </div>
-<script src="pagination.js?v=20261020b"></script>
+<script src="table-tools.js?v=20261023a"></script>
+<script src="pagination.js?v=20261023a"></script>
 </body>
 </html>
