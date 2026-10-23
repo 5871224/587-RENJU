@@ -6,7 +6,29 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>規則</title>
 	<link href="renju.css" rel="stylesheet" type="text/css">
-	<style>#contentBody .site-rule-plain-text{line-height:1.75;overflow-wrap:anywhere;margin:0 0 1.5em}</style>
+	<style>
+        #contentBody .site-rule-plain-text {
+            line-height: 1.75;
+            overflow-wrap: anywhere;
+            margin: 0 0 1.5em;
+        }
+        #contentBody .site-rule-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 1.65em 0 0.65em;
+            color: var(--renju-primary-dark);
+            line-height: 1.4;
+        }
+        #contentBody .site-rule-title::before {
+            content: "";
+            display: inline-block;
+            flex: 0 0 5px;
+            height: 1.15em;
+            border-radius: 4px;
+            background: var(--renju-primary);
+        }
+    </style>
 	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 	<script type="text/javascript">
 		$(document).ready(function () {
@@ -55,6 +77,11 @@
 
         function renderRuleContent(html) {
             $('#contentBody').html(html);
+            // 舊版靜態備援仍含「◎」，與動態資料使用同一套簡潔標題樣式。
+            $('#contentBody h3').each(function () {
+                this.textContent = (this.textContent || '').replace(/^\s*◎\s*/u, '');
+                this.classList.add('site-rule-title');
+            });
             window.scrollTo(0, 0);
         }
 
