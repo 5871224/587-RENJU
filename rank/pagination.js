@@ -94,6 +94,7 @@
       if(params.has(key))hiddenField(form,key,params.get(key));
     });
     hiddenField(form,'original',token);
+    if(targetTable.dataset.siteCsrf)hiddenField(form,'csrf',targetTable.dataset.siteCsrf);
     form.addEventListener('submit',function(){
       saveReturnScroll();
     });
@@ -123,10 +124,17 @@
           input.appendChild(option);
         }
       }else{
-        input=document.createElement('input');
         const inputType=header.dataset.inputType||'text';
-        input.type=['text','number','date','datetime-local'].includes(inputType)?inputType:'text';
-        if(input.type==='number')input.step='any';
+        if(inputType==='textarea'){
+          input=document.createElement('textarea');
+          input.rows=6;
+          input.style.minWidth='280px';
+          input.style.whiteSpace='pre-wrap';
+        }else{
+          input=document.createElement('input');
+          input.type=['text','number','date','datetime-local'].includes(inputType)?inputType:'text';
+          if(input.type==='number')input.step='any';
+        }
         if(header.dataset.readonly==='1')input.readOnly=true;
       }
       input.className='inline-edit-input';
