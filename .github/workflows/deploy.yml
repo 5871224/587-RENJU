@@ -206,9 +206,12 @@ jobs:
           # expected to return zero games, so smoke tests stay inexpensive.
           for metric in score wins streak-win; do
             world_body="$(mktemp)"
+            world_headers="$(mktemp)"
             world_url="$base/riftw/world-record.php?part=results&record=$metric&from=2099-01-01&to=2099-01-01"
-            world_code="$(curl -k -sS -o "$world_body" -w '%{http_code}' --max-time 45 "$world_url" || true)"
-            echo "/riftw/world-record.php $metric smoke -> $world_code"
+            world_code="$(curl -k -sS -D "$world_headers" -o "$world_body" -w '%{http_code}' --max-time 45 "$world_url" || true)"
+            pagination_mode="$(grep -i '^x-world-record-pagination:' "$world_headers" | tr -d '\r' | tail -1 || true)"
+            echo "/riftw/world-record.php $metric smoke -> $world_code, $pagination_mode"
+            rm -f "$world_headers"
             if [ "$world_code" != '200' ] || ! grep -q '世界排名' "$world_body" || grep -q '世界紀錄查詢失敗' "$world_body"; then
               echo "World-record smoke test failed: $metric" >&2
               failed=1
