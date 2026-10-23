@@ -25,6 +25,10 @@ foreach ($expected as $relativePath => $test) {
         throw new RuntimeException("Rule titles or order changed for {$relativePath}: " . implode(' / ', $actualNames));
     }
     foreach ($items as $item) {
+        $plainText = siteContentHtmlToPlainText($item['content_html']);
+        if ($plainText === '' || str_contains($plainText, '<a') || str_contains($plainText, 'href=')) {
+            throw new RuntimeException("Rule must be readable plain text: {$relativePath} / {$item['title']}");
+        }
         if (trim(strip_tags($item['content_html'])) === '') {
             throw new RuntimeException("Empty rule content: {$relativePath} / {$item['title']}");
         }
@@ -35,3 +39,13 @@ foreach ($expected as $relativePath => $test) {
     $total += count($items);
 }
 echo "Rule item migration: {$total} records across four categories OK\n";
+
+$sample = siteContentHtmlToPlainText('<p>第一行<br>第二行 <a href="../open.htm">26開局</a></p>'
+    . '<table><tr><td>甲</td><td>乙</td></tr><tr><td>丙</td><td>丁</td></tr></table>');
+if (!str_contains($sample, "第一行\n第二行")
+    || !str_contains($sample, '26開局')
+    || str_contains($sample, '<a')
+    || str_contains($sample, '../open.htm')
+    || !str_contains($sample, "甲\t乙\n丙\t丁")) {
+    throw new RuntimeException('Plain-text conversion must preserve line breaks and table rows without hyperlinks.');
+}

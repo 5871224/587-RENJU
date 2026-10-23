@@ -3,6 +3,8 @@
     const table = document.querySelector('table.resource-draggable');
     if (!table || !table.tBodies.length) return;
     const tbody = table.tBodies[0];
+    const view = table.dataset.reorderView === 'site-rules' ? 'site-rules' : 'site-resources';
+    const action = view === 'site-rules' ? 'reorder_rules' : 'reorder_resources';
     let armed = null;
     let dragging = null;
     let saving = false;
@@ -38,12 +40,12 @@
         table.classList.add('resource-saving');
         try {
             const data = new FormData();
-            data.append('view', 'site-resources');
-            data.append('action', 'reorder_resources');
+            data.append('view', view);
+            data.append('action', action);
             data.append('csrf', table.dataset.resourceCsrf || '');
             data.append('category', category);
             ids.forEach(function (id) { data.append('ids[]', id); });
-            const response = await fetch(window.location.pathname + '?view=site-resources', {
+            const response = await fetch(window.location.pathname + '?view=' + encodeURIComponent(view), {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: { 'Accept': 'application/json' },
@@ -54,8 +56,8 @@
                 throw new Error(result.error || '排序儲存失敗。');
             }
             // A previously selected header sort must not conceal the stored manual order.
-            try { sessionStorage.removeItem('renju-rank:site-resources:::sort'); } catch (ignore) {}
-            window.location.assign('./?view=site-resources&p=1&reordered=1');
+            try { sessionStorage.removeItem('renju-rank:' + view + ':::sort'); } catch (ignore) {}
+            window.location.assign('./?view=' + encodeURIComponent(view) + '&p=' + encodeURIComponent(new URLSearchParams(window.location.search).get('p') || '1') + '&reordered=1');
         } catch (error) {
             alert(error.message || '排序儲存失敗，請重新整理後再試。');
             window.location.reload(); // put the row back in its last saved position
