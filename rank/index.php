@@ -532,7 +532,7 @@ $totalRecords = array_sum($counts);
 <title>台灣連珠排名管理</title>
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
-<link rel="stylesheet" href="pagination.css?v=20260827">
+<link rel="stylesheet" href="pagination.css?v=20261023b">
 <style>.edit-field:has(textarea){grid-column:1/-1}.edit-field textarea{display:block;width:100%;min-height:190px;resize:vertical;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:14px/1.55 Consolas,monospace}.edit-field textarea[name*="content_html"]{min-height:420px}</style>
 <link rel="stylesheet" href="table-tools.css?v=20261023a">
 </head>
@@ -717,7 +717,7 @@ $totalRecords = array_sum($counts);
 <?php endif; ?>
 </main>
 </div>
-<script src="table-tools.js?v=20261023a"></script>
-<script src="pagination.js?v=20261023a"></script>
+<script src="table-tools.js?v=20261023b"></script>
+<script src="pagination.js?v=20261023b"></script>
 </body>
 </html>
