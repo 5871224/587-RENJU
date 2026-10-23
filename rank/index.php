@@ -3,6 +3,7 @@ require_once __DIR__ . '/login.php';
 require_once __DIR__ . '/swiss-lib.php';
 require_once __DIR__ . '/swiss-sequence.php';
 require_once __DIR__ . '/action-icons.php';
+require_once __DIR__ . '/server-pagination.php';
 require_once dirname(__DIR__) . '/site-content-lib.php';
 
 function h($value): string {
@@ -40,6 +41,13 @@ function normalizeFieldValue($value, array $meta) {
 }
 function listUrl(string $view, string $q = '', string $searchField = '', array $extra = []): string {
     $params = ['view' => $view];
+    $sourceView = (string)($_POST['view'] ?? $_GET['view'] ?? '');
+    if ($sourceView === $view && in_array($view, ['games', 'ranking'], true)) {
+        foreach (['f', 'sort', 'dir', 'p'] as $key) {
+            $value = $_POST[$key] ?? $_GET[$key] ?? null;
+            if (is_string($value) && $value !== '') $params[$key] = $value;
+        }
+    }
     if ($q !== '') $params['q'] = $q;
     if ($searchField !== '') $params['field_search'] = $searchField;
     foreach ($extra as $key => $value) {
@@ -190,6 +198,13 @@ $current = null;
 $counts = [];
 $recentTournaments = [];
 $newDefaults = [];
+$serverPaged = in_array($view, ['games', 'ranking'], true);
+$serverFilters = [];
+$serverTotal = 0;
+$serverPage = 1;
+$serverLimit = 100;
+$serverSort = -1;
+$serverDir = 'desc';
 
 try {
     ensureSiteNoticeTable($MYSQL);
@@ -221,8 +236,11 @@ try {
         exit;
     }
 
-    foreach ($views as $key => $meta) {
-        $counts[$key] = (int)$MYSQL->query('SELECT COUNT(*) FROM ' . qi($meta['table']))->fetchColumn();
+    // Do not COUNT all ten tables on every data management page.
+    if ($view === 'dashboard') {
+        foreach ($views as $key => $meta) {
+            $counts[$key] = (int)$MYSQL->query('SELECT COUNT(*) FROM ' . qi($meta['table']))->fetchColumn();
+        }
     }
 
     if ($view === 'dashboard') {
@@ -457,33 +475,46 @@ try {
             if (!$editRow) throw new RuntimeException('找不到要修改的資料。');
         }
 
-        $sql = 'SELECT * FROM ' . qi($table);
-        $params = [];
-        if ($q !== '' && $columns) {
-            if ($searchField !== '') {
-                $sql .= ' WHERE CAST(' . qi($searchField) . ' AS CHAR) LIKE ?';
-                $params[] = '%' . $q . '%';
-            } else {
-                $parts = [];
-                foreach ($columns as $column) {
-                    $parts[] = 'CAST(' . qi($column) . ' AS CHAR) LIKE ?';
-                    $params[] = '%' . $q . '%';
-                }
-                $sql .= ' WHERE ' . implode(' OR ', $parts);
-            }
-        }
-        if ($table === 'SITE_RESOURCE') {
-            $sql .= " ORDER BY FIELD(category, 'learning', 'playing'), sort_order, id";
-        } elseif ($table === 'SITE_RULE_PAGE') {
-            $sql .= ' ORDER BY sort_order, id';
-        } elseif ($table === 'SITE_NOTICE') {
-            $sql .= ' ORDER BY `is_pinned` DESC, `notice_date` DESC, `sort_order` DESC, `id` DESC';
+        if ($serverPaged) {
+            $serverFilters = rankPagedFilters($_GET['f'] ?? '', $columns);
+            $serverSort = filter_var($_GET['sort'] ?? -1, FILTER_VALIDATE_INT);
+            if ($serverSort === false || $serverSort < 0 || $serverSort >= count($columns)) $serverSort = -1;
+            $serverDir = (string)($_GET['dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+            $requestedPage = filter_var($_GET['p'] ?? 1, FILTER_VALIDATE_INT);
+            $requestedPage = $requestedPage === false ? 1 : max(1, $requestedPage);
+            [$rows, $serverTotal, $serverPage, $serverLimit] = rankPagedQuery(
+                $MYSQL, $table, $columns, $columnMeta, $primaryKeys,
+                $q, $searchField, $serverFilters, $requestedPage, $serverSort, $serverDir
+            );
         } else {
-            $sql .= ' ORDER BY 1 DESC';
+            $sql = 'SELECT * FROM ' . qi($table);
+            $params = [];
+            if ($q !== '' && $columns) {
+                if ($searchField !== '') {
+                    $sql .= ' WHERE CAST(' . qi($searchField) . ' AS CHAR) LIKE ?';
+                    $params[] = '%' . $q . '%';
+                } else {
+                    $parts = [];
+                    foreach ($columns as $column) {
+                        $parts[] = 'CAST(' . qi($column) . ' AS CHAR) LIKE ?';
+                        $params[] = '%' . $q . '%';
+                    }
+                    $sql .= ' WHERE ' . implode(' OR ', $parts);
+                }
+            }
+            if ($table === 'SITE_RESOURCE') {
+                $sql .= " ORDER BY FIELD(category, 'learning', 'playing'), sort_order, id";
+            } elseif ($table === 'SITE_RULE_PAGE') {
+                $sql .= ' ORDER BY sort_order, id';
+            } elseif ($table === 'SITE_NOTICE') {
+                $sql .= ' ORDER BY `is_pinned` DESC, `notice_date` DESC, `sort_order` DESC, `id` DESC';
+            } else {
+                $sql .= ' ORDER BY 1 DESC';
+            }
+            $stmt = $MYSQL->prepare($sql);
+            $stmt->execute($params);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-        $stmt = $MYSQL->prepare($sql);
-        $stmt->execute($params);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } else {
         http_response_code(404);
         $error = '找不到指定的功能頁。';
@@ -592,7 +623,7 @@ $totalRecords = array_sum($counts);
         <?php if ($isNew && $columns): ?>
         <form class="edit-panel" method="post">
             <h3>新增 <?= h($current['title']) ?>資料</h3>
-            <input type="hidden" name="action" value="create"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>">
+            <input type="hidden" name="action" value="create"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><?= $serverPaged ? '<input type="hidden" name="f" value="' . h((string)($_GET['f'] ?? '')) . '"><input type="hidden" name="sort" value="' . h((string)($_GET['sort'] ?? '')) . '"><input type="hidden" name="dir" value="' . h((string)($_GET['dir'] ?? '')) . '"><input type="hidden" name="p" value="' . $serverPage . '">' : '' ?>
             <div class="edit-grid">
             <?php foreach ($columns as $column):
                 $meta = $columnMeta[$column] ?? [];
@@ -628,7 +659,7 @@ $totalRecords = array_sum($counts);
         <?php if ($editRow && $columns): ?>
         <form class="edit-panel" method="post">
             <h3>修改 <?= h($current['title']) ?>資料</h3>
-            <input type="hidden" name="action" value="update"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><input type="hidden" name="original" value="<?= h(encodeRowKey($editRow, $primaryKeys)) ?>">
+            <input type="hidden" name="action" value="update"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><?= $serverPaged ? '<input type="hidden" name="f" value="' . h((string)($_GET['f'] ?? '')) . '"><input type="hidden" name="sort" value="' . h((string)($_GET['sort'] ?? '')) . '"><input type="hidden" name="dir" value="' . h((string)($_GET['dir'] ?? '')) . '"><input type="hidden" name="p" value="' . $serverPage . '">' : '' ?><input type="hidden" name="original" value="<?= h(encodeRowKey($editRow, $primaryKeys)) ?>">
             <div class="edit-grid">
             <?php foreach ($columns as $column):
                 $meta = $columnMeta[$column] ?? [];
@@ -658,8 +689,9 @@ $totalRecords = array_sum($counts);
         </form>
         <?php endif; ?>
 
-        <?php if ($rows && $columns): ?>
-        <div class="table-wrap"><table class="data"><thead><tr>
+        <?php if ($serverPaged): ?><?= rankPagedPager($view, $serverPage, $serverTotal, $serverLimit) ?><?php endif; ?>
+        <?php if (($rows || $serverPaged) && $columns): ?>
+        <div class="table-wrap"><table class="data"<?= $serverPaged ? ' data-server-paged="1" data-initial-sort="' . (int)$serverSort . '" data-sort-dir="' . h($serverDir) . '" data-filters="' . h(json_encode($serverFilters, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) . '"' : '' ?>><thead><tr>
         <?php foreach ($columns as $column):
             $inlineOptions = siteContentFieldOptions($current['table'], $column);
             $inlineType = $current['table'] === 'SITE_NOTICE' ? inputTypeForColumn((string)($columnMeta[$column]['Type'] ?? '')) : 'text';
@@ -671,14 +703,16 @@ $totalRecords = array_sum($counts);
         <?php foreach ($rows as $row): $rowKey = encodeRowKey($row, $primaryKeys); ?>
             <tr><?php foreach ($columns as $column): ?><td data-raw-value="<?= h($row[$column] ?? '') ?>"><?= h(adminCellValue($current['table'], $column, $row[$column] ?? '')) ?></td><?php endforeach; ?><td class="actions-cell">
                 <a class="action-link icon-action" href="<?= h(listUrl($view, $q, $searchField, ['edit' => $rowKey])) ?>" title="修改" aria-label="修改"><?= rankActionIcon('edit') ?></a>
-                <form class="delete-form" method="post" onsubmit="return confirm('確定要刪除這筆資料嗎？此動作無法復原。')"><input type="hidden" name="action" value="delete"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><input type="hidden" name="original" value="<?= h($rowKey) ?>"><button class="delete-link icon-action icon-action--danger" type="submit" title="刪除" aria-label="刪除"><?= rankActionIcon('delete') ?></button></form>
+                <form class="delete-form" method="post" onsubmit="return confirm('確定要刪除這筆資料嗎？此動作無法復原。')"><input type="hidden" name="action" value="delete"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><?= $serverPaged ? '<input type="hidden" name="f" value="' . h((string)($_GET['f'] ?? '')) . '"><input type="hidden" name="sort" value="' . h((string)($_GET['sort'] ?? '')) . '"><input type="hidden" name="dir" value="' . h((string)($_GET['dir'] ?? '')) . '"><input type="hidden" name="p" value="' . $serverPage . '">' : '' ?><input type="hidden" name="original" value="<?= h($rowKey) ?>"><button class="delete-link icon-action icon-action--danger" type="submit" title="刪除" aria-label="刪除"><?= rankActionIcon('delete') ?></button></form>
                 <?php if ($current['table'] === 'PLAYER' && isset($row['代號'])): ?><a class="action-link" href="player.php?PLAYER=<?= rawurlencode((string)$row['代號']) ?>">棋士頁</a><?php endif; ?>
                 <?php if ($current['table'] === 'SUMMARY' && isset($row['代號'])): ?><a class="action-link" href="../riftw/player.php?PLAYER=<?= rawurlencode((string)$row['代號']) ?>">棋士頁</a><?php endif; ?>
                 <?php if ($current['table'] === 'TOURNAMENT' && isset($row['賽號'])): ?><a class="action-link" href="swiss.php?TOUR=<?= rawurlencode((string)$row['賽號']) ?>">戰績</a><?php endif; ?>
             </td></tr>
         <?php endforeach; ?>
         </tbody></table></div>
+        <?php if ($serverPaged && !$rows): ?><div class="empty">沒有符合條件的資料，可雙擊欄標題調整或清除篩選。</div><?php endif; ?>
         <?php else: ?><div class="empty"><?= $q !== '' ? '搜尋不到符合的資料。' : '目前沒有資料。' ?></div><?php endif; ?>
+        <?php if ($serverPaged): ?><?= rankPagedPager($view, $serverPage, $serverTotal, $serverLimit) ?><?php endif; ?>
     </section>
 <?php endif; ?>
 </main>
