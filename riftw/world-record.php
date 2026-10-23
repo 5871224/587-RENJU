@@ -896,58 +896,75 @@ $isResultsRequest = (($_GET['part'] ?? '') === 'results');
 try {
     // The filter controls render immediately; expensive rankings load separately.
     if (!$isResultsRequest) {
-    // Filter dropdowns reflect the current rated/all-games mode; only include
-    // countries and rules that have valid games of that kind.
-    $ratedCondition = $ratedMode === 'rated' ? 'AND T.rated = 1' : '';
-    $countrySql = "
-        SELECT C.id, C.name, C.abbr
-        FROM RENJUNET_COUNTRY C
-        JOIN (
-            SELECT P.country_id
-            FROM RENJUNET_TOURNAMENT T
-            JOIN RENJUNET_GAME G ON G.tournament_id = T.id
-            JOIN RENJUNET_PLAYER P ON P.id = G.black_player_id
+    // Cache relatively static filter choices separately from leaderboard data.
+    // A new RenjuNet import ID invalidates the options immediately.
+    $importInfo = $MYSQL->query('SELECT id, database_date FROM RENJUNET_IMPORT ORDER BY imported_at DESC, id DESC LIMIT 1')
+        ->fetch(PDO::FETCH_ASSOC);
+    $sourceDate = is_array($importInfo) ? (string)$importInfo['database_date'] : '';
+    $filterKey = 'filter-options:' . (string)($importInfo['id'] ?? '0') . ':' . $ratedMode;
+    $filterCache = wrReadRankingCache($filterKey);
+    if (is_array($filterCache)
+        && isset($filterCache['countries'], $filterCache['rules'], $filterCache['openingOptions'])) {
+        $countries = $filterCache['countries'];
+        $rules = $filterCache['rules'];
+        $openingOptions = $filterCache['openingOptions'];
+    } else {
+        // Filter dropdowns reflect the current rated/all-games mode; only include
+        // countries and rules that have valid games of that kind.
+        $ratedCondition = $ratedMode === 'rated' ? 'AND T.rated = 1' : '';
+        $countrySql = "
+            SELECT C.id, C.name, C.abbr
+            FROM RENJUNET_COUNTRY C
+            JOIN (
+                SELECT P.country_id
+                FROM RENJUNET_TOURNAMENT T
+                JOIN RENJUNET_GAME G ON G.tournament_id = T.id
+                JOIN RENJUNET_PLAYER P ON P.id = G.black_player_id
+                WHERE T.end_date IS NOT NULL
+                  {$ratedCondition}
+                  AND G.black_player_id > 0 AND G.white_player_id > 0
+                  AND G.black_player_id <> G.white_player_id
+                  AND G.black_result IN (0, 0.5, 1)
+                UNION
+                SELECT P.country_id
+                FROM RENJUNET_TOURNAMENT T
+                JOIN RENJUNET_GAME G ON G.tournament_id = T.id
+                JOIN RENJUNET_PLAYER P ON P.id = G.white_player_id
+                WHERE T.end_date IS NOT NULL
+                  {$ratedCondition}
+                  AND G.black_player_id > 0 AND G.white_player_id > 0
+                  AND G.black_player_id <> G.white_player_id
+                  AND G.black_result IN (0, 0.5, 1)
+            ) UsedCountries ON UsedCountries.country_id = C.id
+            ORDER BY C.name
+        ";
+        $countries = $MYSQL->query($countrySql)->fetchAll(PDO::FETCH_ASSOC);
+        // Whether a game is rated is recorded on its tournament, not on its rule.
+        // For each used rule, show whether its games are rated, unrated, or mixed.
+        $ratedHaving = $ratedMode === 'rated' ? 'HAVING has_rated = 1' : '';
+        $rules = $MYSQL->query("
+            SELECT R.id, R.name,
+                MAX(CASE WHEN T.rated = 1 THEN 1 ELSE 0 END) AS has_rated,
+                MAX(CASE WHEN T.rated <> 1 THEN 1 ELSE 0 END) AS has_unrated
+            FROM RENJUNET_RULE R
+            INNER JOIN RENJUNET_GAME G ON G.rule_id = R.id
+            INNER JOIN RENJUNET_TOURNAMENT T ON T.id = G.tournament_id
             WHERE T.end_date IS NOT NULL
-              {$ratedCondition}
-              AND G.black_player_id > 0 AND G.white_player_id > 0
+              AND G.black_player_id > 0
+              AND G.white_player_id > 0
               AND G.black_player_id <> G.white_player_id
               AND G.black_result IN (0, 0.5, 1)
-            UNION
-            SELECT P.country_id
-            FROM RENJUNET_TOURNAMENT T
-            JOIN RENJUNET_GAME G ON G.tournament_id = T.id
-            JOIN RENJUNET_PLAYER P ON P.id = G.white_player_id
-            WHERE T.end_date IS NOT NULL
-              {$ratedCondition}
-              AND G.black_player_id > 0 AND G.white_player_id > 0
-              AND G.black_player_id <> G.white_player_id
-              AND G.black_result IN (0, 0.5, 1)
-        ) UsedCountries ON UsedCountries.country_id = C.id
-        ORDER BY C.name
-    ";
-    $countries = $MYSQL->query($countrySql)->fetchAll(PDO::FETCH_ASSOC);
-    // Whether a game is rated is recorded on its tournament, not on its rule.
-    // For each used rule, show whether its games are rated, unrated, or mixed.
-    $ratedHaving = $ratedMode === 'rated' ? 'HAVING has_rated = 1' : '';
-    $rules = $MYSQL->query("
-        SELECT R.id, R.name,
-            MAX(CASE WHEN T.rated = 1 THEN 1 ELSE 0 END) AS has_rated,
-            MAX(CASE WHEN T.rated <> 1 THEN 1 ELSE 0 END) AS has_unrated
-        FROM RENJUNET_RULE R
-        INNER JOIN RENJUNET_GAME G ON G.rule_id = R.id
-        INNER JOIN RENJUNET_TOURNAMENT T ON T.id = G.tournament_id
-        WHERE T.end_date IS NOT NULL
-          AND G.black_player_id > 0
-          AND G.white_player_id > 0
-          AND G.black_player_id <> G.white_player_id
-          AND G.black_result IN (0, 0.5, 1)
-        GROUP BY R.id, R.name
-        {$ratedHaving}
-        ORDER BY R.name
-    ")->fetchAll(PDO::FETCH_ASSOC);
-    $openingOptions = $MYSQL->query('SELECT id, abbr, name FROM RENJUNET_OPENING ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
-    $stamp = $MYSQL->query('SELECT database_date FROM RENJUNET_IMPORT ORDER BY imported_at DESC, id DESC LIMIT 1')->fetchColumn();
-    $sourceDate = is_string($stamp) ? $stamp : '';
+            GROUP BY R.id, R.name
+            {$ratedHaving}
+            ORDER BY R.name
+        ")->fetchAll(PDO::FETCH_ASSOC);
+        $openingOptions = $MYSQL->query('SELECT id, abbr, name FROM RENJUNET_OPENING ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+    
+        wrWriteRankingCache($filterKey, [
+            'countries' => $countries, 'rules' => $rules,
+            'openingOptions' => $openingOptions
+        ]);
+    }
     }
     if ($isResultsRequest) {
     if ($from !== '' && $to !== '' && $from > $to) {
