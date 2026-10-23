@@ -33,4 +33,6 @@ $sample = '<section><p>Place: Arjeplog, Sweden</p><p>Rule: <a>Classic</a> Rated:
 $remote = tmRenjuNetMetadata($sample);
 expectMetadata('RenjuNet place', $remote['location'], 'Arjeplog, Sweden');
 expectMetadata('RenjuNet opening rule', $remote['rule'], '國際規則');
+expectMetadata('hybrid opening', tmRuleLabel('Swap gomoku + Taraguchi-10'), 'Swap gomoku + Taraguchi-10');
+expectMetadata('group suffix precedence', tmGroupName('國手選拔賽日規組'), '日規');
 echo "Tournament metadata regression checks passed.\n";
