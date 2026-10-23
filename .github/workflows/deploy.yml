@@ -213,6 +213,19 @@ jobs:
             rm -f "$world_body"
           done
 
+          # Confirm the new all-games path and English/native player search can execute.
+          for mode in all rated; do
+            world_body="$(mktemp)"
+            world_url="$base/riftw/world-record.php?record=score&rated=$mode&player=SmokeNotFound&from=2099-01-01&to=2099-01-01"
+            world_code="$(curl -k -sS -o "$world_body" -w '%{http_code}' --max-time 45 "$world_url" || true)"
+            echo "/riftw/world-record.php $mode + name search -> $world_code"
+            if [ "$world_code" != '200' ] || ! grep -q 'name="player"' "$world_body" || grep -q '世界紀錄查詢失敗' "$world_body"; then
+              echo "World-record mode/search smoke test failed: $mode" >&2
+              failed=1
+            fi
+            rm -f "$world_body"
+          done
+
           if [ "$failed" -ne 0 ]; then
             echo 'One or more public security boundary checks failed.' >&2
             exit 1
