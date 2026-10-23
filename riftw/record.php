@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>各項紀錄｜台灣連珠</title>
+<title>台灣紀錄｜台灣連珠</title>
 <link href="../../renju.css" rel="stylesheet" type="text/css">
 <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 <script>
@@ -39,7 +39,7 @@ function changeRecord(value) {
 <body>
 <div id="myDiv"></div>
 <main class="record-shell">
-<h1>各項紀錄</h1>
+<h1>台灣紀錄</h1>
 <?php
 require_once 'login.php';
 require_once __DIR__ . '/record-queries.php';
@@ -50,7 +50,7 @@ $recordOptions = [
     'draws' => ['以和為貴', '近五年出賽15局以上最高和棋率'],
     'games' => ['業精於勤', '近五年對局最多'],
     'gain' => ['一鳴驚人', '單場賽事最大得分，每人取最高一場'],
-    'streak-win' => ['COMBO大師', '個人最高連續獲勝局數'],
+    'streak-win' => ['連戰皆捷', '個人最高連續獲勝局數'],
     'streak-unbeaten' => ['獨孤求敗', '個人最高連續不敗局數'],
     'streak-draw' => ['和氣一團', '個人最高連續和棋局數'],
     'streak-nondraw' => ['誓不兩立', '個人最高連續不和棋局數'],
@@ -236,7 +236,7 @@ switch ($selected) {
           $streakBoards = recordConsecutiveBoards($MYSQL);
           $statement = $streakBoards['win'];
 
-     echo "<H2>COMBO大師</H2>（連續獲勝局數）";
+     echo "<H2>連戰皆捷</H2>（連續獲勝局數）";
      echo "<TABLE class='rank'><colgroup><col width='100'><col width='80'><col width='120'><col width='120'></colgroup>";
      echo "<TR><TH>棋士</TH><TH>連勝</TH><TH>開始日</TH><TH>結束日</TH></TR>";
      foreach ($statement as $row) {
