@@ -803,40 +803,11 @@ function wrStreak(PDO $db, string $source, array $params, array $qualified, stri
     });
     return $rows;
 }
-function wrTournamentPoints(PDO $db, string $source, array $params, array $qualified): array {
-    $sql = 'SELECT X.pid, X.tour, SUM(X.points)/2 AS tour_points, '
-        . 'COUNT(*) AS tour_games, MIN(X.played) AS played '
-        . 'FROM (' . $source . ') X GROUP BY X.pid, X.tour';
-    $stmt = $db->prepare($sql);
-    $stmt->execute($params);
-    $best = [];
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $pid = (int)$row['pid'];
-        if (!isset($qualified[$pid])) continue;
-        if (!isset($best[$pid])
-            || (float)$row['tour_points'] > (float)$best[$pid]['tour_points']
-            || ((float)$row['tour_points'] === (float)$best[$pid]['tour_points']
-                && (string)$row['played'] < (string)$best[$pid]['played'])) {
-            $best[$pid] = $row;
-        }
-    }
-    $stmt->closeCursor();
-    $rows = [];
-    foreach ($best as $pid => $item) $rows[] = array_merge($qualified[$pid], $item);
-    usort($rows, static function ($a, $b): int {
-        return ((float)$b['tour_points'] <=> (float)$a['tour_points'])
-            ?: ((int)$b['tour_games'] <=> (int)$a['tour_games'])
-            ?: ((int)$a['pid'] <=> (int)$b['pid']);
-    });
-    return $rows;
-}
-
 $options = [
     'score' => ['神乎棋技', '期間最高得分率'],
     'wins' => ['只許成功', '期間最高勝率'],
     'draws' => ['以和為貴', '期間最高和棋率'],
     'games' => ['業精於勤', '期間對局最多'],
-    'gain' => ['一鳴驚人', '單場賽事最高積分（非等級分增幅）'],
     'streak-win' => ['COMBO大師', '個人最高連續獲勝局數'],
     'streak-unbeaten' => ['獨孤求敗', '個人最高連續不敗局數'],
     'streak-draw' => ['和氣一團', '個人最高連續和棋局數'],
@@ -893,8 +864,6 @@ try {
         $qualified = array_filter($all, static fn($item) => (int)$item['games'] > $minGames);
         if (str_starts_with($record, 'streak-')) {
             $rows = wrStreak($MYSQL, $source, $sourceParams, $qualified, $record);
-        } elseif ($record === 'gain') {
-            $rows = wrTournamentPoints($MYSQL, $source, $sourceParams, $qualified);
         } else {
             $rows = array_values($qualified);
             $metric = match ($record) {
@@ -1083,9 +1052,6 @@ document.addEventListener('DOMContentLoaded',function(){
 <div class="wr-form-action"><button class="wr-btn" type="submit">查詢</button><a class="wr-reset" href="world-record.php">清除篩選</a></div>
 </form>
 <h2 class="wr-title"><?= wrH($options[$record][0]) ?></h2>
-<?php if ($record === 'gain'): ?>
-<p class="wr-note">此項依單場賽事的勝和負積分計算（勝 1 分、和 0.5 分、負 0 分），並非 Renju Rating 的賽前／賽後等級分差。</p>
-<?php endif; ?>
 <?php if($error!==''): ?><p class="wr-error" role="alert"><?= wrH($error) ?></p>
 <?php else: ?>
 <div class="wr-tablebox">
@@ -1095,8 +1061,6 @@ document.addEventListener('DOMContentLoaded',function(){
 <th>勝</th><th>和</th><th>負</th><th>局數</th><th><?= wrH(['score'=>'得分率','wins'=>'勝率','draws'=>'和棋率'][$record]) ?></th>
 <?php elseif ($record === 'games'): ?>
 <th>局數</th><th>勝</th><th>和</th><th>負</th>
-<?php elseif ($record === 'gain'): ?>
-<th>賽事積分</th><th>該賽局數</th><th>賽事</th>
 <?php else: ?>
 <th>連續局數</th><th>開始日</th><th>結束日</th><th>期間總局數</th>
 <?php endif; ?>
@@ -1120,9 +1084,6 @@ document.addEventListener('DOMContentLoaded',function(){
 <td><?= (int)$r['games'] ?></td><td><?= number_format($rate,2) ?>%</td>
 <?php elseif($record==='games'): ?>
 <td><?= (int)$r['games'] ?></td><td><?= (int)$r['wins'] ?></td><td><?= (int)$r['draws'] ?></td><td><?= (int)$r['losses'] ?></td>
-<?php elseif($record==='gain'): ?>
-<td><?= number_format((float)$r['tour_points'],1) ?></td><td><?= (int)$r['tour_games'] ?></td>
-<td><a href="https://www.renju.net/tournament/<?= (int)$r['tour'] ?>/" target="_blank" rel="noopener noreferrer">#<?= (int)$r['tour'] ?> ↗</a></td>
 <?php else: ?>
 <td><?= (int)$r['streak'] ?></td><td><?= wrH($r['started']) ?></td><td><?= wrH($r['ended']) ?></td><td><?= (int)$r['games'] ?></td>
 <?php endif; ?>
