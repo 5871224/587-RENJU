@@ -537,8 +537,13 @@ try {
 
         if ($serverPaged) {
             $serverFilters = rankPagedFilters($_GET['f'] ?? '', $columns);
+            // Column index from the visible table, excluding the drag-only hidden sort_order.
+            $visibleColumns = $table === 'SITE_RESOURCE'
+                ? array_values(array_filter($columns, static fn(string $column): bool => $column !== 'sort_order'))
+                : $columns;
             $serverSort = filter_var($_GET['sort'] ?? -1, FILTER_VALIDATE_INT);
-            if ($serverSort === false || $serverSort < 0 || $serverSort >= count($columns)) $serverSort = -1;
+            if ($serverSort === false || $serverSort < 0 || $serverSort >= count($visibleColumns)) $serverSort = -1;
+            $querySort = $serverSort < 0 ? -1 : array_search($visibleColumns[$serverSort], $columns, true);
             $serverDir = (string)($_GET['dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
             $requestedPage = filter_var($_GET['p'] ?? 1, FILTER_VALIDATE_INT);
             $requestedPage = $requestedPage === false ? 1 : max(1, $requestedPage);
@@ -551,7 +556,7 @@ try {
             };
             [$rows, $serverTotal, $serverPage, $serverLimit] = rankPagedQuery(
                 $MYSQL, $table, $columns, $columnMeta, $primaryKeys,
-                $q, $searchField, $serverFilters, $requestedPage, $serverSort, $serverDir,
+                $q, $searchField, $serverFilters, $requestedPage, $querySort, $serverDir,
                 $defaultOrder
             );
         } else {
