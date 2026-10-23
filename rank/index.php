@@ -59,8 +59,8 @@ function adminColumnLabel(string $table, string $column): string {
     if ($table === 'SITE_RESOURCE') {
         return ['id'=>'編號','category'=>'分類','title'=>'名稱','url'=>'連結網址','language'=>'語言','description_html'=>'介紹','sort_order'=>'排序','is_visible'=>'顯示'][$column] ?? $column;
     }
-    if ($table === 'SITE_RULE_PAGE') {
-        return ['id'=>'編號','slug'=>'分類代碼','title'=>'分類名稱','content_html'=>'規則內容','sort_order'=>'排序','is_visible'=>'顯示'][$column] ?? $column;
+    if ($table === 'SITE_RULE_ITEM') {
+        return ['id'=>'編號','page_slug'=>'分類','title'=>'規則名稱','content_html'=>'規則內容','sort_order'=>'排序','is_visible'=>'顯示'][$column] ?? $column;
     }
     if ($table !== 'SITE_NOTICE') return $column;
     static $labels = [
@@ -96,23 +96,24 @@ function siteNoticeFieldOptions(string $column): ?array {
 }
 function siteContentFieldOptions(string $table, string $column): ?array {
     if ($table === 'SITE_NOTICE') return siteNoticeFieldOptions($column);
-    if ($column === 'is_visible' && in_array($table, ['SITE_RESOURCE', 'SITE_RULE_PAGE'], true)) return ['1'=>'顯示','0'=>'隱藏'];
+    if ($column === 'is_visible' && in_array($table, ['SITE_RESOURCE', 'SITE_RULE_ITEM'], true)) return ['1'=>'顯示','0'=>'隱藏'];
     if ($table === 'SITE_RESOURCE' && $column === 'category') return ['learning'=>'學習網站','playing'=>'下棋網站'];
+    if ($table === 'SITE_RULE_ITEM' && $column === 'page_slug') return ['rulehome'=>'行棋規則','renju-rule'=>'禁手開局規則','gomoku-rule'=>'無禁開局規則','other'=>'其他玩法'];
     return null;
 }
 function siteContentNormalizeField(string $table, string $column, $value) {
-    if (!in_array($table, ['SITE_RESOURCE', 'SITE_RULE_PAGE'], true)) return $value;
+    if (!in_array($table, ['SITE_RESOURCE', 'SITE_RULE_ITEM'], true)) return $value;
     if (in_array($column, ['description_html','content_html'], true)) return siteContentSanitizeHtml((string)$value);
     if ($table === 'SITE_RESOURCE' && $column === 'url' && !siteContentSafeUrl((string)$value, false)) {
         throw new RuntimeException('連結網址只能使用 http:// 或 https://。');
     }
-    if ($table === 'SITE_RULE_PAGE' && $column === 'slug' && !preg_match('/^[a-z0-9-]{1,80}$/', (string)$value)) {
-        throw new RuntimeException('分類代碼只能使用英文字母小寫、數字或減號。');
+    if ($table === 'SITE_RULE_ITEM' && $column === 'page_slug' && !in_array((string)$value, ['rulehome','renju-rule','gomoku-rule','other'], true)) {
+        throw new RuntimeException('請選擇正確的規則分類。');
     }
     return $value;
 }
 function adminCellValue(string $table, string $column, $value): string {
-    if (in_array($column, ['description_html', 'content_html'], true) && in_array($table, ['SITE_RESOURCE','SITE_RULE_PAGE'], true)) {
+    if (in_array($column, ['description_html', 'content_html'], true) && in_array($table, ['SITE_RESOURCE','SITE_RULE_ITEM'], true)) {
         return mb_strimwidth(trim(strip_tags((string)$value)), 0, 100, '…', 'UTF-8');
     }
     $option = siteContentFieldOptions($table, $column);
@@ -153,7 +154,7 @@ $views = [
     'meijin' => ['title' => '名人', 'table' => 'MEIJIN', 'desc' => '名人戰歷史資料'],
     'site-notices' => ['title' => '首頁訊息', 'table' => 'SITE_NOTICE', 'desc' => '首頁更新、比賽訊息與一般消息'],
     'site-resources' => ['title' => '線上資源', 'table' => 'SITE_RESOURCE', 'desc' => '學習網站與下棋網站的連結、語言、介紹及排序'],
-    'site-rules' => ['title' => '規則內容', 'table' => 'SITE_RULE_PAGE', 'desc' => '行棋規則及各種開局規則的完整文章'],
+    'site-rules' => ['title' => '規則內容', 'table' => 'SITE_RULE_ITEM', 'desc' => '四個分頁分類，每條規則獨立一筆資料'],
 ];
 $ratingTools = [
     'review' => ['title' => '台灣排名重算檢查', 'file' => 'rating-review.php', 'desc' => '整合逐場差異、完整性檢查與每位棋士最終差異，所有明細皆可分頁查看'],
@@ -179,6 +180,7 @@ if (!empty($_SESSION['rank_rebuild_flash'])) { $message = (string)$_SESSION['ran
 elseif (isset($_GET['saved'])) $message = '資料已更新。';
 elseif (isset($_GET['created'])) $message = '資料已新增。';
 elseif (isset($_GET['deleted'])) $message = '資料已刪除。';
+elseif (isset($_GET['reordered'])) $message = '排序已儲存。';
 elseif (isset($_GET['shifted'])) {
     $after = max(0, (int)($_GET['after'] ?? 0));
     $message = '已在賽號 ' . $after . ' 後空出賽號 ' . ($after + 1) . '，後續賽號與關聯資料均已後移 1。';
@@ -272,10 +274,11 @@ try {
             $prefillName = trim((string)($_GET['name'] ?? ''));
             if ($prefillName !== '') $newDefaults['姓名'] = mb_substr($prefillName, 0, 255, 'UTF-8');
         }
-        if ($isNew && in_array($table, ['SITE_RESOURCE','SITE_RULE_PAGE'], true)) {
+        if ($isNew && in_array($table, ['SITE_RESOURCE','SITE_RULE_ITEM'], true)) {
             $newDefaults['is_visible'] = '1';
             $newDefaults['sort_order'] = (string)((int)$MYSQL->query('SELECT COALESCE(MAX(sort_order),0)+1 FROM ' . qi($table))->fetchColumn());
             if ($table === 'SITE_RESOURCE') $newDefaults['category'] = 'learning';
+            if ($table === 'SITE_RULE_ITEM') $newDefaults['page_slug'] = 'rulehome';
         }
         if ($isNew && $table === 'SITE_NOTICE') {
             $newDefaults['notice_date'] = $rankToday;
@@ -286,11 +289,48 @@ try {
         }
 
         $action = $_SERVER['REQUEST_METHOD'] === 'POST' ? (string)($_POST['action'] ?? '') : '';
-        if ($action !== '' && in_array($table, ['SITE_RESOURCE','SITE_RULE_PAGE'], true)) {
+        if ($action !== '' && in_array($table, ['SITE_RESOURCE','SITE_RULE_ITEM'], true)) {
             $csrf = (string)($_POST['csrf'] ?? '');
             if ($csrf === '' || !hash_equals((string)$_SESSION['rank_rebuild_csrf'], $csrf)) {
                 throw new RuntimeException('表單驗證已失效，請重新整理頁面。');
             }
+        }
+
+        if ($action === 'reorder_resources' && $table === 'SITE_RESOURCE') {
+            header('Content-Type: application/json; charset=UTF-8');
+            try {
+                $category = (string)($_POST['category'] ?? '');
+                $rawIds = $_POST['ids'] ?? null;
+                if (!in_array($category, ['learning','playing'], true) || !is_array($rawIds) || !$rawIds) {
+                    throw new RuntimeException('排序資料格式不正確。');
+                }
+                $ids = [];
+                foreach ($rawIds as $value) {
+                    if (!is_scalar($value) || !preg_match('/^[1-9][0-9]*$/D', (string)$value)) {
+                        throw new RuntimeException('資料編號無效。');
+                    }
+                    $ids[] = (int)$value;
+                }
+                if (count($ids) !== count(array_unique($ids))) throw new RuntimeException('排序項目不可重複。');
+                $MYSQL->beginTransaction();
+                $stmtCurrent = $MYSQL->prepare('SELECT id FROM SITE_RESOURCE WHERE category=? ORDER BY sort_order,id FOR UPDATE');
+                $stmtCurrent->execute([$category]);
+                $existing = array_map('intval', $stmtCurrent->fetchAll(PDO::FETCH_COLUMN));
+                $expected = $existing;
+                $submitted = $ids;
+                sort($expected, SORT_NUMERIC);
+                sort($submitted, SORT_NUMERIC);
+                if ($expected !== $submitted) throw new RuntimeException('資料已異動，請重新整理後再排序。');
+                $stmtUpdate = $MYSQL->prepare('UPDATE SITE_RESOURCE SET sort_order=? WHERE id=? AND category=?');
+                foreach ($ids as $index => $id) $stmtUpdate->execute([($index + 1) * 10, $id, $category]);
+                $MYSQL->commit();
+                echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE);
+            } catch (Throwable $reorderError) {
+                if ($MYSQL->inTransaction()) $MYSQL->rollBack();
+                http_response_code(409);
+                echo json_encode(['error' => $reorderError->getMessage()], JSON_UNESCAPED_UNICODE);
+            }
+            exit;
         }
 
         if ($action === 'shift_tournament_number') {
@@ -334,6 +374,13 @@ try {
 
         if ($action === 'create') {
             $fields = isset($_POST['field']) && is_array($_POST['field']) ? $_POST['field'] : [];
+            if ($table === 'SITE_RESOURCE') {
+                $category = (string)($fields['category'] ?? '');
+                if (!in_array($category, ['learning','playing'], true)) throw new RuntimeException('請選擇正確的資源分類。');
+                $next = $MYSQL->prepare('SELECT COALESCE(MAX(sort_order),0)+10 FROM SITE_RESOURCE WHERE category=?');
+                $next->execute([$category]);
+                $fields['sort_order'] = (int)$next->fetchColumn();
+            }
 
             if (in_array($table, ['DEN', 'SUMMARY'], true)) {
                 $values = [];
@@ -404,7 +451,8 @@ try {
                 unset($fields['id']);
             }
 
-            if (in_array($table, ['SITE_RESOURCE','SITE_RULE_PAGE'], true)) unset($fields['id']);
+            if (in_array($table, ['SITE_RESOURCE','SITE_RULE_ITEM'], true)) unset($fields['id']);
+            if ($table === 'SITE_RESOURCE') unset($fields['sort_order']);
             $sets = [];
             $params = [];
             foreach ($columns as $column) {
@@ -505,8 +553,8 @@ try {
             }
             if ($table === 'SITE_RESOURCE') {
                 $sql .= " ORDER BY FIELD(category, 'learning', 'playing'), sort_order, id";
-            } elseif ($table === 'SITE_RULE_PAGE') {
-                $sql .= ' ORDER BY sort_order, id';
+            } elseif ($table === 'SITE_RULE_ITEM') {
+                $sql .= " ORDER BY FIELD(page_slug,'rulehome','renju-rule','gomoku-rule','other'),sort_order,id";
             } elseif ($table === 'SITE_NOTICE') {
                 $sql .= ' ORDER BY `is_pinned` DESC, `notice_date` DESC, `sort_order` DESC, `id` DESC';
             } else {
@@ -627,11 +675,12 @@ $totalRecords = array_sum($counts);
             <input type="hidden" name="action" value="create"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><?= $serverPaged ? '<input type="hidden" name="f" value="' . h((string)($_GET['f'] ?? '')) . '"><input type="hidden" name="sort" value="' . h((string)($_GET['sort'] ?? '')) . '"><input type="hidden" name="dir" value="' . h((string)($_GET['dir'] ?? '')) . '"><input type="hidden" name="p" value="' . $serverPage . '">' : '' ?>
             <div class="edit-grid">
             <?php foreach ($columns as $column):
+                if ($current['table'] === 'SITE_RESOURCE' && $column === 'sort_order') continue;
                 $meta = $columnMeta[$column] ?? [];
                 $type = inputTypeForColumn((string)($meta['Type'] ?? ''));
                 $step = $type === 'number' ? ' step="any"' : '';
                 $isChronologicalSequence = $column === '序號' && in_array($current['table'], ['DEN', 'SUMMARY'], true);
-                $isSiteNoticeAutoId = in_array($current['table'], ['SITE_NOTICE','SITE_RESOURCE','SITE_RULE_PAGE'], true) && $column === 'id' && str_contains((string)($meta['Extra'] ?? ''), 'auto_increment');
+                $isSiteNoticeAutoId = in_array($current['table'], ['SITE_NOTICE','SITE_RESOURCE','SITE_RULE_ITEM'], true) && $column === 'id' && str_contains((string)($meta['Extra'] ?? ''), 'auto_increment');
                 $default = $isChronologicalSequence ? '' : (array_key_exists($column, $newDefaults) ? $newDefaults[$column] : ($meta['Default'] ?? ''));
                 if ($default === null) $default = '';
                 $fieldOptions = siteContentFieldOptions($current['table'], $column);
@@ -663,11 +712,12 @@ $totalRecords = array_sum($counts);
             <input type="hidden" name="action" value="update"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><?= $serverPaged ? '<input type="hidden" name="f" value="' . h((string)($_GET['f'] ?? '')) . '"><input type="hidden" name="sort" value="' . h((string)($_GET['sort'] ?? '')) . '"><input type="hidden" name="dir" value="' . h((string)($_GET['dir'] ?? '')) . '"><input type="hidden" name="p" value="' . $serverPage . '">' : '' ?><input type="hidden" name="original" value="<?= h(encodeRowKey($editRow, $primaryKeys)) ?>">
             <div class="edit-grid">
             <?php foreach ($columns as $column):
+                if ($current['table'] === 'SITE_RESOURCE' && $column === 'sort_order') continue;
                 $meta = $columnMeta[$column] ?? [];
                 $type = inputTypeForColumn((string)($meta['Type'] ?? ''));
                 $step = $type === 'number' ? ' step="any"' : '';
                 $value = $editRow[$column] ?? '';
-                $isSiteNoticeId = in_array($current['table'], ['SITE_NOTICE','SITE_RESOURCE','SITE_RULE_PAGE'], true) && $column === 'id';
+                $isSiteNoticeId = in_array($current['table'], ['SITE_NOTICE','SITE_RESOURCE','SITE_RULE_ITEM'], true) && $column === 'id';
                 $fieldOptions = siteContentFieldOptions($current['table'], $column);
                 if ($type === 'datetime-local' && $value) $value = str_replace(' ', 'T', substr((string)$value, 0, 16));
             ?>
@@ -692,17 +742,30 @@ $totalRecords = array_sum($counts);
 
         <?php if ($serverPaged): ?><?= rankPagedPager($view, $serverPage, $serverTotal, $serverLimit) ?><?php endif; ?>
         <?php if (($rows || $serverPaged) && $columns): ?>
-        <div class="table-wrap"><table class="data"<?= $serverPaged ? ' data-server-paged="1" data-initial-sort="' . (int)$serverSort . '" data-sort-dir="' . h($serverDir) . '" data-filters="' . h(json_encode($serverFilters, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) . '"' : '' ?>><thead><tr>
+        <div class="table-wrap"><table class="data<?= $view === 'site-resources' ? ' resource-draggable' : '' ?>"<?= $view === 'site-resources' ? ' data-resource-csrf="' . h((string)$_SESSION['rank_rebuild_csrf']) . '"' : '' ?><?= $serverPaged ? ' data-server-paged="1" data-initial-sort="' . (int)$serverSort . '" data-sort-dir="' . h($serverDir) . '" data-filters="' . h(json_encode($serverFilters, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) . '"' : '' ?>><thead><tr>
         <?php foreach ($columns as $column):
+            if ($current['table'] === 'SITE_RESOURCE' && $column === 'sort_order') continue;
             $inlineOptions = siteContentFieldOptions($current['table'], $column);
             $inlineType = $current['table'] === 'SITE_NOTICE' ? inputTypeForColumn((string)($columnMeta[$column]['Type'] ?? '')) : 'text';
         ?>
             <th data-column="<?= h($column) ?>" data-input-type="<?= h($inlineType) ?>"
                 <?php if ($inlineOptions !== null): ?>data-options="<?= h(json_encode($inlineOptions, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) ?>"<?php endif; ?>
-                <?php if (in_array($current['table'], ['SITE_RESOURCE','SITE_RULE_PAGE'], true) || ($current['table'] === 'SITE_NOTICE' && $column === 'id')): ?>data-readonly="1"<?php endif; ?>><?= h(adminColumnLabel($current['table'], $column)) ?></th>
+                <?php if (in_array($current['table'], ['SITE_RESOURCE','SITE_RULE_ITEM'], true) || ($current['table'] === 'SITE_NOTICE' && $column === 'id')): ?>data-readonly="1"<?php endif; ?>><?= $current['table'] === 'SITE_RESOURCE' && $column === 'id' ? '排序' : h(adminColumnLabel($current['table'], $column)) ?></th>
         <?php endforeach; ?><th>操作</th></tr></thead><tbody>
         <?php foreach ($rows as $row): $rowKey = encodeRowKey($row, $primaryKeys); ?>
-            <tr><?php foreach ($columns as $column): ?><td data-raw-value="<?= h($row[$column] ?? '') ?>"><?= h(adminCellValue($current['table'], $column, $row[$column] ?? '')) ?></td><?php endforeach; ?><td class="actions-cell">
+            <tr<?= $current['table'] === 'SITE_RESOURCE' ? ' data-resource-id="' . (int)$row['id'] . '" data-resource-category="' . h((string)$row['category']) . '"' : '' ?>>
+                <?php foreach ($columns as $column):
+                    if ($current['table'] === 'SITE_RESOURCE' && $column === 'sort_order') continue;
+                    if ($current['table'] === 'SITE_RESOURCE' && $column === 'id'): ?>
+                    <td data-raw-value="<?= (int)$row['id'] ?>" class="resource-drag-cell">
+                        <button class="resource-drag-handle" type="button" aria-label="拖曳以調整排序" title="拖曳調整排序">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="8" cy="5" r="1.6"/><circle cx="16" cy="5" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="8" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/></svg>
+                        </button>
+                    </td>
+                    <?php else: ?>
+                    <td data-raw-value="<?= h($row[$column] ?? '') ?>"><?= h(adminCellValue($current['table'], $column, $row[$column] ?? '')) ?></td>
+                    <?php endif; ?>
+                <?php endforeach; ?><td class="actions-cell">
                 <a class="action-link icon-action" href="<?= h(listUrl($view, $q, $searchField, ['edit' => $rowKey])) ?>" title="修改" aria-label="修改"><?= rankActionIcon('edit') ?></a>
                 <form class="delete-form" method="post" onsubmit="return confirm('確定要刪除這筆資料嗎？此動作無法復原。')"><input type="hidden" name="action" value="delete"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><?= $serverPaged ? '<input type="hidden" name="f" value="' . h((string)($_GET['f'] ?? '')) . '"><input type="hidden" name="sort" value="' . h((string)($_GET['sort'] ?? '')) . '"><input type="hidden" name="dir" value="' . h((string)($_GET['dir'] ?? '')) . '"><input type="hidden" name="p" value="' . $serverPage . '">' : '' ?><input type="hidden" name="original" value="<?= h($rowKey) ?>"><button class="delete-link icon-action icon-action--danger" type="submit" title="刪除" aria-label="刪除"><?= rankActionIcon('delete') ?></button></form>
                 <?php if ($current['table'] === 'PLAYER' && isset($row['代號'])): ?><a class="action-link" href="player.php?PLAYER=<?= rawurlencode((string)$row['代號']) ?>">棋士頁</a><?php endif; ?>
@@ -720,5 +783,6 @@ $totalRecords = array_sum($counts);
 </div>
 <script src="table-tools.js?v=20261023b"></script>
 <script src="pagination.js?v=20261023b"></script>
+<?php if ($view === 'site-resources'): ?><script src="resource-drag.js?v=20261023a"></script><?php endif; ?>
 </body>
 </html>
