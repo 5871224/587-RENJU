@@ -207,9 +207,10 @@ $serverSort = -1;
 $serverDir = 'desc';
 
 try {
-    ensureSiteNoticeTable($MYSQL);
+    // Large GAME / RANK lists do not need home-page content DDL on each request.
+    if (!$serverPaged) ensureSiteNoticeTable($MYSQL);
     try {
-        siteContentEnsureTables($MYSQL);
+        if (!$serverPaged) siteContentEnsureTables($MYSQL);
     } catch (Throwable $contentError) {
         error_log('site-content initialization: ' . $contentError->getMessage());
         // 網站內容尚未建好時，不影響原有排名、比賽與首頁訊息管理。
