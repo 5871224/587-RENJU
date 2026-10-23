@@ -23,13 +23,15 @@ function tmAsciiDigits(string $value): string {
 }
 function tmRuleLabel(string $raw): string {
     $raw = tmClean(tmAsciiDigits($raw), 80);
+    // 複合規則不能只截取其中一種；保留官方原文以免改變賽制。
+    if (preg_match('~(?:swap\s*gomoku|gomoku\s*swap)\s*\+\s*taraguchi~iu', $raw)) return 'Swap gomoku + Taraguchi-10';
     $rules = [
         '~塔拉山口\s*[-－]?\s*10|taraguchi\s*[- ]?\s*10~iu' => '塔拉山口10',
         '~塔拉山口|taraguchi|塔拉(?:\s*規則)?~iu' => '塔拉',
         '~日式規則|日規|日本式~u' => '日式規則',
         '~國際規則|三手交換.{0,8}(?:兩打|二打)|\bclassic\b~iu' => '國際規則',
         '~山口(?:\s*規則)?|\byamaguchi\b~iu' => '山口',
-        '~蘇索夫|soos[oõ]rv~iu' => '',
+        '~蘇索夫|soos[oyõ]rv~iu' => '',
         '~swap\s*[- ]?\s*2\b|swap2\b~iu' => 'Swap2',
         '~swap\s*[- ]?\s*5\b~iu' => 'Swap-5',
         '~gomoku\s*[-–]\s*pro\b|\bpro\s*gomoku\b~iu' => 'Gomoku Pro',
@@ -39,7 +41,7 @@ function tmRuleLabel(string $raw): string {
     foreach ($rules as $pattern => $label) {
         if (preg_match($pattern, $raw)) {
             if ($label !== '') return $label;
-            if (preg_match('~(?:soos[oõ]rv|蘇索夫)\s*[- ]?\s*(5|7|8|10)~iu', $raw, $m)) return '蘇索夫' . $m[1];
+            if (preg_match('~(?:soos[oyõ]rv|蘇索夫)\s*[- ]?\s*(5|7|8|10)~iu', $raw, $m)) return '蘇索夫' . $m[1];
             return '蘇索夫';
         }
     }
