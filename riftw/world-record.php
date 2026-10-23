@@ -931,7 +931,7 @@ try {
         }
         [$source, $sourceParams] = wrBuildQuery($color, $conditions, $params);
         $all = wrAggregate($MYSQL, $source, $sourceParams, $country);
-        $qualified = array_filter($all, static fn($item) => (int)$item['games'] > $minGames);
+        $qualified = array_filter($all, static fn($item) => (int)$item['games'] >= $minGames);
         if (str_starts_with($record, 'streak-')) {
             $rows = wrStreak($MYSQL, $source, $sourceParams, $qualified, $record);
         } else {
@@ -1079,7 +1079,7 @@ document.addEventListener('DOMContentLoaded',function(){
 <div id="myDiv"></div>
 <main class="wr-main">
 <h1>世界紀錄</h1>
-<p class="wr-note">資料來源：RenjuNet（<?= wrH($sourceDate !== '' ? '更新至 '.$sourceDate : '本地同步資料') ?>）。僅統計標記為 Rated（計入排名）的比賽對局，期間依比賽結束日篩選，國家依棋士所屬國家篩選；局數門檻採嚴格大於。</p>
+<p class="wr-note">資料來源：RenjuNet（<?= wrH($sourceDate !== '' ? '更新至 '.$sourceDate : '本地同步資料') ?>）。僅統計標記為 Rated（計入排名）的比賽對局，期間依比賽結束日篩選。</p>
 <form method="get" class="wr-filters">
 <label>選擇紀錄
 <select name="record" aria-label="選擇紀錄">
@@ -1119,7 +1119,7 @@ document.addEventListener('DOMContentLoaded',function(){
 </div>
 <label>開始日期<input type="date" name="from" value="<?= wrH($from) ?>"></label>
 <label>結束日期<input type="date" name="to" value="<?= wrH($to) ?>"></label>
-<label>局數基準（超過幾局）<input type="number" name="min_games" min="0" max="100000" step="1" value="<?= $minGames ?>"></label>
+<label>局數基準（≥ 幾局）<input type="number" name="min_games" min="0" max="100000" step="1" value="<?= $minGames ?>"></label>
 <div class="wr-form-action"><button class="wr-btn" type="submit">查詢</button><a class="wr-reset" href="world-record.php">清除篩選</a></div>
 </form>
 <h2 class="wr-title"><?= wrH($options[$record][0]) ?></h2>
