@@ -17,28 +17,90 @@
 			$("#myDiv").html(htmlobj.responseText);
 
 			// 預設載入行棋規則
-			loadContent('rule/rulehome.htm');
+			loadRuleOptions();
 		});
 
-		function loadContent(url) {
-			if (!url) return;
-			$.ajax({
-				url: url,
-				success: function (data) {
-					// 移除動態載入內容中的多餘結構，只取 body 內的內容
-					var bodyContent = data.match(/<body[^>]*>([\s\S.]*)<\/body>/i);
-					var content = bodyContent ? bodyContent[1] : data;
+        function loadRuleOptions() {
+            $.ajax({
+                url: 'api/site-content.php',
+                data: { kind: 'rules' },
+                dataType: 'json',
+                cache: false,
+                success: function (data) {
+                    if (!Array.isArray(data.rules)) {
+                        loadContent('rule/rulehome.htm');
+                        return;
+                    }
+                    const selector = document.getElementById('rule-select');
+                    selector.replaceChildren();
+                    data.rules.forEach(function (rule) {
+                        if (!/^[a-z0-9-]{1,80}$/.test(String(rule.slug || ''))) return;
+                        const option = document.createElement('option');
+                        option.value = 'rule/' + rule.slug + '.htm';
+                        option.textContent = rule.title || rule.slug;
+                        selector.appendChild(option);
+                    });
+                    if (selector.options.length) {
+                        loadContent(selector.value);
+                    } else {
+                        document.getElementById('contentBody').textContent = '目前沒有公開的規則內容。';
+                    }
+                },
+                error: function () {
+                    loadContent('rule/rulehome.htm');
+                }
+            });
+        }
 
-					// 移除內容中可能重複的選單 div
-					var div = document.createElement('div');
-					div.innerHTML = content;
-					$(div).find('#myDiv').remove();
+        function renderRuleContent(html) {
+            $('#contentBody').html(html);
+            window.scrollTo(0, 0);
+        }
 
-					$("#contentBody").html(div.innerHTML);
-					window.scrollTo(0, 0);
-				}
-			});
-		}
+        function loadStaticRule(url) {
+            // 資料庫故障時，原有四份 HTML 仍可正常顯示。
+            if (!/^rule\/(?:rulehome|renju-rule|gomoku-rule|other)\.htm$/.test(url)) {
+                $('#contentBody').text('規則內容暫時無法讀取。');
+                return;
+            }
+            $.ajax({
+                url: url,
+                success: function (data) {
+                    var bodyContent = data.match(/<body[^>]*>([\s\S.]*)<\/body>/i);
+                    var content = bodyContent ? bodyContent[1] : data;
+                    var div = document.createElement('div');
+                    div.innerHTML = content;
+                    $(div).find('#myDiv').remove();
+                    renderRuleContent(div.innerHTML);
+                },
+                error: function () {
+                    $('#contentBody').text('規則內容暫時無法讀取。');
+                }
+            });
+        }
+
+        function loadContent(url) {
+            if (!url) return;
+            const match = /^rule\/([a-z0-9-]{1,80})\.htm$/.exec(url);
+            if (!match) return;
+            $.ajax({
+                url: 'api/site-content.php',
+                data: { kind: 'rules', slug: match[1] },
+                dataType: 'json',
+                cache: false,
+                success: function (data) {
+                    if (typeof data.body_html === 'string') {
+                        renderRuleContent(data.body_html);
+                    } else {
+                        loadStaticRule(url);
+                    }
+                },
+                error: function () {
+                    loadStaticRule(url);
+                }
+            });
+        }
+
 	</script>
 </head>
 
