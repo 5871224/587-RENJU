@@ -48,7 +48,7 @@ $recordOptions = [
     'score' => ['神乎棋技', '近五年出賽15局以上最高得分率'],
     'wins' => ['只許成功', '近五年出賽15局以上最高勝率'],
     'draws' => ['以和為貴', '近五年出賽15局以上最高和棋率'],
-    'games' => ['業精於勤', '近五年對局最多（符合原有15局門檻）'],
+    'games' => ['業精於勤', '近五年對局最多'],
     'gain' => ['一鳴驚人', '單場賽事最大得分，每人取最高一場'],
     'streak-win' => ['COMBO大師', '個人最高連續獲勝局數'],
     'streak-unbeaten' => ['獨孤求敗', '個人最高連續不敗局數'],
@@ -181,7 +181,7 @@ switch ($selected) {
      echo "</TABLE><BR/>";
           break;
      case 'games':
-          $rateBoards = recordRateBoards($MYSQL, $YY, $Y5);
+          $rateBoards = recordRateBoards($MYSQL, $YY, $Y5, true);
           $statement = $rateBoards['games'];
 
      echo "<H2>業精於勤</H2>（近五年對局最多）";
@@ -279,7 +279,7 @@ switch ($selected) {
      echo "</TABLE><BR/>";
           break;
      case 'den-early':
-          $denBoards = recordDenBoards($MYSQL);
+          $denBoards = recordDenBoards($MYSQL, true);
           $record = $denBoards['early'];
 
      echo "<H2>長江前浪</H2>（各段位取得最早時間）<BR/><TABLE class='rank'><colgroup><col width='100'><col width='50'><col width='85'><col width='120'></colgroup><TR><TH>棋士</TH><TH>性別</TH><TH>段位</TH><TH>日期</TH></TR>";
@@ -293,7 +293,7 @@ switch ($selected) {
      echo "</TABLE><BR/>";
           break;
      case 'den-young':
-          $denBoards = recordDenBoards($MYSQL);
+          $denBoards = recordDenBoards($MYSQL, true);
           $record = $denBoards['young'];
 
      echo "<H2>當年之勇</H2>（各段位取得最小年紀）<BR/><TABLE class='rank'><colgroup><col width='100'><col width='50'><col width='85'><col width='100'></colgroup><TR><TH>棋士</TH><TH>性別</TH><TH>段位</TH><TH>年紀</TH></TR>";
