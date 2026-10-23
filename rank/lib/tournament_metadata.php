@@ -19,7 +19,7 @@ function tmClean(string $value, int $max = 160): string {
     return mb_substr($value, 0, $max, 'UTF-8');
 }
 function tmAsciiDigits(string $value): string {
-    return strtr($value, '０１２３４５６７８９', '0123456789');
+    return strtr($value, ['０'=>'0','１'=>'1','２'=>'2','３'=>'3','４'=>'4','５'=>'5','６'=>'6','７'=>'7','８'=>'8','９'=>'9']);
 }
 function tmRuleLabel(string $raw): string {
     $raw = tmClean(tmAsciiDigits($raw), 80);
