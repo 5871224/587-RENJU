@@ -584,6 +584,7 @@ $totalRecords = array_sum($counts);
                 <?php if ($view === 'games'): ?><a class="btn" href="renjunet-game-import.php">從 RenjuNet 匯入棋譜</a><?php endif; ?>
                 <?php if ($view === 'tournaments'): ?>
                 <a class="btn" href="sched-import.php">從 Sched 匯入比賽</a>
+                <a class="btn" href="tournament-metadata.php">補齊地點與規則</a>
                 <a class="btn" href="player-transfer.php">轉移棋手</a>
                 <details class="shift-tool">
                     <summary class="btn">空出賽號</summary>
