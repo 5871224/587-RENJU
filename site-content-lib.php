@@ -16,7 +16,7 @@ function siteContentSafeUrl(string $url, bool $allowRelative = true): bool
 function siteContentSanitizeHtml(string $html): string
 {
     if (!class_exists('DOMDocument')) {
-        return nl2br(htmlspecialchars(strip_tags($html), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+        throw new RuntimeException('PHP DOM extension is required to safely preserve formatted content.');
     }
     $dom = new DOMDocument('1.0', 'UTF-8');
     $prior = libxml_use_internal_errors(true);
