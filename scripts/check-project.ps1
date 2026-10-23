@@ -12,6 +12,11 @@ foreach ($file in $phpFiles) {
     }
 }
 
+php scripts/check-site-rule-migration.php
+if ($LASTEXITCODE -ne 0) {
+    throw 'Site rule migration regression checks failed.'
+}
+
 php scripts/check-tournament-metadata.php
 if ($LASTEXITCODE -ne 0) {
     throw 'Tournament metadata parser regression checks failed.'
@@ -40,7 +45,7 @@ if ($LASTEXITCODE -ne 0) {
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
     throw 'Node.js is required for Swiss JavaScript syntax validation.'
 }
-foreach ($file in @('rank/swiss-ui.js', 'rank/swiss-admin-ui.js', 'rank/sched-import.js')) {
+foreach ($file in @('rank/swiss-ui.js', 'rank/swiss-admin-ui.js', 'rank/sched-import.js', 'rank/resource-drag.js')) {
     node --check $file
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax check failed: $file"
