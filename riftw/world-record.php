@@ -1062,7 +1062,7 @@ document.addEventListener('DOMContentLoaded',function(){
 <?php elseif ($record === 'games'): ?>
 <th>局數</th><th>勝</th><th>和</th><th>負</th>
 <?php else: ?>
-<th>連續局數</th><th>開始日</th><th>結束日</th><th>期間總局數</th>
+<th>連續局數</th><th>開始日</th><th>結束日</th>
 <?php endif; ?>
 </tr></thead>
 <tbody>
@@ -1085,7 +1085,7 @@ document.addEventListener('DOMContentLoaded',function(){
 <?php elseif($record==='games'): ?>
 <td><?= (int)$r['games'] ?></td><td><?= (int)$r['wins'] ?></td><td><?= (int)$r['draws'] ?></td><td><?= (int)$r['losses'] ?></td>
 <?php else: ?>
-<td><?= (int)$r['streak'] ?></td><td><?= wrH($r['started']) ?></td><td><?= wrH($r['ended']) ?></td><td><?= (int)$r['games'] ?></td>
+<td><?= (int)$r['streak'] ?></td><td><?= wrH($r['started']) ?></td><td><?= wrH($r['ended']) ?></td>
 <?php endif; ?>
 </tr>
 <?php endforeach; ?>
