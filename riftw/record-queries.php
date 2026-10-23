@@ -69,7 +69,7 @@ function recordRateBoards($db, string $today, string $fiveYearsAgo, bool $includ
 
 function recordConsecutiveBoards($db): array
 {
-    $thresholds = ['win'=>1, 'unbeaten'=>1, 'draw'=>1, 'nondraw'=>1];
+    $thresholds = ['win'=>2, 'unbeaten'=>2, 'draw'=>2, 'nondraw'=>2];
     $boards = array_fill_keys(array_keys($thresholds), []);
     $streaks = [];
     $lastPlayer = null;
@@ -152,7 +152,8 @@ function recordConsecutiveBoards($db): array
                 ?: strcmp((string)$a['sortEnd'], (string)$b['sortEnd'])
                 ?: ($a['playerId'] <=> $b['playerId']);
         });
-        // 每位棋士僅保留歷史最佳一次，沒有達成該項連續紀錄者也列為 0。
+        // 每位棋士只保留最佳連續紀錄，未滿 2 局者不列入。
+
         $unique = [];
         $seen = [];
         foreach ($rows as $entry) {
@@ -160,13 +161,6 @@ function recordConsecutiveBoards($db): array
             if (isset($seen[$id])) continue;
             $seen[$id] = true;
             $unique[] = $entry;
-        }
-        foreach ($players as $id => $name) {
-            if (isset($seen[$id])) continue;
-            $unique[] = [
-                '姓名' => $name, '連勝' => 0, '開始' => '—', '結束' => '—',
-                'sortEnd' => '', 'playerId' => $id
-            ];
         }
         $rows = $unique;
     }
