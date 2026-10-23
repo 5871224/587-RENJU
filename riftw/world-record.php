@@ -712,6 +712,33 @@ function wrCountryName($english, $abbr = ''): string {
     return $name !== '' ? $name : '—';
 }
 
+/**
+ * Standard 26 renju openings: canonical D1-D13 / I1-I13 identifiers and
+ * Traditional Chinese names from the site's own /open.htm reference chart.
+ */
+function wrOpeningLabel(array $option): string {
+    static $names = [
+        'D1'=>'寒星', 'D2'=>'溪月', 'D3'=>'疏星', 'D4'=>'花月',
+        'D5'=>'殘月', 'D6'=>'雨月', 'D7'=>'金星', 'D8'=>'松月',
+        'D9'=>'丘月', 'D10'=>'新月', 'D11'=>'瑞星', 'D12'=>'山月',
+        'D13'=>'游星',
+        'I1'=>'長星', 'I2'=>'峽月', 'I3'=>'恆星', 'I4'=>'水月',
+        'I5'=>'流星', 'I6'=>'雲月', 'I7'=>'浦月', 'I8'=>'嵐月',
+        'I9'=>'銀月', 'I10'=>'明星', 'I11'=>'斜月', 'I12'=>'名月',
+        'I13'=>'彗星',
+    ];
+    $abbr = trim((string)($option['abbr'] ?? ''));
+    $english = trim((string)($option['name'] ?? ''));
+    $key = strtoupper(preg_replace('/\\s+/', '', $abbr));
+    $chinese = $names[$key] ?? '';
+    if ($chinese === '' && preg_match('/^(?:direct|indirect)\\s*(\\d{1,2})$/i', $english, $m)) {
+        $key = (stripos($english, 'indirect') === 0 ? 'I' : 'D') . (int)$m[1];
+        $chinese = $names[$key] ?? '';
+    }
+    $original = trim($abbr . ' ' . $english);
+    return $chinese === '' ? $original : ($key . ' ' . $chinese . ($english !== '' ? '（' . $english . '）' : ''));
+}
+
 function wrBuildQuery(string $color, array $baseConditions, array $baseParams): array {
     $base = ' FROM RENJUNET_GAME G INNER JOIN RENJUNET_TOURNAMENT T ON T.id=G.tournament_id WHERE '
         . implode(' AND ', $baseConditions);
@@ -903,9 +930,9 @@ try {
             });
         }
         $total = count($rows);
-        $pages = max(1, (int)ceil($total / 50));
+        $pages = max(1, (int)ceil($total / 100));
         $page = min($page, $pages);
-        $displayRows = array_slice($rows, ($page - 1)*50, 50);
+        $displayRows = array_slice($rows, ($page - 1)*100, 100);
     }
 } catch (Throwable $exception) {
     error_log('world-record.php: ' . $exception->getMessage());
@@ -974,6 +1001,7 @@ try {
 @media(max-width:900px){.wr-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.wr-main{padding:12px}.wr-filters{grid-template-columns:1fr}.wr-filter-openings .wr-opening-panel{width:100%;max-width:100%}.wr-pagination{justify-content:center}}
 </style>
+<script src="record-sticky-header.js?v=20261023a" defer></script>
 <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 <script>
 $(function(){ $.ajax({url:"https://587.renju.org.tw/menu.html",async:false,success:function(text){$("#myDiv").html(text);}}); });
@@ -1064,7 +1092,7 @@ document.addEventListener('DOMContentLoaded',function(){
 <div class="wr-opening-search"><input id="wr-opening-search" type="search" placeholder="搜尋開局" aria-label="搜尋開局" oninput="wrSearchOpenings(this.value)" autocomplete="off"></div>
 <div class="wr-opening-list" role="group" aria-label="選擇開局（可複選）">
 <?php foreach ($openingOptions as $option): ?>
-<label><input type="checkbox" name="opening[]" value="<?= (int)$option['id'] ?>" <?= in_array((int)$option['id'],$openings,true)?'checked':'' ?> onchange="wrUpdateLabel()"><span><?= wrH(trim((string)$option['abbr'].' '.(string)$option['name'])) ?></span></label>
+<label><input type="checkbox" name="opening[]" value="<?= (int)$option['id'] ?>" <?= in_array((int)$option['id'],$openings,true)?'checked':'' ?> onchange="wrUpdateLabel()"><span><?= wrH(wrOpeningLabel($option)) ?></span></label>
 <?php endforeach; ?>
 <p class="wr-opening-empty" id="wr-opening-empty" hidden>沒有符合的開局</p>
 </div>
@@ -1079,7 +1107,7 @@ document.addEventListener('DOMContentLoaded',function(){
 <h2 class="wr-title"><?= wrH($options[$record][0]) ?></h2>
 <?php if($error!==''): ?><p class="wr-error" role="alert"><?= wrH($error) ?></p>
 <?php else: ?>
-<div class="wr-tablebox">
+<div class="wr-tablebox" data-record-sticky>
 <table>
 <thead><tr><th>排名</th><th>國家/地區</th><th>棋士</th>
 <?php if (in_array($record,['score','wins','draws'],true)): ?>
@@ -1098,7 +1126,7 @@ document.addEventListener('DOMContentLoaded',function(){
     $playerHref='https://www.renju.net/people/'.rawurlencode($disp).'/';
 ?>
 <tr>
-<td><?= ($page-1)*50+$i+1 ?></td>
+<td><?= ($page-1)*100+$i+1 ?></td>
 <td><?= wrH(wrCountryName($r['country_name']??'', $r['country_abbr']??'')) ?></td>
 <td class="wr-name"><span class="wr-name-pair"><a href="<?= wrH($playerHref) ?>" target="_blank" rel="noopener noreferrer"><?= wrH($roman!==''?$roman:('#'.(int)$r['pid'])) ?></a><?php if($native!=='' && strcasecmp($native,$roman)!==0): ?><span class="wr-native"><?= wrH($native) ?></span><?php endif; ?></span></td>
 <?php if(in_array($record,['score','wins','draws'],true)):
@@ -1118,11 +1146,11 @@ document.addEventListener('DOMContentLoaded',function(){
 </tbody>
 </table>
 </div>
-<div class="wr-pagination"><span>共 <?= $total ?> 位棋士，每頁 50 筆</span>
+<div class="wr-pagination"><span>共 <?= $total ?> 位棋士，每頁 100 筆</span>
 <nav aria-label="世界紀錄分頁">
 <?php if($page>1): ?><a href="<?= wrH(wrLink($filters,$page-1)) ?>">上一頁</a><?php endif; ?>
 <?php
-$pages=max(1,(int)ceil($total/50));
+$pages=max(1,(int)ceil($total/100));
 $begin=max(1,$page-2);$last=min($pages,$page+2);
 if($begin>1){echo '<a href="'.wrH(wrLink($filters,1)).'">1</a>';if($begin>2)echo '…';}
 for($i=$begin;$i<=$last;$i++){
