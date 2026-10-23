@@ -88,6 +88,7 @@ if ($tour > 0) {
 <link rel="stylesheet" href="admin.css?v=20260828a">
 <link rel="stylesheet" href="swiss.css?v=20260901c">
 <link rel="stylesheet" href="swiss-admin-ui.css?v=20260828a">
+<link rel="stylesheet" href="table-tools.css?v=20261023a">
 </head>
 <body>
 <div class="app">
@@ -145,5 +146,6 @@ if ($tour <= 0) {
 </div>
 <script src="swiss-ui.js?v=20260901c"></script>
 <script src="swiss-admin-ui.js?v=20260828a"></script>
+<script src="table-tools.js?v=20261023a"></script>
 </body>
 </html>
