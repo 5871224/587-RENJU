@@ -53,6 +53,7 @@ foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
 <link rel="stylesheet" href="renjunet-game-import.css?v=3">
+<link rel="stylesheet" href="table-tools.css?v=20261023a">
 </head>
 <body>
 <div class="app">
@@ -206,4 +207,5 @@ foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
 </section>
 <?php endif; ?>
 </main></div>
+<script src="table-tools.js?v=20261023a"></script>
 </body></html>
