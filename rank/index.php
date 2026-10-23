@@ -192,7 +192,16 @@ $newDefaults = [];
 
 try {
     ensureSiteNoticeTable($MYSQL);
-    siteContentEnsureTables($MYSQL);
+    try {
+        siteContentEnsureTables($MYSQL);
+    } catch (Throwable $contentError) {
+        error_log('site-content initialization: ' . $contentError->getMessage());
+        // 網站內容尚未建好時，不影響原有排名、比賽與首頁訊息管理。
+        if (in_array($view, ['site-resources', 'site-rules'], true)) {
+            throw new RuntimeException('網站內容資料表暫時無法使用，請檢查 PHP DOM 與 MySQL 建表權限。', 0, $contentError);
+        }
+        unset($views['site-resources'], $views['site-rules']);
+    }
 
     if ($view === 'rating-tools' && $_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'rebuild_rank') {
         if ($tool !== 'review') throw new RuntimeException('正式排名只能從台灣排名重算檢查執行。');
