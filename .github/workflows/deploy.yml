@@ -117,10 +117,15 @@ jobs:
             with open(local_path,'rb') as fh: ftp.storbinary(f'STOR {posixpath.basename(remote_path)}',fh)
           # Rating utility pages below were merged into rank/index.php as server-side partials and must not remain deployed.
           ftp.cwd(base_dir); ensure_dir('rank')
-          for legacy_name in ('recalculate.php','recalculate-check.php','final-diff.php','recalculated-ranking.php','elo-audit.php','rating-elo-audit.php','renjunet-elo-compare.php','renjunet-sync.php'):
+          for legacy_name in ('recalculate.php','recalculate-check.php','final-diff.php','recalculated-ranking.php','elo-audit.php','rating-elo-audit.php','renjunet-elo-compare.php','renjunet-sync.php','tournament-metadata.php'):
             try: ftp.delete(legacy_name)
             except ftplib.error_perm as exc:
               if not str(exc).startswith('550'): raise
+          # Remove the abandoned manual metadata tool (direct maintenance runs privately instead).
+          ftp.cwd(base_dir); ensure_dir('rank/lib')
+          try: ftp.delete('tournament_metadata.php')
+          except ftplib.error_perm as exc:
+            if not str(exc).startswith('550'): raise
           # Regression tests belong to CI only and must never remain in the public rank tree.
           ftp.cwd(base_dir); ensure_dir('rank/tests')
           try: ftp.delete('swiss-render-regression.php')
@@ -150,6 +155,8 @@ jobs:
             '/rank/rating-elo-audit.php'
             '/rank/renjunet-elo-compare.php'
             '/rank/renjunet-sync.php'
+            '/rank/tournament-metadata.php'
+            '/rank/lib/tournament_metadata.php'
             '/rank/tests/swiss-render-regression.php'
           )
           failed=0
