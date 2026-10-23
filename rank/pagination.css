@@ -1,10 +1,79 @@
-.table-wrap{max-height:none!important}
-.pager{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:11px 16px;border-top:1px solid #dbe4ee;background:#fbfdff}.pager.top{border-top:0;border-bottom:1px solid #dbe4ee}.pager-info{color:#64748b;font-size:13px;font-weight:700}.pager-controls{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.pager button{min-width:36px;min-height:34px;padding:5px 9px;border:1px solid #b9c9d8;border-radius:7px;background:#fff;color:#24445f;font-weight:700;cursor:pointer}.pager button:hover:not(:disabled){background:#e8f2fb}.pager button.current{border-color:#1769aa;background:#1769aa;color:#fff}.pager button:disabled{opacity:.45;cursor:default}.pager-ellipsis{padding:0 3px;color:#64748b}
-table.data th.sortable{cursor:pointer;user-select:none;padding-right:24px;transition:background .12s ease}table.data th.sortable:hover{background:#dfeef8}table.data th.sortable::after{content:'↕';position:absolute;right:8px;color:#94a3b8;font-size:11px}table.data th.sortable[data-sort-dir='asc']::after{content:'▲';color:#1769aa}table.data th.sortable[data-sort-dir='desc']::after{content:'▼';color:#1769aa}table.data th.sortable:focus-visible{outline:2px solid #1769aa;outline-offset:-2px}
-@media(max-width:720px){.pager{align-items:flex-start;flex-direction:column}.pager-controls{width:100%}}
-
-/* The database-backed GAME and RANK pages use links rather than client-side buttons. */
-.rank-server-pager .pager-controls a,.rank-server-pager .pager-controls .pager-disabled{display:inline-flex;align-items:center;justify-content:center;min-width:36px;min-height:34px;padding:5px 9px;border:1px solid #b9c9d8;border-radius:7px;background:#fff;color:#24445f;font-weight:700;text-decoration:none}
-.rank-server-pager .pager-controls a:hover{background:#e8f2fb}
-.rank-server-pager .pager-controls a.current{border-color:#1769aa;background:#1769aa;color:#fff}
-.rank-server-pager .pager-controls .pager-disabled{opacity:.4}
+/* rank/pagination.css
+ * Shared pager skin for admin MySQL pagination, client pagination,
+ * and rating tool pages.  Data handling stays in PHP / JavaScript.
+ */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 11px 16px;
+  border-top: 1px solid #dbe4ee;
+  background: #fbfdff;
+}
+.pager.top {
+  border-top: 0;
+  border-bottom: 1px solid #dbe4ee;
+}
+.pager-info {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+.pager > .pager-info { margin-right: auto; }
+.pager-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.pager .pager-controls > :is(button, a, .pager-disabled),
+.pager > :is(a, strong) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 34px;
+  padding: 5px 9px;
+  border: 1px solid #b9c9d8;
+  border-radius: 7px;
+  background: #fff;
+  color: #24445f;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+.pager .pager-controls > :is(button, a):hover:not(:disabled):not(.current),
+.pager > a:hover:not(.current) { background: #e8f2fb; }
+.pager .pager-controls > :is(button, a).current,
+.pager .pager-controls > a[aria-current="page"],
+.pager > strong {
+  border-color: #1769aa;
+  background: #1769aa;
+  color: #fff;
+  cursor: default;
+}
+.pager .pager-controls > :is(button, .pager-disabled):disabled,
+.pager .pager-controls > .pager-disabled {
+  opacity: .45;
+  cursor: default;
+}
+.pager .pager-controls > :is(button, a):focus-visible,
+.pager > a:focus-visible {
+  outline: 2px solid #1769aa;
+  outline-offset: 2px;
+}
+.pager-ellipsis { padding: 0 3px; color: #64748b; }
+@media (max-width: 720px) {
+  .pager {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .pager-controls { width: 100%; }
+  .pager > .pager-info { margin-right: 0; }
+}
