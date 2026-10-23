@@ -636,7 +636,21 @@ $totalRecords = array_sum($counts);
         <div class="panel">
             <div class="panel-head"><h2>最近比賽</h2><a class="btn" href="<?= h(listUrl('tournaments')) ?>">全部比賽</a></div>
             <?php if ($recentTournaments): ?>
-            <div class="table-wrap"><table class="data"><thead><tr><th>賽號</th><th>賽名</th><th>開始</th><th>結束</th><th>戰績</th></tr></thead><tbody>
+            <?php if ($isNew && $columns): ?>
+        <form id="rank-inline-create-form" method="post" action="<?= h(listUrl($view, $q, $searchField)) ?>">
+            <input type="hidden" name="action" value="create">
+            <input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>">
+            <input type="hidden" name="view" value="<?= h($view) ?>">
+            <input type="hidden" name="q" value="<?= h($q) ?>">
+            <input type="hidden" name="field_search" value="<?= h($searchField) ?>">
+            <?php foreach (['f','sort','dir','p'] as $contextKey): ?>
+            <?php if (isset($_GET[$contextKey]) && is_string($_GET[$contextKey])): ?>
+            <input type="hidden" name="<?= h($contextKey) ?>" value="<?= h($_GET[$contextKey]) ?>">
+            <?php endif; ?>
+            <?php endforeach; ?>
+        </form>
+        <?php endif; ?>
+        <div class="table-wrap"><table class="data"><thead><tr><th>賽號</th><th>賽名</th><th>開始</th><th>結束</th><th>戰績</th></tr></thead><tbody>
             <?php foreach ($recentTournaments as $tour): ?>
                 <tr><td><?= h($tour['賽號']) ?></td><td><?= h($tour['賽名']) ?></td><td><?= h($tour['開始']) ?></td><td><?= h($tour['結束']) ?></td><td><a class="action-link" href="swiss.php?TOUR=<?= rawurlencode((string)$tour['賽號']) ?>">戰績</a></td></tr>
             <?php endforeach; ?>
@@ -680,7 +694,7 @@ $totalRecords = array_sum($counts);
         <div class="panel-head">
             <h2><?= h($current['title']) ?></h2>
             <div class="panel-tools">
-                <a class="btn primary" href="<?= h(listUrl($view, $q, $searchField, ['new' => 1])) ?>">＋ 新增</a>
+                <a class="btn primary" data-rank-create-trigger href="<?= h(listUrl($view, $q, $searchField, ['new' => 1])) ?>">＋ 新增</a>
                 <?php if ($view === 'games'): ?><a class="btn" href="renjunet-game-import.php">從 RenjuNet 匯入棋譜</a><?php endif; ?>
                 <?php if ($view === 'tournaments'): ?>
                 <a class="btn" href="sched-import.php">從 Sched 匯入比賽</a>
@@ -699,43 +713,6 @@ $totalRecords = array_sum($counts);
                 <?php endif; ?>
             </div>
         </div>
-
-        <?php if ($isNew && $columns): ?>
-        <form class="edit-panel" method="post">
-            <h3>新增 <?= h($current['title']) ?>資料</h3>
-            <input type="hidden" name="action" value="create"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><?= $serverPaged ? '<input type="hidden" name="f" value="' . h((string)($_GET['f'] ?? '')) . '"><input type="hidden" name="sort" value="' . h((string)($_GET['sort'] ?? '')) . '"><input type="hidden" name="dir" value="' . h((string)($_GET['dir'] ?? '')) . '"><input type="hidden" name="p" value="' . $serverPage . '">' : '' ?>
-            <div class="edit-grid">
-            <?php foreach ($columns as $column):
-                if (in_array($current['table'], ['SITE_RESOURCE','SITE_RULE_ITEM'], true) && $column === 'sort_order') continue;
-                $meta = $columnMeta[$column] ?? [];
-                $type = inputTypeForColumn((string)($meta['Type'] ?? ''));
-                $step = $type === 'number' ? ' step="any"' : '';
-                $isChronologicalSequence = $column === '序號' && in_array($current['table'], ['DEN', 'SUMMARY'], true);
-                $isSiteNoticeAutoId = in_array($current['table'], ['SITE_NOTICE','SITE_RESOURCE','SITE_RULE_ITEM'], true) && $column === 'id' && str_contains((string)($meta['Extra'] ?? ''), 'auto_increment');
-                $default = $isChronologicalSequence ? '' : (array_key_exists($column, $newDefaults) ? $newDefaults[$column] : ($meta['Default'] ?? ''));
-                if ($default === null) $default = '';
-                $fieldOptions = siteContentFieldOptions($current['table'], $column);
-            ?>
-                <div class="edit-field"><label><?= h(adminColumnLabel($current['table'], $column)) ?><?= $isSiteNoticeAutoId ? '（自動產生）' : (in_array($column, $primaryKeys, true) ? '（主鍵）' : '') ?><?= $isChronologicalSequence ? '（依日期自動）' : ($column === '序號' && array_key_exists('序號', $newDefaults) ? '（自動下一號）' : '') ?></label>
-                <?php if ($isSiteNoticeAutoId): ?>
-                    <input type="text" value="自動跳號" readonly>
-                <?php elseif ($fieldOptions !== null): ?>
-                    <select name="field[<?= h($column) ?>]">
-                    <?php foreach ($fieldOptions as $optionValue => $optionLabel): ?>
-                        <option value="<?= h($optionValue) ?>" <?= (string)$default === (string)$optionValue ? 'selected' : '' ?>><?= h($optionLabel) ?></option>
-                    <?php endforeach; ?>
-                    </select>
-                <?php elseif (in_array($column, ['description_html','content_text'], true)): ?>
-                    <textarea class="<?= $column === 'content_text' ? 'rule-text-input' : '' ?>" rows="<?= $column === 'content_text' ? 7 : 3 ?>" name="field[<?= h($column) ?>]"><?= h($default) ?></textarea>
-                <?php else: ?>
-                    <input type="<?= h($type) ?>"<?= $step ?> name="field[<?= h($column) ?>]" value="<?= h($default) ?>"<?= $isChronologicalSequence ? ' readonly' : '' ?>>
-                <?php endif; ?>
-                </div>
-            <?php endforeach; ?>
-            </div>
-            <div class="edit-actions"><button class="btn primary" type="submit" >新增資料</button><a class="btn" href="<?= h(listUrl($view, $q, $searchField)) ?>">取消</a></div>
-        </form>
-        <?php endif; ?>
 
         <?php if ($editRow && $columns): ?>
         <form class="edit-panel" method="post">
@@ -783,6 +760,44 @@ $totalRecords = array_sum($counts);
                 <?php if ($inlineOptions !== null): ?>data-options="<?= h(json_encode($inlineOptions, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) ?>"<?php endif; ?>
                 <?php if ((in_array($current['table'], ['SITE_RESOURCE','SITE_RULE_ITEM'], true) && $column === 'id') || ($current['table'] === 'SITE_NOTICE' && $column === 'id')): ?>data-readonly="1"<?php endif; ?>><?= in_array($current['table'], ['SITE_RESOURCE','SITE_RULE_ITEM'], true) && $column === 'id' ? '排序' : h(adminColumnLabel($current['table'], $column)) ?></th>
         <?php endforeach; ?><th>操作</th></tr></thead><tbody>
+        <?php if ($isNew && $columns): ?>
+        <tr class="rank-inline-create-row" data-rank-create-row>
+            <?php foreach ($columns as $column):
+                if (in_array($current['table'], ['SITE_RESOURCE','SITE_RULE_ITEM'], true) && $column === 'sort_order') continue;
+                $meta = $columnMeta[$column] ?? [];
+                $type = inputTypeForColumn((string)($meta['Type'] ?? ''));
+                $default = $column === '序號' && in_array($current['table'], ['DEN','SUMMARY'], true) ? '' :
+                    ($newDefaults[$column] ?? ($meta['Default'] ?? ''));
+                if ($default === null) $default = '';
+                $autoId = in_array($current['table'], ['SITE_NOTICE','SITE_RESOURCE','SITE_RULE_ITEM'], true) &&
+                    $column === 'id' && str_contains((string)($meta['Extra'] ?? ''), 'auto_increment');
+                $autoChronological = $column === '序號' && in_array($current['table'], ['DEN','SUMMARY'], true);
+                $fieldOptions = siteContentFieldOptions($current['table'], $column);
+            ?>
+            <td<?= $column === 'content_text' ? ' class="rule-content-cell"' : '' ?>>
+                <?php if ($autoId): ?>
+                    <span class="rank-inline-auto">自動產生</span>
+                <?php elseif ($autoChronological): ?>
+                    <input type="text" value="依日期自動" readonly aria-label="<?= h(adminColumnLabel($current['table'], $column)) ?>">
+                <?php elseif ($fieldOptions !== null): ?>
+                    <select form="rank-inline-create-form" name="field[<?= h($column) ?>]" aria-label="<?= h(adminColumnLabel($current['table'], $column)) ?>">
+                    <?php foreach ($fieldOptions as $optionValue => $optionLabel): ?>
+                        <option value="<?= h($optionValue) ?>"<?= (string)$default === (string)$optionValue ? ' selected' : '' ?>><?= h($optionLabel) ?></option>
+                    <?php endforeach; ?>
+                    </select>
+                <?php elseif (in_array($column, ['description_html','content_text'], true)): ?>
+                    <textarea form="rank-inline-create-form" name="field[<?= h($column) ?>]" rows="<?= $column === 'content_text' ? 5 : 3 ?>" aria-label="<?= h(adminColumnLabel($current['table'], $column)) ?>"><?= h($default) ?></textarea>
+                <?php else: ?>
+                    <input form="rank-inline-create-form" type="<?= h($type) ?>"<?= $type === 'number' ? ' step="any"' : '' ?> name="field[<?= h($column) ?>]" value="<?= h($default) ?>" aria-label="<?= h(adminColumnLabel($current['table'], $column)) ?>">
+                <?php endif; ?>
+            </td>
+            <?php endforeach; ?>
+            <td class="actions-cell rank-inline-create-actions">
+                <button class="btn primary" form="rank-inline-create-form" type="submit">儲存</button>
+                <a class="btn" data-rank-create-cancel href="<?= h(listUrl($view, $q, $searchField, ['new' => null])) ?>">取消</a>
+            </td>
+        </tr>
+        <?php endif; ?>
         <?php foreach ($rows as $row): $rowKey = encodeRowKey($row, $primaryKeys); ?>
             <tr<?= in_array($current['table'], ['SITE_RESOURCE','SITE_RULE_ITEM'], true) ? ' data-resource-id="' . (int)$row['id'] . '" data-resource-category="' . h((string)($row[$current['table'] === 'SITE_RESOURCE' ? 'category' : 'page_slug'] ?? '')) . '"' : '' ?>>
                 <?php foreach ($columns as $column):
@@ -812,7 +827,8 @@ $totalRecords = array_sum($counts);
 <?php endif; ?>
 </main>
 </div>
-<script src="table-tools.js?v=20261023b"></script>
+<script src="table-tools.js?v=20261023e"></script>
+<script src="inline-create.js?v=20261023a"></script>
 <script src="pagination.js?v=20261023d"></script>
 <?php if (in_array($view, ['site-resources','site-rules'], true)): ?><script src="resource-drag.js?v=20261023d"></script><?php endif; ?>
 </body>
