@@ -50,12 +50,23 @@
     const initialRows=Array.from(tbody.rows);
     const uniform=thead.rows.length===1&&headers.every(h=>h.colSpan===1)&&initialRows.every(r=>r.cells.length===headers.length&&Array.from(r.cells).every(c=>c.colSpan===1));
     if(!uniform||table.closest('.swiss-modal-table'))return null;
+    const server=settings&&settings.server;
     const filters=new Map();
+    if(server && server.filters && typeof server.filters==='object'){
+      headers.forEach((th,i)=>{
+        const name=th.dataset.column||th.textContent.trim();
+        const saved=server.filters[name];
+        if(saved&&typeof saved.term==='string'&&saved.term!==''){
+          filters.set(i,{term:saved.term,mode:saved.mode||'includes',picks:null});
+        }
+      });
+    }
     const kinds=headers.map((_,i)=>kindOf(initialRows,i));
     const originalIndex=new Map(initialRows.map((row,index)=>[row,index]));
     const state={column:-1,direction:'asc',filters:filters};
     const onChange=settings&&settings.onChange;
     function filteredAndSorted(){
+      if(server)return initialRows;
       const visible=initialRows.filter(row=>{
         for(const [col,f] of filters){
           const value=cellText(row,col);
@@ -89,6 +100,26 @@
       return visible;
     }
     function notify(action){
+      if(server&&action){
+        const u=new URL(location.href);
+        const next={};
+        for(const [col,filter] of filters){
+          const name=headers[col].dataset.column||headers[col].textContent.trim();
+          if(filter.term)next[name]={term:filter.term,mode:filter.mode};
+        }
+        if(Object.keys(next).length)u.searchParams.set('f',JSON.stringify(next));
+        else u.searchParams.delete('f');
+        if(state.column>=0){
+          u.searchParams.set('sort',String(state.column));
+          u.searchParams.set('dir',state.direction);
+        }else{
+          u.searchParams.delete('sort');
+          u.searchParams.delete('dir');
+        }
+        u.searchParams.set('p','1');
+        location.assign(u.pathname+u.search+u.hash);
+        return;
+      }
       headers.forEach((h,i)=>{
         h.removeAttribute('data-sort-dir');
         if(h.classList.contains('rank-sortable'))h.setAttribute('aria-sort','none');
@@ -119,8 +150,8 @@
       const mode=document.createElement('select');
       [['includes','包含'],['equals','完全相同'],['starts','開頭符合'],['not','不包含'],['gt','數值大於'],['lt','數值小於']].forEach(([v,n])=>{const opt=document.createElement('option');opt.value=v;opt.textContent=n;mode.appendChild(opt);});
       pop.appendChild(mode);
-      label('選擇欄位值（可複選）');
-      const values=[...new Set(initialRows.map(r=>cellText(r,col)))].sort((a,b)=>compare(a,b,kinds[col]));
+      if(!server)label('選擇欄位值（可複選）');
+      const values=server?[]:[...new Set(initialRows.map(r=>cellText(r,col)))].sort((a,b)=>compare(a,b,kinds[col]));
       const choices=document.createElement('div');choices.className='rank-filter-options';
       const allChoice=document.createElement('label');allChoice.className='rank-filter-choice';
       const selectAll=document.createElement('input');selectAll.type='checkbox';selectAll.checked=true;
@@ -134,7 +165,13 @@
       });
       selectAll.addEventListener('change',()=>{items.forEach(item=>item.check.checked=selectAll.checked);});
       items.forEach(item=>item.check.addEventListener('change',()=>{selectAll.checked=items.every(i=>i.check.checked);}));
-      pop.append(choices);
+      if(!server)pop.append(choices);
+      else {
+        const tip=document.createElement('div');
+        tip.className='rank-filter-description';
+        tip.textContent='此欄搜尋與排序套用整張資料表，不只目前這一頁。';
+        pop.append(tip);
+      }
       if(values.length>180){const tip=document.createElement('div');tip.className='rank-filter-description';tip.textContent='選項僅列前 180 種值，其他值仍可用上方關鍵字搜尋。';pop.append(tip);}
       const previous=filters.get(col);
       if(previous){search.value=previous.term;mode.value=previous.mode; if(previous.picks!==null){items.forEach(item=>{item.check.checked=previous.picks.has(item.value);});selectAll.checked=items.every(i=>i.check.checked);}}
@@ -145,7 +182,7 @@
       apply.onclick=()=>{
         const term=search.value.trim();
         let picks=null;
-        if(!items.every(i=>i.check.checked)){
+        if(!server&&!items.every(i=>i.check.checked)){
           picks=new Set(items.filter(i=>i.check.checked).map(i=>i.value));
         }
         if(values.length>180&&picks===null)picks=null;
@@ -197,7 +234,7 @@
   }
   function autoInit(){
     document.querySelectorAll('table').forEach(table=>{
-      if(!table.tHead||table.dataset.rankToolsReady==='1')return;
+      if(!table.tHead||table.dataset.rankToolsReady==='1'||table.dataset.serverPaged==='1')return;
       enhance(table);
     });
   }
