@@ -96,7 +96,13 @@ function siteContentEnsureTables(PDO $db): void
         meta_key VARCHAR(80) NOT NULL PRIMARY KEY,
         completed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
-    siteContentSeed($db);
+    $lock = (int)$db->query("SELECT GET_LOCK('site_content_seed_587', 10)")->fetchColumn();
+    if ($lock !== 1) throw new RuntimeException('Could not acquire content import lock.');
+    try {
+        siteContentSeed($db);
+    } finally {
+        $db->query("SELECT RELEASE_LOCK('site_content_seed_587')");
+    }
 }
 
 function siteContentSeed(PDO $db): void
