@@ -750,8 +750,20 @@ function wrBuildQuery(string $color, array $baseConditions, array $baseParams): 
     if ($color === 'white') return [$white, $baseParams];
     return [$black . ' UNION ALL ' . $white, array_merge($baseParams, $baseParams)];
 }
-function wrAggregate(PDO $db, string $source, array $params, int $country): array {
-    $extra = $country > 0 ? ' WHERE P.country_id = ?' : '';
+function wrAggregate(PDO $db, string $source, array $params, int $country, string $playerName): array {
+    $filters = [];
+    if ($country > 0) {
+        $filters[] = 'P.country_id = ?';
+        $params[] = $country;
+    }
+    if ($playerName !== '') {
+        $filters[] = '(LOCATE(?, CONCAT_WS(\' \', P.surname, P.name)) > 0'
+            . ' OR LOCATE(?, CONCAT_WS(\' \', P.name, P.surname)) > 0'
+            . ' OR LOCATE(?, COALESCE(P.native_name, \'\')) > 0'
+            . ' OR LOCATE(?, P.disp_id) > 0)';
+        array_push($params, $playerName, $playerName, $playerName, $playerName);
+    }
+    $extra = $filters ? ' WHERE ' . implode(' AND ', $filters) : '';
     $sql = 'SELECT X.pid, COUNT(*) AS games, SUM(X.points>1) AS wins, '
         . 'SUM(X.points=1) AS draws, SUM(X.points<1) AS losses, '
         . 'SUM(X.points)/2 AS points, P.surname, P.name, P.native_name, P.disp_id, '
@@ -760,7 +772,6 @@ function wrAggregate(PDO $db, string $source, array $params, int $country): arra
         . 'JOIN RENJUNET_PLAYER P ON P.id=X.pid '
         . 'LEFT JOIN RENJUNET_COUNTRY C ON C.id=P.country_id '
         . $extra . ' GROUP BY X.pid, P.surname, P.name, P.native_name, P.disp_id, C.name, C.abbr';
-    if ($country > 0) $params[] = $country;
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     $results = [];
@@ -843,6 +854,12 @@ $options = [
 $input = $_GET;
 $record = is_string($input['record'] ?? null) && isset($options[$input['record']])
     ? $input['record'] : 'score';
+$ratedMode = is_string($input['rated'] ?? null) && $input['rated'] === 'all' ? 'all' : 'rated';
+$playerName = is_string($input['player'] ?? null) ? trim($input['player']) : '';
+if (strlen($playerName) > 120) {
+    $playerName = function_exists('mb_strcut')
+        ? mb_strcut($playerName, 0, 120, 'UTF-8') : substr($playerName, 0, 120);
+}
 $color = is_string($input['color'] ?? null) && in_array($input['color'], ['all','black','white'], true)
     ? $input['color'] : 'all';
 $country = max(0, wrInt($input['country'] ?? 0));
@@ -857,14 +874,16 @@ $openings = array_values(array_unique(array_filter(array_map(
 sort($openings, SORT_NUMERIC);
 $page = max(1, wrInt($input['p'] ?? 1, 1));
 $filters = ['record' => $record, 'country' => $country, 'color' => $color,
-    'rule' => $rule, 'from' => $from, 'to' => $to, 'min_games' => $minGames];
+    'rule' => $rule, 'from' => $from, 'to' => $to, 'min_games' => $minGames,
+    'rated' => $ratedMode, 'player' => $playerName];
 if ($openings) $filters['opening'] = $openings;
 $error = ''; $rows = []; $total = 0; $displayRows = [];
 $countries = []; $rules = []; $openingOptions = []; $sourceDate = '';
 try {
-    // 只顯示至少有一局有效 RenjuNet 計分對局的棋士所屬國家／地區。
-    // 使用既有的 tournament / black / white 索引，先去重國家再列出選項。
-    $countries = $MYSQL->query("
+    // Filter dropdowns reflect the current rated/all-games mode; only include
+    // countries and rules that have valid games of that kind.
+    $ratedCondition = $ratedMode === 'rated' ? 'AND T.rated = 1' : '';
+    $countrySql = "
         SELECT C.id, C.name, C.abbr
         FROM RENJUNET_COUNTRY C
         JOIN (
@@ -872,7 +891,8 @@ try {
             FROM RENJUNET_TOURNAMENT T
             JOIN RENJUNET_GAME G ON G.tournament_id = T.id
             JOIN RENJUNET_PLAYER P ON P.id = G.black_player_id
-            WHERE T.rated = 1 AND T.end_date IS NOT NULL
+            WHERE T.end_date IS NOT NULL
+              {$ratedCondition}
               AND G.black_player_id > 0 AND G.white_player_id > 0
               AND G.black_player_id <> G.white_player_id
               AND G.black_result IN (0, 0.5, 1)
@@ -881,15 +901,15 @@ try {
             FROM RENJUNET_TOURNAMENT T
             JOIN RENJUNET_GAME G ON G.tournament_id = T.id
             JOIN RENJUNET_PLAYER P ON P.id = G.white_player_id
-            WHERE T.rated = 1 AND T.end_date IS NOT NULL
+            WHERE T.end_date IS NOT NULL
+              {$ratedCondition}
               AND G.black_player_id > 0 AND G.white_player_id > 0
               AND G.black_player_id <> G.white_player_id
               AND G.black_result IN (0, 0.5, 1)
         ) UsedCountries ON UsedCountries.country_id = C.id
         ORDER BY C.name
-    ")->fetchAll(PDO::FETCH_ASSOC);
-    // 規則清單只列出實際出現在有效 RenjuNet 計分對局的規則。
-    // 與下方紀錄統計採用相同的比賽資格及棋局有效性條件。
+    ";
+    $countries = $MYSQL->query($countrySql)->fetchAll(PDO::FETCH_ASSOC);
     $rules = $MYSQL->query("
         SELECT R.id, R.name
         FROM RENJUNET_RULE R
@@ -898,7 +918,7 @@ try {
             FROM RENJUNET_GAME G
             INNER JOIN RENJUNET_TOURNAMENT T ON T.id = G.tournament_id
             WHERE G.rule_id = R.id
-              AND T.rated = 1
+              {$ratedCondition}
               AND T.end_date IS NOT NULL
               AND G.black_player_id > 0
               AND G.white_player_id > 0
@@ -914,13 +934,13 @@ try {
         $error = '開始日期不可晚於結束日期。';
     } else {
         $conditions = [
-            'T.rated=1',
             'T.end_date IS NOT NULL',
             'G.black_player_id>0',
             'G.white_player_id>0',
             'G.black_player_id<>G.white_player_id',
             'G.black_result IN (0, 0.5, 1)'
         ];
+        if ($ratedMode === 'rated') $conditions[] = 'T.rated=1';
         $params = [];
         if ($from !== '') { $conditions[] = 'T.end_date>=?'; $params[] = $from; }
         if ($to !== '') { $conditions[] = 'T.end_date<=?'; $params[] = $to; }
@@ -930,7 +950,7 @@ try {
             array_push($params, ...$openings);
         }
         [$source, $sourceParams] = wrBuildQuery($color, $conditions, $params);
-        $all = wrAggregate($MYSQL, $source, $sourceParams, $country);
+        $all = wrAggregate($MYSQL, $source, $sourceParams, $country, $playerName);
         $qualified = array_filter($all, static fn($item) => (int)$item['games'] >= $minGames);
         if (str_starts_with($record, 'streak-')) {
             $rows = wrStreak($MYSQL, $source, $sourceParams, $qualified, $record);
@@ -971,9 +991,11 @@ try {
 .wr-filters label{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;color:#23384e;min-width:0}
 .wr-filters input,.wr-filters select,.wr-filter-openings summary{font:inherit;box-sizing:border-box;width:100%;height:40px;padding:7px 10px;border:1px solid #c6d1de;border-radius:8px;background:#fff;color:#23384e}
 .wr-filters input[type=number]{width:100%}
-.wr-form-action{display:flex;gap:9px;align-items:center;height:40px}
-.wr-btn{padding:9px 17px;background:#2474b7;border:1px solid #2474b7;border-radius:8px;color:#fff;cursor:pointer;font:inherit;white-space:nowrap}
-.wr-reset{padding:8px 10px;border:1px solid #c6d1de;border-radius:8px;background:#fff;text-decoration:none;color:#23384e}
+.wr-form-action{display:flex;gap:9px;align-items:center;min-height:40px}
+.wr-filters .wr-action{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:100px;height:40px;min-height:40px;padding:8px 16px;border:1px solid #b8c8d8;border-radius:8px;background:#fff;color:#23384e;font:inherit;font-size:14px;font-weight:600;line-height:1.3;text-align:center;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .15s,border-color .15s}
+.wr-filters .wr-action:hover{background:#eaf1f8;border-color:#8da9c4}
+.wr-filters .wr-action-primary{background:#2474b7;color:#fff;border-color:#2474b7}
+.wr-filters .wr-action-primary:hover{background:#195c95;border-color:#195c95;color:#fff}
 .wr-filter-openings{position:relative;min-width:0}
 .wr-filter-openings>label{margin-bottom:6px}
 .wr-filters .wr-opening-trigger{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:40px;min-height:40px;box-sizing:border-box;padding:7px 11px;border:1px solid #c6d1de;border-radius:8px;background:#fff;color:#23384e;font-size:14px;font-weight:400;text-align:left;cursor:pointer}
@@ -1079,14 +1101,10 @@ document.addEventListener('DOMContentLoaded',function(){
 <div id="myDiv"></div>
 <main class="wr-main">
 <h1>世界紀錄</h1>
-<p class="wr-note">資料來源：RenjuNet（<?= wrH($sourceDate !== '' ? '更新至 '.$sourceDate : '本地同步資料') ?>）。僅統計標記為 Rated（計入排名）的比賽對局，期間依比賽結束日篩選。</p>
+<p class="wr-note">資料來源：RenjuNet（<?= wrH($sourceDate !== '' ? '更新至 '.$sourceDate : '本地同步資料') ?>）。</p>
 <form method="get" class="wr-filters">
-<label>選擇紀錄
-<select name="record" aria-label="選擇紀錄">
-<?php foreach ($options as $key=>$option): ?>
-<option value="<?= wrH($key) ?>" <?= $record===$key?'selected':'' ?>><?= wrH($option[0].' - '.$option[1]) ?></option>
-<?php endforeach; ?>
-</select></label>
+<label>開始日期<input type="date" name="from" value="<?= wrH($from) ?>"></label>
+<label>結束日期<input type="date" name="to" value="<?= wrH($to) ?>"></label>
 <label>國家/地區
 <select name="country">
 <option value="0">全部國家/地區</option>
@@ -1117,10 +1135,22 @@ document.addEventListener('DOMContentLoaded',function(){
 <div class="wr-opening-footer"><button type="button" class="wr-opening-all" onclick="wrResetOpenings()">全部開局</button><span class="wr-opening-footer-right"><span class="wr-opening-count" id="wr-opening-count">未限制</span><button type="button" class="wr-opening-done" onclick="wrCloseOpenings(true)">完成</button></span></div>
 </div>
 </div>
-<label>開始日期<input type="date" name="from" value="<?= wrH($from) ?>"></label>
-<label>結束日期<input type="date" name="to" value="<?= wrH($to) ?>"></label>
+<label>計入排名
+<select name="rated">
+<option value="rated" <?= $ratedMode==='rated'?'selected':'' ?>>計入排名對局</option>
+<option value="all" <?= $ratedMode==='all'?'selected':'' ?>>全部對局</option>
+</select></label>
 <label>局數基準（≥ 幾局）<input type="number" name="min_games" min="0" max="100000" step="1" value="<?= $minGames ?>"></label>
-<div class="wr-form-action"><button class="wr-btn" type="submit">查詢</button><a class="wr-reset" href="world-record.php">清除篩選</a></div>
+<label>選擇紀錄
+<select name="record" aria-label="選擇紀錄">
+<?php foreach ($options as $key=>$option): ?>
+<option value="<?= wrH($key) ?>" <?= $record===$key?'selected':'' ?>><?= wrH($option[0].' - '.$option[1]) ?></option>
+<?php endforeach; ?>
+</select></label>
+<label>棋士
+<input type="search" name="player" value="<?= wrH($playerName) ?>" maxlength="120" placeholder="搜尋英文或原文姓名" autocomplete="off">
+</label>
+<div class="wr-form-action"><button class="wr-action wr-action-primary" type="submit">查詢</button><a class="wr-action" href="world-record.php">清除篩選</a></div>
 </form>
 <h2 class="wr-title"><?= wrH($options[$record][0]) ?></h2>
 <?php if($error!==''): ?><p class="wr-error" role="alert"><?= wrH($error) ?></p>
