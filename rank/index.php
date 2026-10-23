@@ -2,6 +2,7 @@
 require_once __DIR__ . '/login.php';
 require_once __DIR__ . '/swiss-lib.php';
 require_once __DIR__ . '/swiss-sequence.php';
+require_once dirname(__DIR__) . '/site-content-lib.php';
 
 function h($value): string {
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
@@ -46,6 +47,12 @@ function listUrl(string $view, string $q = '', string $searchField = '', array $
     return '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
 }
 function adminColumnLabel(string $table, string $column): string {
+    if ($table === 'SITE_RESOURCE') {
+        return ['id'=>'編號','category'=>'分類','title'=>'名稱','url'=>'連結網址','language'=>'語言','description_html'=>'介紹','sort_order'=>'排序','is_visible'=>'顯示'][$column] ?? $column;
+    }
+    if ($table === 'SITE_RULE_PAGE') {
+        return ['id'=>'編號','slug'=>'分類代碼','title'=>'分類名稱','content_html'=>'規則內容','sort_order'=>'排序','is_visible'=>'顯示'][$column] ?? $column;
+    }
     if ($table !== 'SITE_NOTICE') return $column;
     static $labels = [
         'id' => '編號',
@@ -78,7 +85,29 @@ function siteNoticeFieldOptions(string $column): ?array {
     ];
     return $options[$column] ?? null;
 }
+function siteContentFieldOptions(string $table, string $column): ?array {
+    if ($table === 'SITE_NOTICE') return siteNoticeFieldOptions($column);
+    if ($column === 'is_visible' && in_array($table, ['SITE_RESOURCE', 'SITE_RULE_PAGE'], true)) return ['1'=>'顯示','0'=>'隱藏'];
+    if ($table === 'SITE_RESOURCE' && $column === 'category') return ['learning'=>'學習網站','playing'=>'下棋網站'];
+    return null;
+}
+function siteContentNormalizeField(string $table, string $column, $value) {
+    if (!in_array($table, ['SITE_RESOURCE', 'SITE_RULE_PAGE'], true)) return $value;
+    if (in_array($column, ['description_html','content_html'], true)) return siteContentSanitizeHtml((string)$value);
+    if ($table === 'SITE_RESOURCE' && $column === 'url' && !siteContentSafeUrl((string)$value, false)) {
+        throw new RuntimeException('連結網址只能使用 http:// 或 https://。');
+    }
+    if ($table === 'SITE_RULE_PAGE' && $column === 'slug' && !preg_match('/^[a-z0-9-]{1,80}$/', (string)$value)) {
+        throw new RuntimeException('分類代碼只能使用英文字母小寫、數字或減號。');
+    }
+    return $value;
+}
 function adminCellValue(string $table, string $column, $value): string {
+    if (in_array($column, ['description_html', 'content_html'], true) && in_array($table, ['SITE_RESOURCE','SITE_RULE_PAGE'], true)) {
+        return mb_strimwidth(trim(strip_tags((string)$value)), 0, 100, '…', 'UTF-8');
+    }
+    $option = siteContentFieldOptions($table, $column);
+    if ($option !== null && isset($option[(string)$value])) return $option[(string)$value];
     if ($table === 'SITE_NOTICE') {
         $options = siteNoticeFieldOptions($column);
         $key = (string)$value;
@@ -114,6 +143,8 @@ $views = [
     'history' => ['title' => '歷程', 'table' => 'SUMMARY', 'desc' => '棋手重要賽事與歷程紀錄'],
     'meijin' => ['title' => '名人', 'table' => 'MEIJIN', 'desc' => '名人戰歷史資料'],
     'site-notices' => ['title' => '首頁訊息', 'table' => 'SITE_NOTICE', 'desc' => '首頁更新、比賽訊息與一般消息'],
+    'site-resources' => ['title' => '線上資源', 'table' => 'SITE_RESOURCE', 'desc' => '學習網站與下棋網站的連結、語言、介紹及排序'],
+    'site-rules' => ['title' => '規則內容', 'table' => 'SITE_RULE_PAGE', 'desc' => '行棋規則及各種開局規則的完整文章'],
 ];
 $ratingTools = [
     'review' => ['title' => '台灣排名重算檢查', 'file' => 'rating-review.php', 'desc' => '整合逐場差異、完整性檢查與每位棋士最終差異，所有明細皆可分頁查看'],
@@ -161,6 +192,7 @@ $newDefaults = [];
 
 try {
     ensureSiteNoticeTable($MYSQL);
+    siteContentEnsureTables($MYSQL);
 
     if ($view === 'rating-tools' && $_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'rebuild_rank') {
         if ($tool !== 'review') throw new RuntimeException('正式排名只能從台灣排名重算檢查執行。');
@@ -211,6 +243,11 @@ try {
             $prefillName = trim((string)($_GET['name'] ?? ''));
             if ($prefillName !== '') $newDefaults['姓名'] = mb_substr($prefillName, 0, 255, 'UTF-8');
         }
+        if ($isNew && in_array($table, ['SITE_RESOURCE','SITE_RULE_PAGE'], true)) {
+            $newDefaults['is_visible'] = '1';
+            $newDefaults['sort_order'] = (string)((int)$MYSQL->query('SELECT COALESCE(MAX(sort_order),0)+1 FROM ' . qi($table))->fetchColumn());
+            if ($table === 'SITE_RESOURCE') $newDefaults['category'] = 'learning';
+        }
         if ($isNew && $table === 'SITE_NOTICE') {
             $newDefaults['notice_date'] = $rankToday;
             $newDefaults['type'] = 'UPDATE';
@@ -220,6 +257,12 @@ try {
         }
 
         $action = $_SERVER['REQUEST_METHOD'] === 'POST' ? (string)($_POST['action'] ?? '') : '';
+        if ($action !== '' && in_array($table, ['SITE_RESOURCE','SITE_RULE_PAGE'], true)) {
+            $csrf = (string)($_POST['csrf'] ?? '');
+            if ($csrf === '' || !hash_equals((string)$_SESSION['rank_rebuild_csrf'], $csrf)) {
+                throw new RuntimeException('表單驗證已失效，請重新整理頁面。');
+            }
+        }
 
         if ($action === 'shift_tournament_number') {
             if ($view !== 'tournaments') throw new RuntimeException('只有比賽資料頁可以執行空出賽號。');
@@ -301,7 +344,7 @@ try {
                 if (($meta['Extra'] ?? '') === 'auto_increment' && (string)$raw === '') continue;
                 $insertColumns[] = qi($column);
                 $placeholders[] = '?';
-                $params[] = normalizeFieldValue($raw, $meta);
+                $params[] = normalizeFieldValue(siteContentNormalizeField($table, $column, $raw), $meta);
             }
             if (!$insertColumns) throw new RuntimeException('沒有可新增的欄位。');
             $stmtInsert = $MYSQL->prepare(
@@ -332,6 +375,7 @@ try {
                 unset($fields['id']);
             }
 
+            if (in_array($table, ['SITE_RESOURCE','SITE_RULE_PAGE'], true)) unset($fields['id']);
             $sets = [];
             $params = [];
             foreach ($columns as $column) {
@@ -349,7 +393,7 @@ try {
                     }
                 }
                 $sets[] = qi($column) . '=?';
-                $params[] = normalizeFieldValue($value, $columnMeta[$column] ?? []);
+                $params[] = normalizeFieldValue(siteContentNormalizeField($table, $column, $value), $columnMeta[$column] ?? []);
             }
             if (!$sets) throw new RuntimeException('沒有可更新的欄位。');
             $where = [];
@@ -418,7 +462,11 @@ try {
                 $sql .= ' WHERE ' . implode(' OR ', $parts);
             }
         }
-        if ($table === 'SITE_NOTICE') {
+        if ($table === 'SITE_RESOURCE') {
+            $sql .= " ORDER BY FIELD(category, 'learning', 'playing'), sort_order, id";
+        } elseif ($table === 'SITE_RULE_PAGE') {
+            $sql .= ' ORDER BY sort_order, id';
+        } elseif ($table === 'SITE_NOTICE') {
             $sql .= ' ORDER BY `is_pinned` DESC, `notice_date` DESC, `sort_order` DESC, `id` DESC';
         } else {
             $sql .= ' ORDER BY 1 DESC';
@@ -444,6 +492,7 @@ $totalRecords = array_sum($counts);
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20260820">
 <link rel="stylesheet" href="pagination.css?v=20260827">
+<style>.edit-field:has(textarea){grid-column:1/-1}.edit-field textarea{display:block;width:100%;min-height:190px;resize:vertical;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:14px/1.55 Consolas,monospace}.edit-field textarea[name*="content_html"]{min-height:420px}</style>
 </head>
 <body>
 <div class="app">
@@ -555,17 +604,17 @@ $totalRecords = array_sum($counts);
         <?php if ($isNew && $columns): ?>
         <form class="edit-panel" method="post">
             <h3>新增 <?= h($current['title']) ?>資料</h3>
-            <input type="hidden" name="action" value="create"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>">
+            <input type="hidden" name="action" value="create"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>">
             <div class="edit-grid">
             <?php foreach ($columns as $column):
                 $meta = $columnMeta[$column] ?? [];
                 $type = inputTypeForColumn((string)($meta['Type'] ?? ''));
                 $step = $type === 'number' ? ' step="any"' : '';
                 $isChronologicalSequence = $column === '序號' && in_array($current['table'], ['DEN', 'SUMMARY'], true);
-                $isSiteNoticeAutoId = $current['table'] === 'SITE_NOTICE' && $column === 'id' && str_contains((string)($meta['Extra'] ?? ''), 'auto_increment');
+                $isSiteNoticeAutoId = in_array($current['table'], ['SITE_NOTICE','SITE_RESOURCE','SITE_RULE_PAGE'], true) && $column === 'id' && str_contains((string)($meta['Extra'] ?? ''), 'auto_increment');
                 $default = $isChronologicalSequence ? '' : (array_key_exists($column, $newDefaults) ? $newDefaults[$column] : ($meta['Default'] ?? ''));
                 if ($default === null) $default = '';
-                $fieldOptions = $current['table'] === 'SITE_NOTICE' ? siteNoticeFieldOptions($column) : null;
+                $fieldOptions = siteContentFieldOptions($current['table'], $column);
             ?>
                 <div class="edit-field"><label><?= h(adminColumnLabel($current['table'], $column)) ?><?= $isSiteNoticeAutoId ? '（自動產生）' : (in_array($column, $primaryKeys, true) ? '（主鍵）' : '') ?><?= $isChronologicalSequence ? '（依日期自動）' : ($column === '序號' && array_key_exists('序號', $newDefaults) ? '（自動下一號）' : '') ?></label>
                 <?php if ($isSiteNoticeAutoId): ?>
@@ -576,6 +625,8 @@ $totalRecords = array_sum($counts);
                         <option value="<?= h($optionValue) ?>" <?= (string)$default === (string)$optionValue ? 'selected' : '' ?>><?= h($optionLabel) ?></option>
                     <?php endforeach; ?>
                     </select>
+                <?php elseif (in_array($column, ['description_html','content_html'], true)): ?>
+                    <textarea name="field[<?= h($column) ?>]"><?= h($default) ?></textarea>
                 <?php else: ?>
                     <input type="<?= h($type) ?>"<?= $step ?> name="field[<?= h($column) ?>]" value="<?= h($default) ?>"<?= $isChronologicalSequence ? ' readonly' : '' ?>>
                 <?php endif; ?>
@@ -589,15 +640,15 @@ $totalRecords = array_sum($counts);
         <?php if ($editRow && $columns): ?>
         <form class="edit-panel" method="post">
             <h3>修改 <?= h($current['title']) ?>資料</h3>
-            <input type="hidden" name="action" value="update"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><input type="hidden" name="original" value="<?= h(encodeRowKey($editRow, $primaryKeys)) ?>">
+            <input type="hidden" name="action" value="update"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><input type="hidden" name="original" value="<?= h(encodeRowKey($editRow, $primaryKeys)) ?>">
             <div class="edit-grid">
             <?php foreach ($columns as $column):
                 $meta = $columnMeta[$column] ?? [];
                 $type = inputTypeForColumn((string)($meta['Type'] ?? ''));
                 $step = $type === 'number' ? ' step="any"' : '';
                 $value = $editRow[$column] ?? '';
-                $isSiteNoticeId = $current['table'] === 'SITE_NOTICE' && $column === 'id';
-                $fieldOptions = $current['table'] === 'SITE_NOTICE' ? siteNoticeFieldOptions($column) : null;
+                $isSiteNoticeId = in_array($current['table'], ['SITE_NOTICE','SITE_RESOURCE','SITE_RULE_PAGE'], true) && $column === 'id';
+                $fieldOptions = siteContentFieldOptions($current['table'], $column);
                 if ($type === 'datetime-local' && $value) $value = str_replace(' ', 'T', substr((string)$value, 0, 16));
             ?>
                 <div class="edit-field"><label><?= h(adminColumnLabel($current['table'], $column)) ?><?= in_array($column, $primaryKeys, true) ? '（主鍵）' : '' ?></label>
@@ -607,6 +658,8 @@ $totalRecords = array_sum($counts);
                         <option value="<?= h($optionValue) ?>" <?= (string)$value === (string)$optionValue ? 'selected' : '' ?>><?= h($optionLabel) ?></option>
                     <?php endforeach; ?>
                     </select>
+                <?php elseif (in_array($column, ['description_html','content_html'], true)): ?>
+                    <textarea name="field[<?= h($column) ?>]"><?= h($value) ?></textarea>
                 <?php else: ?>
                     <input type="<?= h($type) ?>"<?= $step ?> name="field[<?= h($column) ?>]" value="<?= h($value) ?>"<?= $isSiteNoticeId ? ' readonly' : '' ?>>
                 <?php endif; ?>
@@ -620,17 +673,17 @@ $totalRecords = array_sum($counts);
         <?php if ($rows && $columns): ?>
         <div class="table-wrap"><table class="data"><thead><tr>
         <?php foreach ($columns as $column):
-            $inlineOptions = $current['table'] === 'SITE_NOTICE' ? siteNoticeFieldOptions($column) : null;
+            $inlineOptions = siteContentFieldOptions($current['table'], $column);
             $inlineType = $current['table'] === 'SITE_NOTICE' ? inputTypeForColumn((string)($columnMeta[$column]['Type'] ?? '')) : 'text';
         ?>
             <th data-column="<?= h($column) ?>" data-input-type="<?= h($inlineType) ?>"
                 <?php if ($inlineOptions !== null): ?>data-options="<?= h(json_encode($inlineOptions, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) ?>"<?php endif; ?>
-                <?php if ($current['table'] === 'SITE_NOTICE' && $column === 'id'): ?>data-readonly="1"<?php endif; ?>><?= h(adminColumnLabel($current['table'], $column)) ?></th>
+                <?php if (in_array($current['table'], ['SITE_RESOURCE','SITE_RULE_PAGE'], true) || ($current['table'] === 'SITE_NOTICE' && $column === 'id')): ?>data-readonly="1"<?php endif; ?>><?= h(adminColumnLabel($current['table'], $column)) ?></th>
         <?php endforeach; ?><th>操作</th></tr></thead><tbody>
         <?php foreach ($rows as $row): $rowKey = encodeRowKey($row, $primaryKeys); ?>
             <tr><?php foreach ($columns as $column): ?><td data-raw-value="<?= h($row[$column] ?? '') ?>"><?= h(adminCellValue($current['table'], $column, $row[$column] ?? '')) ?></td><?php endforeach; ?><td class="actions-cell">
                 <a class="action-link" href="<?= h(listUrl($view, $q, $searchField, ['edit' => $rowKey])) ?>">修改</a>
-                <form class="delete-form" method="post" onsubmit="return confirm('確定要刪除這筆資料嗎？此動作無法復原。')"><input type="hidden" name="action" value="delete"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><input type="hidden" name="original" value="<?= h($rowKey) ?>"><button class="delete-link" type="submit">刪除</button></form>
+                <form class="delete-form" method="post" onsubmit="return confirm('確定要刪除這筆資料嗎？此動作無法復原。')"><input type="hidden" name="action" value="delete"><input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>"><input type="hidden" name="view" value="<?= h($view) ?>"><input type="hidden" name="q" value="<?= h($q) ?>"><input type="hidden" name="field_search" value="<?= h($searchField) ?>"><input type="hidden" name="original" value="<?= h($rowKey) ?>"><button class="delete-link" type="submit">刪除</button></form>
                 <?php if ($current['table'] === 'PLAYER' && isset($row['代號'])): ?><a class="action-link" href="player.php?PLAYER=<?= rawurlencode((string)$row['代號']) ?>">棋士頁</a><?php endif; ?>
                 <?php if ($current['table'] === 'SUMMARY' && isset($row['代號'])): ?><a class="action-link" href="../riftw/player.php?PLAYER=<?= rawurlencode((string)$row['代號']) ?>">棋士頁</a><?php endif; ?>
                 <?php if ($current['table'] === 'TOURNAMENT' && isset($row['賽號'])): ?><a class="action-link" href="swiss.php?TOUR=<?= rawurlencode((string)$row['賽號']) ?>">戰績</a><?php endif; ?>
