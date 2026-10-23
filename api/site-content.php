@@ -31,12 +31,28 @@ try {
             echo json_encode(['error' => 'Invalid slug']);
             exit;
         }
-        $stmt = $db->prepare('SELECT title,content_html FROM SITE_RULE_PAGE WHERE slug=? AND is_visible=1');
-        $stmt->execute([$slug]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        echo json_encode(['title' => $row['title'] ?? '', 'body_html' => $row['content_html'] ?? ''], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        $category = $db->prepare('SELECT title FROM SITE_RULE_PAGE WHERE slug=? AND is_visible=1');
+        $category->execute([$slug]);
+        $page = $category->fetch(PDO::FETCH_ASSOC);
+        $body = '';
+        if ($page) {
+            $heading = htmlspecialchars((string)$page['title'], ENT_QUOTES, 'UTF-8');
+            $body = '<h2>' . $heading . '</h2><hr>';
+            $stmt = $db->prepare('SELECT title,content_html FROM SITE_RULE_ITEM
+                WHERE page_slug=? AND is_visible=1 ORDER BY sort_order,id');
+            $stmt->execute([$slug]);
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $item) {
+                $name = htmlspecialchars((string)$item['title'], ENT_QUOTES, 'UTF-8');
+                $body .= '<h3>◎' . $name . '</h3>' . $item['content_html'];
+            }
+        }
+        echo json_encode(['title' => $page['title'] ?? '', 'body_html' => $body],
+            JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     } else {
-        $rows = $db->query('SELECT slug,title FROM SITE_RULE_PAGE WHERE is_visible=1 ORDER BY sort_order,id')->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $db->query('SELECT p.slug,p.title FROM SITE_RULE_PAGE p
+            WHERE p.is_visible=1 AND EXISTS (
+                SELECT 1 FROM SITE_RULE_ITEM i WHERE i.page_slug=p.slug AND i.is_visible=1
+            ) ORDER BY p.sort_order,p.id')->fetchAll(PDO::FETCH_ASSOC);
         echo json_encode(['rules' => $rows], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     }
 } catch (Throwable $error) {
