@@ -645,20 +645,6 @@ $totalRecords = array_sum($counts);
         <div class="panel">
             <div class="panel-head"><h2>最近比賽</h2><a class="btn" href="<?= h(listUrl('tournaments')) ?>">全部比賽</a></div>
             <?php if ($recentTournaments): ?>
-            <?php if ($isNew && $columns): ?>
-        <form id="rank-inline-create-form" method="post" action="<?= h(listUrl($view, $q, $searchField, ['new' => 1])) ?>">
-            <input type="hidden" name="action" value="create">
-            <input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>">
-            <input type="hidden" name="view" value="<?= h($view) ?>">
-            <input type="hidden" name="q" value="<?= h($q) ?>">
-            <input type="hidden" name="field_search" value="<?= h($searchField) ?>">
-            <?php foreach (['f','sort','dir','p'] as $contextKey): ?>
-            <?php if (isset($_GET[$contextKey]) && is_string($_GET[$contextKey])): ?>
-            <input type="hidden" name="<?= h($contextKey) ?>" value="<?= h($_GET[$contextKey]) ?>">
-            <?php endif; ?>
-            <?php endforeach; ?>
-        </form>
-        <?php endif; ?>
         <div class="table-wrap"><table class="data"><thead><tr><th>賽號</th><th>賽名</th><th>開始</th><th>結束</th><th>戰績</th></tr></thead><tbody>
             <?php foreach ($recentTournaments as $tour): ?>
                 <tr><td><?= h($tour['賽號']) ?></td><td><?= h($tour['賽名']) ?></td><td><?= h($tour['開始']) ?></td><td><?= h($tour['結束']) ?></td><td><a class="action-link" href="swiss.php?TOUR=<?= rawurlencode((string)$tour['賽號']) ?>">戰績</a></td></tr>
@@ -759,6 +745,20 @@ $totalRecords = array_sum($counts);
 
         <?php if ($serverPaged): ?><?= rankPagedPager($view, $serverPage, $serverTotal, $serverLimit) ?><?php endif; ?>
         <?php if (($rows || $serverPaged) && $columns): ?>
+        <?php if ($isNew && $columns): ?>
+        <form id="rank-inline-create-form" method="post" action="<?= h(listUrl($view, $q, $searchField, ['new' => 1])) ?>">
+            <input type="hidden" name="action" value="create">
+            <input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>">
+            <input type="hidden" name="view" value="<?= h($view) ?>">
+            <input type="hidden" name="q" value="<?= h($q) ?>">
+            <input type="hidden" name="field_search" value="<?= h($searchField) ?>">
+            <?php foreach (['f','sort','dir','p'] as $contextKey): ?>
+            <?php if (isset($_GET[$contextKey]) && is_string($_GET[$contextKey])): ?>
+            <input type="hidden" name="<?= h($contextKey) ?>" value="<?= h($_GET[$contextKey]) ?>">
+            <?php endif; ?>
+            <?php endforeach; ?>
+        </form>
+        <?php endif; ?>
         <div class="table-wrap"><table class="data<?= in_array($view, ['site-resources','site-rules'], true) ? ' resource-draggable' : '' ?><?= $view === 'site-rules' ? ' rule-item-table' : '' ?>"<?= in_array($view, ['site-resources','site-rules'], true) ? ' data-resource-csrf="' . h((string)$_SESSION['rank_rebuild_csrf']) . '" data-reorder-view="' . h($view) . '" data-site-csrf="' . h((string)$_SESSION['rank_rebuild_csrf']) . '"' : '' ?><?= $serverPaged ? ' data-server-paged="1" data-initial-sort="' . (int)$serverSort . '" data-sort-dir="' . h($serverDir) . '" data-filters="' . h(json_encode($serverFilters, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) . '"' : '' ?>><thead><tr>
         <?php foreach ($columns as $column):
             if (in_array($current['table'], ['SITE_RESOURCE','SITE_RULE_ITEM'], true) && $column === 'sort_order') continue;
