@@ -4,7 +4,7 @@
  * 特意保留舊版各項榜單的篩選口徑；若紀錄算法需要修正，應獨立列出差異。
  */
 
-function recordRateBoards($db, string $today, string $fiveYearsAgo): array
+function recordRateBoards($db, string $today, string $fiveYearsAgo, bool $includeShortRecords = false): array
 {
     $empty = ['score'=>[], 'wins'=>[], 'draws'=>[], 'games'=>[]];
     $limitStmt = $db->prepare("SELECT MAX(賽號) FROM TOURNAMENT WHERE 結束<=?");
@@ -15,6 +15,7 @@ function recordRateBoards($db, string $today, string $fiveYearsAgo): array
     $limitStmt->closeCursor();
     if ($lastTour === 0) return $empty;
 
+    $minimumGames = $includeShortRecords ? 1 : 15;
     // 一次計算所有棋士的五年勝和負差額，取代原本四段近乎相同的 SQL。
     $sql = "SELECT S.*, ROUND((S.勝 + S.和 * 0.5)*100/S.對局數,2) AS 得分率,
                ROUND(S.勝*100/S.對局數,2) AS 勝率,
@@ -35,7 +36,7 @@ function recordRateBoards($db, string $today, string $fiveYearsAgo): array
                 JOIN PLAYER P ON P.代號=H.代號 AND P.顯示=1
                 LEFT JOIN `RANK` R5 ON R5.代號=H.代號 AND R5.比賽=H.五年前
                 WHERE H.最近 > {$oldTour}
-                  AND R.勝+R.和+R.負-COALESCE(R5.勝,0)-COALESCE(R5.和,0)-COALESCE(R5.負,0) >= 15
+                  AND R.勝+R.和+R.負-COALESCE(R5.勝,0)-COALESCE(R5.和,0)-COALESCE(R5.負,0) >= {$minimumGames}
             ) S";
     $rows = $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     $keys = [
