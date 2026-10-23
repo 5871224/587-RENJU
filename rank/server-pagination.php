@@ -26,7 +26,8 @@ function rankPagedFilters($raw, array $columns): array
 
 function rankPagedQuery(
     PDO $db, string $table, array $columns, array $columnMeta, array $primaryKeys,
-    string $q, string $searchField, array $filters, int $page, int $sortIndex, string $direction
+    string $q, string $searchField, array $filters, int $page, int $sortIndex, string $direction,
+    string $defaultOrder = ''
 ): array {
     $limit = 100;
     $conditions = [];
@@ -85,8 +86,10 @@ function rankPagedQuery(
         $orderColumns[] = qi($pk) . ' DESC';
     }
     if (!$orderColumns) $orderColumns[] = qi($columns[0]) . ' DESC';
+    // Caller-defined default clauses are fixed, trusted SQL fragments, never user input.
+    $orderBy = $sortIndex < 0 && $defaultOrder !== '' ? $defaultOrder : implode(', ', $orderColumns);
     // LIMIT and OFFSET use validated integer literals; other values remain bound.
-    $sql = 'SELECT *' . $from . $where . ' ORDER BY ' . implode(', ', $orderColumns)
+    $sql = 'SELECT *' . $from . $where . ' ORDER BY ' . $orderBy
         . ' LIMIT ' . $limit . ' OFFSET ' . $offset;
     $stmt = $db->prepare($sql);
     $stmt->execute($args);
