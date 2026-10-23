@@ -49,7 +49,7 @@ function rankPagedQuery(
         $term = (string)$item['term'];
         $mode = (string)$item['mode'];
         $identifier = qi($column);
-        $isNumeric = (bool)preg_match('/^(tinyint|smallint|mediumint|int|bigint|decimal|float|double|numeric|real)\\b/i', (string)($columnMeta[$column]['Type'] ?? ''));
+        $isNumeric = (bool)preg_match('/^(tinyint|smallint|mediumint|int|bigint|decimal|float|double|numeric|real)\b/i', (string)($columnMeta[$column]['Type'] ?? ''));
         if ($mode === 'gt' || $mode === 'lt') {
             if (!$isNumeric || !is_numeric($term)) {
                 $conditions[] = '1=0';
