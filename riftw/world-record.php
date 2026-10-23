@@ -767,19 +767,16 @@ function wrBuildQuery(string $color, array $baseConditions, array $baseParams): 
     if ($color === 'white') return [$white, $baseParams];
     return [$black . ' UNION ALL ' . $white, array_merge($baseParams, $baseParams)];
 }
-function wrAggregate(PDO $db, string $source, array $params, int $country): array {
-    // The player's name must not narrow the underlying ranking query.
-    // Assign ranks from the complete filtered dataset first, then search names.
-    $extra = $country > 0 ? ' WHERE P.country_id = ?' : '';
-    if ($country > 0) $params[] = $country;
+function wrAggregate(PDO $db, string $source, array $params): array {
+    // Assign world and regional ranks before filtering countries or names.
     $sql = 'SELECT X.pid, COUNT(*) AS games, SUM(X.points>1) AS wins, '
         . 'SUM(X.points=1) AS draws, SUM(X.points<1) AS losses, '
-        . 'SUM(X.points)/2 AS points, P.surname, P.name, P.native_name, P.disp_id, '
+        . 'SUM(X.points)/2 AS points, P.surname, P.name, P.native_name, P.disp_id, P.country_id, '
         . 'C.name AS country_name, C.abbr AS country_abbr '
         . 'FROM (' . $source . ') X '
         . 'JOIN RENJUNET_PLAYER P ON P.id=X.pid '
         . 'LEFT JOIN RENJUNET_COUNTRY C ON C.id=P.country_id '
-        . $extra . ' GROUP BY X.pid, P.surname, P.name, P.native_name, P.disp_id, C.name, C.abbr';
+        . 'GROUP BY X.pid, P.surname, P.name, P.native_name, P.disp_id, P.country_id, C.name, C.abbr';
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
     $results = [];
@@ -970,7 +967,7 @@ try {
             array_push($params, ...$openings);
         }
         [$source, $sourceParams] = wrBuildQuery($color, $conditions, $params);
-        $all = wrAggregate($MYSQL, $source, $sourceParams, $country);
+        $all = wrAggregate($MYSQL, $source, $sourceParams);
         $qualified = array_filter($all, static fn($item) => (int)$item['games'] >= $minGames);
         if (str_starts_with($record, 'streak-')) {
             $rows = wrStreak($MYSQL, $source, $sourceParams, $qualified, $record);
@@ -987,16 +984,25 @@ try {
                     ?: ((int)$a['pid'] <=> (int)$b['pid']);
             });
         }
-        // Keep each original rank before applying a name-only display filter.
-        // Country, date, color, opening, rule and rating filters still define
-        // the ranking cohort, so the search only hides nonmatching players.
+        // Rank the full worldwide cohort first. Each normalized displayed
+        // country/region then gets its own independent ranking. Country and
+        // player searches only narrow the rows shown, not either rank.
+        $regionCounters = [];
         foreach ($rows as $index => &$rankingRow) {
+            $region = wrCountryName(
+                $rankingRow['country_name'] ?? '',
+                $rankingRow['country_abbr'] ?? ''
+            );
+            $regionCounters[$region] = ($regionCounters[$region] ?? 0) + 1;
             $rankingRow['rank'] = $index + 1;
+            $rankingRow['region_rank'] = $regionCounters[$region];
         }
         unset($rankingRow);
-        if ($playerName !== '') {
-            $rows = array_values(array_filter($rows, static fn($player) =>
-                wrPlayerMatches($player, $playerName)));
+        if ($country > 0 || $playerName !== '') {
+            $rows = array_values(array_filter($rows, static function ($player) use ($country, $playerName): bool {
+                return ($country === 0 || (int)$player['country_id'] === $country)
+                    && ($playerName === '' || wrPlayerMatches($player, $playerName));
+            }));
         }
         $total = count($rows);
         $pages = max(1, (int)ceil($total / 100));
@@ -1250,7 +1256,7 @@ $status = $hasRated && $hasUnrated ? '部分計入排名' : ($hasRated ? '計入
 <?php else: ?>
 <div class="wr-tablebox" data-record-sticky>
 <table>
-<thead><tr><th>排名</th><th>國家/地區</th><th>棋士</th>
+<thead><tr><th>世界排名</th><th>區域排名</th><th>國家/地區</th><th>棋士</th>
 <?php if (in_array($record,['score','wins','draws'],true)): ?>
 <th>勝</th><th>和</th><th>負</th><th>局數</th><th><?= wrH(['score'=>'得分率','wins'=>'勝率','draws'=>'和棋率'][$record]) ?></th>
 <?php elseif ($record === 'games'): ?>
@@ -1268,6 +1274,7 @@ $status = $hasRated && $hasUnrated ? '部分計入排名' : ($hasRated ? '計入
 ?>
 <tr>
 <td><?= (int)$r['rank'] ?></td>
+<td><?= (int)$r['region_rank'] ?></td>
 <td><?= wrH(wrCountryName($r['country_name']??'', $r['country_abbr']??'')) ?></td>
 <td class="wr-name"><span class="wr-name-pair"><a href="<?= wrH($playerHref) ?>" target="_blank" rel="noopener noreferrer"><?= wrH($roman!==''?$roman:('#'.(int)$r['pid'])) ?></a><?php if($native!=='' && strcasecmp($native,$roman)!==0): ?><span class="wr-native"><?= wrH($native) ?></span><?php endif; ?></span></td>
 <?php if(in_array($record,['score','wins','draws'],true)):
@@ -1283,7 +1290,7 @@ $status = $hasRated && $hasUnrated ? '部分計入排名' : ($hasRated ? '計入
 <?php endif; ?>
 </tr>
 <?php endforeach; ?>
-<?php if(!$displayRows): ?><tr><td colspan="9">目前沒有符合篩選條件的紀錄。</td></tr><?php endif; ?>
+<?php if(!$displayRows): ?><tr><td colspan="<?= in_array($record, ['score','wins','draws'], true) ? 9 : ($record === 'games' ? 8 : 7) ?>">目前沒有符合篩選條件的紀錄。</td></tr><?php endif; ?>
 </tbody>
 </table>
 </div>
