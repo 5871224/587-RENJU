@@ -73,7 +73,8 @@ if ($api !== '') {
                         $setRule->execute([$proposal['rule'], $id]);
                         $savedRules += $setRule->rowCount();
                     }
-                    if ($proposal['location'] === '' || $proposal['rule'] === '') {
+                    if (($proposal['old_location'] === '' && $proposal['location'] === '') ||
+                        ($proposal['old_rule'] === '' && $proposal['rule'] === '')) {
                         $problems[] = $id;
                     }
                 }
