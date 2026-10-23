@@ -92,6 +92,15 @@ function siteContentEnsureTables(PDO $db): void
         is_visible TINYINT(1) NOT NULL DEFAULT 1,
         KEY idx_site_rule_list (is_visible,sort_order,id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+    $db->exec('CREATE TABLE IF NOT EXISTS SITE_RULE_ITEM (
+        id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        page_slug VARCHAR(80) NOT NULL,
+        title VARCHAR(200) NOT NULL,
+        content_html MEDIUMTEXT NOT NULL,
+        sort_order INT NOT NULL DEFAULT 0,
+        is_visible TINYINT(1) NOT NULL DEFAULT 1,
+        KEY idx_site_rule_item_list (page_slug,is_visible,sort_order,id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
     $db->exec('CREATE TABLE IF NOT EXISTS SITE_CONTENT_META (
         meta_key VARCHAR(80) NOT NULL PRIMARY KEY,
         completed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -100,6 +109,7 @@ function siteContentEnsureTables(PDO $db): void
     if ($lock !== 1) throw new RuntimeException('Could not acquire content import lock.');
     try {
         siteContentSeed($db);
+        siteContentMigrateRuleItems($db);
     } finally {
         $db->query("SELECT RELEASE_LOCK('site_content_seed_587')");
     }
@@ -170,4 +180,111 @@ function siteContentSeed(PDO $db): void
         $db->prepare('INSERT IGNORE INTO SITE_CONTENT_META(meta_key) VALUES (?)')->execute([$key]);
         $db->commit();
     } catch (Throwable $error) { $db->rollBack(); throw $error; }
+}
+
+
+/**
+ * Split the already saved HTML (not a fresh copy of old static files) into one
+ * editable row for each rule. Keep SITE_RULE_PAGE as a category/backup table.
+ */
+function siteContentSplitRuleHtml(string $html, string $fallbackTitle): array
+{
+    $dom = new DOMDocument('1.0', 'UTF-8');
+    $prior = libxml_use_internal_errors(true);
+    try {
+        $dom->loadHTML('<?xml encoding="UTF-8"><html><body><div id="rule-migration-root">' .
+            siteContentSanitizeHtml($html) . '</div></body></html>', LIBXML_NONET);
+    } finally {
+        libxml_clear_errors();
+        libxml_use_internal_errors($prior);
+    }
+    $root = (new DOMXPath($dom))->query('//*[@id="rule-migration-root"]')->item(0);
+    if (!$root) return [];
+    $items = [];
+    $title = null;
+    $body = '';
+    $finish = function () use (&$items, &$title, &$body): void {
+        if ($title !== null && trim(strip_tags($body)) !== '') {
+            $items[] = [
+                'title' => mb_substr($title, 0, 200, 'UTF-8'),
+                'content_html' => siteContentSanitizeHtml($body),
+                'sort_order' => (count($items) + 1) * 10,
+            ];
+        }
+        $title = null;
+        $body = '';
+    };
+    foreach (iterator_to_array($root->childNodes) as $node) {
+        if ($node instanceof DOMText && trim($node->textContent) === '') continue;
+        if (!$node instanceof DOMElement) {
+            if ($title !== null) $body .= $dom->saveHTML($node);
+            continue;
+        }
+        $tag = strtolower($node->tagName);
+        if ($tag === 'h2') continue; // category heading comes from SITE_RULE_PAGE
+        if ($tag === 'hr') {
+            if ($title !== null) {
+                $finish();
+                $title = '補充說明';
+            }
+            continue;
+        }
+        if ($tag === 'h3' || $tag === 'h4') {
+            $finish();
+            $title = trim((string)preg_replace('/^◎\s*/u', '', trim($node->textContent)));
+            if ($title === '') $title = $fallbackTitle;
+            continue;
+        }
+        // The restricted-opening-rule page uses <p><strong>◎Rule name</strong>...
+        // rather than h3 headings. Preserve the remaining paragraph verbatim.
+        if ($tag === 'p') {
+            $firstElement = null;
+            foreach ($node->childNodes as $child) {
+                if ($child instanceof DOMElement) { $firstElement = $child; break; }
+                if ($child instanceof DOMText && trim($child->textContent) !== '') break;
+            }
+            if ($firstElement instanceof DOMElement
+                && strtolower($firstElement->tagName) === 'strong'
+                && preg_match('/^◎/u', trim($firstElement->textContent))) {
+                $finish();
+                $title = trim((string)preg_replace('/^◎\s*/u', '', trim($firstElement->textContent)));
+                $node->removeChild($firstElement);
+            }
+        }
+        if ($title === null) $title = '補充說明';
+        $body .= $dom->saveHTML($node);
+    }
+    $finish();
+    return $items;
+}
+
+function siteContentMigrateRuleItems(PDO $db): void
+{
+    $key = 'rules-split-into-items-v2';
+    $check = $db->prepare('SELECT 1 FROM SITE_CONTENT_META WHERE meta_key=?');
+    $check->execute([$key]);
+    if ($check->fetchColumn()) return;
+    $legacy = $db->query('SELECT slug,title,content_html FROM SITE_RULE_PAGE ORDER BY sort_order,id')
+        ->fetchAll(PDO::FETCH_ASSOC);
+    if (!$legacy) return;
+    $db->beginTransaction();
+    try {
+        // Never overwrite edits or duplicate any rows if migration was interrupted.
+        if ((int)$db->query('SELECT COUNT(*) FROM SITE_RULE_ITEM')->fetchColumn() === 0) {
+            $stmt = $db->prepare('INSERT INTO SITE_RULE_ITEM
+                (page_slug,title,content_html,sort_order,is_visible) VALUES (?,?,?,?,1)');
+            foreach ($legacy as $page) {
+                foreach (siteContentSplitRuleHtml((string)$page['content_html'], (string)$page['title']) as $item) {
+                    $stmt->execute([
+                        $page['slug'], $item['title'], $item['content_html'], $item['sort_order'],
+                    ]);
+                }
+            }
+        }
+        $db->prepare('INSERT IGNORE INTO SITE_CONTENT_META(meta_key) VALUES (?)')->execute([$key]);
+        $db->commit();
+    } catch (Throwable $error) {
+        if ($db->inTransaction()) $db->rollBack();
+        throw $error;
+    }
 }
