@@ -183,90 +183,14 @@
     const headers=t.querySelectorAll('thead th');
     return headers.length && headers[headers.length-1].textContent.trim()==='操作';
   });
-
-  function normalizedText(cell){
-    if(cell){
-      const input=cell.querySelector('.inline-edit-input');
-      if(input)return input.value.replace(/\u00a0/g,' ').trim();
-    }
-    return (cell ? cell.textContent : '').replace(/\u00a0/g,' ').trim();
-  }
-
-  function columnKind(rows,column){
-    const values=rows.map(function(row){return normalizedText(row.cells[column]);}).filter(Boolean);
-    if(values.length && values.every(function(v){return /^[-+]?\d+(?:\.\d+)?$/.test(v);})){return 'number';}
-    if(values.length && values.every(function(v){return /^\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?$/.test(v);})){return 'date';}
-    return 'text';
-  }
-
-  function compareValues(a,b,kind){
-    if(a==='' && b==='') return 0;
-    if(a==='') return 1;
-    if(b==='') return -1;
-    if(kind==='number') return Number(a)-Number(b);
-    if(kind==='date') return a<b?-1:(a>b?1:0);
-    return a.localeCompare(b,'zh-Hant-u-kn-true',{numeric:true,sensitivity:'base'});
-  }
-
-  function markSortableHeaders(target,onSort){
-    const headers=Array.from(target.querySelectorAll('thead th'));
-    headers.forEach(function(th,column){
-      if(th.textContent.trim()==='操作') return;
-      th.classList.add('sortable');
-      th.tabIndex=0;
-      th.setAttribute('role','button');
-      th.setAttribute('title','點擊排序');
-      th.setAttribute('aria-sort','none');
-      const activate=function(){onSort(column,th);};
-      th.addEventListener('click',activate);
-      th.addEventListener('keydown',function(e){
-        if(e.key==='Enter'||e.key===' '){e.preventDefault();activate();}
-      });
-    });
-    return headers;
-  }
-
-  function setHeaderState(headers,column,direction){
-    headers.forEach(function(th,i){
-      th.removeAttribute('data-sort-dir');
-      if(th.classList.contains('sortable')) th.setAttribute('aria-sort','none');
-      if(i===column){
-        th.setAttribute('data-sort-dir',direction);
-        th.setAttribute('aria-sort',direction==='asc'?'ascending':'descending');
-      }
-    });
-  }
-
-  // 首頁等沒有分頁控制的資料表，也提供欄位點擊排序。
-  tables.filter(function(t){return t!==table;}).forEach(function(simpleTable){
-    const tbody=simpleTable.tBodies[0];
-    if(!tbody) return;
-    let simpleRows=Array.from(tbody.rows);
-    let sortColumn=-1;
-    let sortDirection='asc';
-    const headers=markSortableHeaders(simpleTable,function(column){
-      sortDirection=(sortColumn===column&&sortDirection==='asc')?'desc':'asc';
-      if(sortColumn!==column) sortDirection='asc';
-      sortColumn=column;
-      const kind=columnKind(simpleRows,column);
-      simpleRows=simpleRows.map(function(row,index){return {row:row,index:index};}).sort(function(a,b){
-        const av=normalizedText(a.row.cells[column]);
-        const bv=normalizedText(b.row.cells[column]);
-        const cmp=compareValues(av,bv,kind);
-        return cmp===0?a.index-b.index:(sortDirection==='asc'?cmp:-cmp);
-      }).map(function(item){return item.row;});
-      simpleRows.forEach(function(row){tbody.appendChild(row);});
-      setHeaderState(headers,sortColumn,sortDirection);
-    });
-  });
-
   if(!table){restoreReturnScroll();return;}
   const tbody=table.tBodies[0];
   if(!tbody){restoreReturnScroll();return;}
-  let rows=Array.from(tbody.rows);
+  const allRows=Array.from(tbody.rows);
+  let rows=allRows.slice();
   if(!rows.length){restoreReturnScroll();return;}
 
-  const totalPages=Math.max(1,Math.ceil(rows.length/pageSize));
+  let totalPages=Math.max(1,Math.ceil(rows.length/pageSize));
   const baseStorageKey='renju-rank:'+String(params.get('view')||'')+':'+String(params.get('field_search')||'')+':'+String(params.get('q')||'');
   const pageStorageKey=baseStorageKey+':page';
   const sortStorageKey=baseStorageKey+':sort';
@@ -311,7 +235,7 @@
   function renderPager(el){
     if(!el) return;
     el.innerHTML='';
-    const first=(current-1)*pageSize+1;
+    const first=rows.length?(current-1)*pageSize+1:0;
     const last=Math.min(rows.length,current*pageSize);
     const info=document.createElement('div');
     info.className='pager-info';
@@ -355,6 +279,7 @@
     if(activeInlineEdit)cancelInlineEdit();
     current=Math.min(totalPages,Math.max(1,page));
     const start=(current-1)*pageSize,end=start+pageSize;
+    allRows.forEach(function(row){row.hidden=true;});
     rows.forEach(function(row,i){row.hidden=!(i>=start&&i<end);});
     renderPager(topPager);renderPager(bottomPager);preservePageOnEditLinks();
     try{sessionStorage.setItem(pageStorageKey,String(current));}catch(e){}
@@ -365,47 +290,37 @@
     }
   }
 
-  const headers=markSortableHeaders(table,function(column){
-    if(activeInlineEdit)cancelInlineEdit();
-    const nextDirection=(sortColumn===column&&sortDirection==='asc')?'desc':'asc';
-    sortRows(column,nextDirection,true);
-  });
-
-  function sortRows(column,direction,userAction){
-    if(column<0||column>=headers.length-1) return;
-    sortColumn=column;
-    sortDirection=direction==='desc'?'desc':'asc';
-    const kind=columnKind(rows,column);
-    rows=rows.map(function(row,index){return {row:row,index:index};}).sort(function(a,b){
-      const av=normalizedText(a.row.cells[column]);
-      const bv=normalizedText(b.row.cells[column]);
-      const cmp=compareValues(av,bv,kind);
-      return cmp===0?a.index-b.index:(sortDirection==='asc'?cmp:-cmp);
-    }).map(function(item){return item.row;});
-    rows.forEach(function(row){tbody.appendChild(row);});
-    setHeaderState(headers,sortColumn,sortDirection);
-    try{sessionStorage.setItem(sortStorageKey,JSON.stringify({column:sortColumn,direction:sortDirection}));}catch(e){}
-    if(userAction){
-      current=1;
-      showPage(1,true);
-    }
-  }
-
   let initialSortColumn=parseInt(params.get('sort')||'',10);
   let initialSortDirection=params.get('dir')==='desc'?'desc':'asc';
-  if(!Number.isFinite(initialSortColumn)||initialSortColumn<0||initialSortColumn>=headers.length-1){
+  const headerCount=table.querySelectorAll('thead th').length;
+  if(!Number.isFinite(initialSortColumn)||initialSortColumn<0||initialSortColumn>=headerCount-1){
+    initialSortColumn=-1;
     try{
       const saved=JSON.parse(sessionStorage.getItem(sortStorageKey)||'null');
-      if(saved&&Number.isFinite(Number(saved.column))&&Number(saved.column)>=0&&Number(saved.column)<headers.length-1){
+      if(saved&&Number.isInteger(Number(saved.column))&&Number(saved.column)>=0&&Number(saved.column)<headerCount-1){
         initialSortColumn=Number(saved.column);
         initialSortDirection=saved.direction==='desc'?'desc':'asc';
       }
     }catch(e){}
   }
-  if(Number.isFinite(initialSortColumn)&&initialSortColumn>=0&&initialSortColumn<headers.length-1){
-    sortRows(initialSortColumn,initialSortDirection,false);
-  }
-
-  showPage(current,false);
+  if(!window.RankTableTools){showPage(current,false);restoreReturnScroll();return;}
+  window.RankTableTools.enhance(table,{
+    initialSort:initialSortColumn,
+    initialDirection:initialSortDirection,
+    onChange:function(visible,sort,userAction){
+      if(activeInlineEdit)cancelInlineEdit();
+      rows=visible;
+      sortColumn=sort.column;
+      sortDirection=sort.direction;
+      totalPages=Math.max(1,Math.ceil(rows.length/pageSize));
+      if(userAction)current=1;
+      current=Math.min(current,totalPages);
+      try{
+        if(sortColumn>=0)sessionStorage.setItem(sortStorageKey,JSON.stringify({column:sortColumn,direction:sortDirection}));
+        else sessionStorage.removeItem(sortStorageKey);
+      }catch(e){}
+      showPage(current,userAction);
+    }
+  });
   restoreReturnScroll();
 })();
