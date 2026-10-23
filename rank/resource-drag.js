@@ -53,6 +53,8 @@
             if (!response.ok || !result.ok) {
                 throw new Error(result.error || '排序儲存失敗。');
             }
+            // A previously selected header sort must not conceal the stored manual order.
+            try { sessionStorage.removeItem('renju-rank:site-resources:::sort'); } catch (ignore) {}
             window.location.assign('./?view=site-resources&p=1&reordered=1');
         } catch (error) {
             alert(error.message || '排序儲存失敗，請重新整理後再試。');
