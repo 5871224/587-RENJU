@@ -15,6 +15,8 @@ $rankTopbarItems = [
     'history' => '歷程',
     'meijin' => '名人',
     'site-notices' => '首頁訊息',
+    'site-resources' => '線上資源',
+    'site-rules' => '規則內容',
 ];
 ?>
 <header class="topbar">
