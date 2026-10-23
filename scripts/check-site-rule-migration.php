@@ -4,8 +4,8 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/site-content-lib.php';
 
 $expected = [
-    'rule/rulehome.htm' => ['count' => 4, 'names' => ['普通規則','連珠規則','無禁規則','補充說明']],
-    'rule/renju-rule.htm' => ['count' => 9, 'names' => ['塔拉規則','塔拉山口-10規則','索索夫-8規則','山口規則','RIF規則','交換規則','坂田規則','連換規則','五目規則']],
+    'rule/rulehome.htm' => ['count' => 4, 'names' => ['普通規則','連珠規則（禁手規則，日式規則，RENJU）','無禁規則（GOMOKU）','補充說明']],
+    'rule/renju-rule.htm' => ['count' => 9, 'names' => ['塔拉規則（Tarannikov）','塔拉山口-10規則（Taraguchi-10）','索索夫-8規則（Soosõrv-8）','山口規則（Yamaguchi）','RIF規則','交換規則','坂田規則（Sakata）','連換規則','五目規則']],
     'rule/gomoku-rule.htm' => ['count' => 5, 'names' => ['Gomoku-Swap2（交換２）','Gomoku-Swap1（交換１）','Gomoku-pro','ORC平台上採用之Gomoku規則','一手交換']],
     'rule/other.htm' => ['count' => 5, 'names' => ['抓子','聯棋','一色棋','混色棋','盲棋']],
 ];
