@@ -54,7 +54,7 @@ assertInline($managementStart !== false, 'Management template branch missing');
 assertInline($formPosition !== false && substr_count($source, $formTag) === 1, 'Expected exactly one common create form');
 assertInline($managementStart < $formPosition && $formPosition < $managementTable, 'Form must be immediately before the management table, not inside the dashboard');
 assertInline(strpos($source, 'data-rank-create-row', $formPosition) !== false, 'Inline create row missing');
-assertInline(str_contains($source, "if (\$action === 'create')") && str_contains($source, '\$stmtInsert->execute($params)'), 'POST insert code missing');
+assertInline(str_contains($source, "if (\$action === 'create')") && str_contains($source, '$stmtInsert->execute($params)'), 'POST insert code missing');
 
 $start = strpos($source, '<?php if ($isNew && $columns): ?>', $managementStart);
 $end = strpos($source, '</tbody></table></div>', $start ?: 0);
