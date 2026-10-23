@@ -110,6 +110,7 @@ function siteContentEnsureTables(PDO $db): void
     try {
         siteContentSeed($db);
         siteContentMigrateRuleItems($db);
+        siteContentMigrateRuleText($db);
     } finally {
         $db->query("SELECT RELEASE_LOCK('site_content_seed_587')");
     }
@@ -280,6 +281,99 @@ function siteContentMigrateRuleItems(PDO $db): void
                     ]);
                 }
             }
+        }
+        $db->prepare('INSERT IGNORE INTO SITE_CONTENT_META(meta_key) VALUES (?)')->execute([$key]);
+        $db->commit();
+    } catch (Throwable $error) {
+        if ($db->inTransaction()) $db->rollBack();
+        throw $error;
+    }
+}
+
+
+/**
+ * Convert legacy rich HTML to human-editable text. Links retain only their
+ * visible label. Paragraphs and table rows become real newlines.
+ */
+function siteContentHtmlToPlainText(string $html): string
+{
+    if (!class_exists('DOMDocument')) throw new RuntimeException('PHP DOM extension is required.');
+    $dom = new DOMDocument('1.0', 'UTF-8');
+    $prior = libxml_use_internal_errors(true);
+    try {
+        $dom->loadHTML('<?xml encoding="UTF-8"><html><body><div id="plain-rule-root">' .
+            $html . '</div></body></html>', LIBXML_NONET);
+    } finally {
+        libxml_clear_errors();
+        libxml_use_internal_errors($prior);
+    }
+    $root = (new DOMXPath($dom))->query('//*[@id="plain-rule-root"]')->item(0);
+    if (!$root) return '';
+    $walk = static function (DOMNode $node) use (&$walk): string {
+        if ($node instanceof DOMText) {
+            return (string)preg_replace('/[ \t\r\n]+/u', ' ', $node->nodeValue);
+        }
+        if (!$node instanceof DOMElement) return '';
+        $tag = strtolower($node->tagName);
+        if (in_array($tag, ['script','style','iframe','object','svg'], true)) return '';
+        if ($tag === 'br') return "\n";
+        if ($tag === 'hr') return "\n";
+        if ($tag === 'img') return trim($node->getAttribute('alt'));
+        $content = '';
+        foreach ($node->childNodes as $child) $content .= $walk($child);
+        if ($tag === 'td' || $tag === 'th') return trim($content) . "\t";
+        if ($tag === 'tr') return rtrim($content) . "\n";
+        if ($tag === 'li') return '• ' . trim($content) . "\n";
+        if (in_array($tag, ['p','div','h2','h3','h4','ul','ol','table','blockquote'], true)) {
+            return trim($content) . "\n\n";
+        }
+        return $content; // <a> text, not href: never store a clickable link.
+    };
+    $text = '';
+    foreach ($root->childNodes as $child) $text .= $walk($child);
+    $text = str_replace(["\r\n","\r"], "\n", $text);
+    $text = preg_replace('/[ \t]+\n/u', "\n", $text);
+    $text = preg_replace('/\n[ \t]+/u', "\n", $text);
+    return trim((string)preg_replace('/\n{3,}/', "\n\n", $text));
+}
+
+/**
+ * Back up the current rule-item HTML in a dedicated table, then change the
+ * actual content column to plain text. The meta record is written only after
+ * every row is converted successfully, so interrupted runs can resume.
+ */
+function siteContentMigrateRuleText(PDO $db): void
+{
+    $key = 'rules-plain-text-v3';
+    $hasMeta = $db->prepare('SELECT 1 FROM SITE_CONTENT_META WHERE meta_key=?');
+    $hasMeta->execute([$key]);
+    if ($hasMeta->fetchColumn()) return;
+
+    $db->exec('CREATE TABLE IF NOT EXISTS SITE_RULE_ITEM_HTML_BACKUP (
+        id INT UNSIGNED NOT NULL PRIMARY KEY,
+        content_html MEDIUMTEXT NOT NULL,
+        backed_up_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+
+    $hasHtml = $db->query("SHOW COLUMNS FROM SITE_RULE_ITEM LIKE 'content_html'")->fetch(PDO::FETCH_ASSOC);
+    if ($hasHtml) {
+        $db->exec('INSERT IGNORE INTO SITE_RULE_ITEM_HTML_BACKUP(id,content_html)
+            SELECT id,content_html FROM SITE_RULE_ITEM');
+        $db->exec('ALTER TABLE SITE_RULE_ITEM
+            CHANGE COLUMN content_html content_text MEDIUMTEXT NOT NULL');
+    }
+
+    $hasText = $db->query("SHOW COLUMNS FROM SITE_RULE_ITEM LIKE 'content_text'")->fetch(PDO::FETCH_ASSOC);
+    if (!$hasText) throw new RuntimeException('Rule content_text column is missing.');
+
+    $original = $db->query('SELECT b.id,b.content_html
+        FROM SITE_RULE_ITEM_HTML_BACKUP b
+        INNER JOIN SITE_RULE_ITEM i ON i.id=b.id')->fetchAll(PDO::FETCH_ASSOC);
+    $db->beginTransaction();
+    try {
+        $update = $db->prepare('UPDATE SITE_RULE_ITEM SET content_text=? WHERE id=?');
+        foreach ($original as $row) {
+            $update->execute([siteContentHtmlToPlainText((string)$row['content_html']), (int)$row['id']]);
         }
         $db->prepare('INSERT IGNORE INTO SITE_CONTENT_META(meta_key) VALUES (?)')->execute([$key]);
         $db->commit();
