@@ -72,6 +72,10 @@
                     var div = document.createElement('div');
                     div.innerHTML = content;
                     $(div).find('#myDiv').remove();
+                    // 備援靜態頁也只顯示連結文字，不提供可點擊的超連結。
+                    $(div).find('a').each(function () {
+                        this.replaceWith(document.createTextNode(this.textContent || ''));
+                    });
                     renderRuleContent(div.innerHTML);
                 },
                 error: function () {
