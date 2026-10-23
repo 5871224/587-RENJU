@@ -936,13 +936,31 @@ try {
 .wr-btn{padding:9px 17px;background:#2474b7;border:1px solid #2474b7;border-radius:8px;color:#fff;cursor:pointer;font:inherit;white-space:nowrap}
 .wr-reset{padding:8px 10px;border:1px solid #c6d1de;border-radius:8px;background:#fff;text-decoration:none;color:#23384e}
 .wr-filter-openings{position:relative;min-width:0}
-.wr-filter-openings summary{display:flex;align-items:center;justify-content:space-between;cursor:pointer;list-style:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wr-filter-openings summary::-webkit-details-marker{display:none}
-.wr-open-panel{position:absolute;z-index:20;top:43px;left:0;min-width:240px;width:max(100%,270px);max-height:290px;overflow:auto;padding:10px;border:1px solid #b8c8d9;background:#fff;border-radius:9px;box-shadow:0 10px 28px #24314426}
-.wr-open-panel .wr-choices{display:flex;gap:8px;margin-bottom:8px}
-.wr-open-panel button{font:inherit;border:1px solid #c4d1de;background:#f7f9fc;border-radius:6px;padding:4px 9px;cursor:pointer}
-.wr-open-panel label{display:flex;flex-direction:row;align-items:center;gap:7px;font-weight:400;padding:4px 2px;cursor:pointer}
-.wr-open-panel input{height:auto;width:auto}
+.wr-filter-openings>label{margin-bottom:6px}
+.wr-filters .wr-opening-trigger{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:40px;min-height:40px;box-sizing:border-box;padding:7px 11px;border:1px solid #c6d1de;border-radius:8px;background:#fff;color:#23384e;font-size:14px;font-weight:400;text-align:left;cursor:pointer}
+.wr-filters .wr-opening-trigger:hover{border-color:#7da6c8;background:#fff}
+.wr-filters .wr-opening-trigger[aria-expanded=true]{border-color:#5286b4;box-shadow:0 0 0 3px #5286b41c}
+.wr-opening-trigger-text{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.wr-opening-chevron{width:8px;height:8px;flex:0 0 auto;border-right:2px solid #5c7088;border-bottom:2px solid #5c7088;transform:rotate(45deg) translateY(-2px);transition:transform .15s}
+.wr-opening-trigger[aria-expanded=true] .wr-opening-chevron{transform:rotate(225deg) translateY(-1px)}
+.wr-filter-openings .wr-opening-panel[hidden]{display:none!important}
+.wr-filter-openings .wr-opening-panel{position:absolute;z-index:40;top:calc(100% + 6px);left:0;width:340px;max-width:calc(100vw - 32px);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;background:#fff;border:1px solid #bbcbdc;border-radius:10px;box-shadow:0 12px 26px #1b385028}
+.wr-opening-search{padding:10px 11px 9px;border-bottom:1px solid #e4ebf2}
+.wr-filters .wr-opening-search input[type=search]{width:100%;height:36px;min-height:36px;box-sizing:border-box;font-size:14px;padding:7px 10px;background:#fff;color:#23384e;border:1px solid #c6d1de;border-radius:7px}
+.wr-opening-list{overflow-y:auto;max-height:250px;padding:5px 8px;overscroll-behavior:contain}
+.wr-filters .wr-opening-list label{display:flex;flex-direction:row;align-items:center;gap:9px;min-height:32px;padding:6px 8px;margin:0;color:#273c55;font-size:14px;font-weight:400;white-space:normal;line-height:1.35;border-radius:6px;cursor:pointer}
+.wr-filters .wr-opening-list label[hidden]{display:none}
+.wr-filters .wr-opening-list label:hover{background:#edf5fc}
+.wr-filters .wr-opening-list input[type=checkbox]{appearance:auto;flex:0 0 16px;width:16px;height:16px;min-height:0;margin:0;padding:0;border:initial;border-radius:3px;box-shadow:none;accent-color:#2474b7;cursor:pointer}
+.wr-opening-empty{margin:10px;color:#64748b;font-size:13px}
+.wr-opening-empty[hidden]{display:none}
+.wr-opening-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px;background:#f8fafc;border-top:1px solid #e4ebf2}
+.wr-filters .wr-opening-all{height:32px;min-height:32px;padding:5px 9px;border:1px solid #cbd8e5;border-radius:6px;background:#fff;color:#3d5976;font-size:13px;font-weight:500;cursor:pointer}
+.wr-filters .wr-opening-all:hover{background:#eaf3fb}
+.wr-opening-footer-right{display:flex;align-items:center;gap:10px}
+.wr-opening-count{font-size:12px;color:#64748b;white-space:nowrap}
+.wr-filters .wr-opening-done{height:32px;min-height:32px;padding:5px 15px;border:1px solid #2474b7;border-radius:6px;background:#2474b7;color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+.wr-filters .wr-opening-done:hover{background:#195c95}
 .wr-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .wr-title{font-size:22px;margin:20px 0 12px}
 .wr-tablebox{width:100%;overflow-x:auto}
@@ -960,21 +978,61 @@ try {
 .wr-pagination nav strong{background:#dfeaf5}
 .wr-error{color:#a32b2b}
 @media(max-width:900px){.wr-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:520px){.wr-main{padding:12px}.wr-filters{grid-template-columns:1fr}.wr-filter-openings .wr-open-panel{width:100%}.wr-pagination{justify-content:center}}
+@media(max-width:520px){.wr-main{padding:12px}.wr-filters{grid-template-columns:1fr}.wr-filter-openings .wr-opening-panel{width:100%;max-width:100%}.wr-pagination{justify-content:center}}
 </style>
 <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 <script>
 $(function(){ $.ajax({url:"https://587.renju.org.tw/menu.html",async:false,success:function(text){$("#myDiv").html(text);}}); });
-function wrToggleOpenings(checked){
-    document.querySelectorAll('.wr-open-panel input[type=checkbox]').forEach(function(c){c.checked=checked;});
-    wrUpdateLabel();
-}
 function wrUpdateLabel(){
-    const checks=document.querySelectorAll('.wr-open-panel input[type=checkbox]');
-    const selected=[...checks].filter(x=>x.checked).length;
-    document.querySelector('.wr-filter-openings summary').textContent=selected?('已選 '+selected+' 種開局 ▾'):'全部開局 ▾';
+    const checks=[...document.querySelectorAll('.wr-opening-list input[type=checkbox]')];
+    const selected=checks.filter(x=>x.checked).length;
+    const text=selected ? '已選 '+selected+' 種開局' : '全部開局';
+    document.getElementById('wr-opening-text').textContent=text;
+    document.getElementById('wr-opening-count').textContent=selected ? selected+' 種已選' : '未限制';
 }
-document.addEventListener('DOMContentLoaded',wrUpdateLabel);
+function wrCloseOpenings(restoreFocus){
+    const panel=document.getElementById('wr-opening-panel');
+    const trigger=document.getElementById('wr-opening-trigger');
+    if(panel.hidden)return;
+    panel.hidden=true;
+    trigger.setAttribute('aria-expanded','false');
+    if(restoreFocus)trigger.focus();
+}
+function wrToggleOpenings(){
+    const panel=document.getElementById('wr-opening-panel');
+    const trigger=document.getElementById('wr-opening-trigger');
+    if(!panel.hidden){wrCloseOpenings(false);return;}
+    panel.hidden=false;
+    trigger.setAttribute('aria-expanded','true');
+    document.getElementById('wr-opening-search').focus();
+}
+function wrResetOpenings(){
+    document.querySelectorAll('.wr-opening-list input[type=checkbox]').forEach(c=>{c.checked=false;});
+    document.getElementById('wr-opening-search').value='';
+    wrSearchOpenings('');
+    wrUpdateLabel();
+    wrCloseOpenings(true);
+}
+function wrSearchOpenings(term){
+    const search=term.trim().toLocaleLowerCase();
+    let visible=0;
+    document.querySelectorAll('.wr-opening-list label').forEach(function(label){
+        const show=label.textContent.toLocaleLowerCase().includes(search);
+        label.hidden=!show;
+        if(show)visible++;
+    });
+    document.getElementById('wr-opening-empty').hidden=visible!==0;
+}
+document.addEventListener('DOMContentLoaded',function(){
+    wrUpdateLabel();
+    const wrapper=document.getElementById('wr-filter-openings');
+    document.addEventListener('pointerdown',function(event){
+        if(!wrapper.contains(event.target))wrCloseOpenings(false);
+    });
+    document.addEventListener('keydown',function(event){
+        if(event.key==='Escape')wrCloseOpenings(true);
+    });
+});
 </script>
 </head>
 <body>
@@ -1005,17 +1063,19 @@ document.addEventListener('DOMContentLoaded',wrUpdateLabel);
 <option value="0">全部規則</option>
 <?php foreach ($rules as $option): ?><option value="<?= (int)$option['id'] ?>" <?= $rule===(int)$option['id']?'selected':'' ?>><?= wrH($option['name']) ?></option><?php endforeach; ?>
 </select></label>
-<div class="wr-filter-openings">
-<label for="wr-opening-summary">開局</label>
-<details>
-<summary id="wr-opening-summary">全部開局 ▾</summary>
-<div class="wr-open-panel">
-<div class="wr-choices"><button type="button" onclick="wrToggleOpenings(true)">全選</button><button type="button" onclick="wrToggleOpenings(false)">清除（全部開局）</button></div>
+<div class="wr-filter-openings" id="wr-filter-openings">
+<label for="wr-opening-trigger">開局</label>
+<button type="button" id="wr-opening-trigger" class="wr-opening-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="wr-opening-panel" onclick="wrToggleOpenings()"><span class="wr-opening-trigger-text" id="wr-opening-text">全部開局</span><span class="wr-opening-chevron" aria-hidden="true"></span></button>
+<div id="wr-opening-panel" class="wr-opening-panel" hidden>
+<div class="wr-opening-search"><input id="wr-opening-search" type="search" placeholder="搜尋開局" aria-label="搜尋開局" oninput="wrSearchOpenings(this.value)" autocomplete="off"></div>
+<div class="wr-opening-list" role="group" aria-label="選擇開局（可複選）">
 <?php foreach ($openingOptions as $option): ?>
 <label><input type="checkbox" name="opening[]" value="<?= (int)$option['id'] ?>" <?= in_array((int)$option['id'],$openings,true)?'checked':'' ?> onchange="wrUpdateLabel()"><span><?= wrH(trim((string)$option['abbr'].' '.(string)$option['name'])) ?></span></label>
 <?php endforeach; ?>
+<p class="wr-opening-empty" id="wr-opening-empty" hidden>沒有符合的開局</p>
 </div>
-</details>
+<div class="wr-opening-footer"><button type="button" class="wr-opening-all" onclick="wrResetOpenings()">全部開局</button><span class="wr-opening-footer-right"><span class="wr-opening-count" id="wr-opening-count">未限制</span><button type="button" class="wr-opening-done" onclick="wrCloseOpenings(true)">完成</button></span></div>
+</div>
 </div>
 <label>開始日期<input type="date" name="from" value="<?= wrH($from) ?>"></label>
 <label>結束日期<input type="date" name="to" value="<?= wrH($to) ?>"></label>
