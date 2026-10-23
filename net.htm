@@ -14,6 +14,44 @@
 			$("#myDiv").html(htmlobj.responseText);
 		});
 	</script>
+
+    <script>
+        // 保留原本靜態表格作為資料庫暫時不可用時的備援。
+        document.addEventListener('DOMContentLoaded', async function () {
+            try {
+                const response = await fetch('api/site-content.php?kind=resources', { cache: 'no-store' });
+                if (!response.ok) return;
+                const data = await response.json();
+                if (!Array.isArray(data.resources)) return;
+                const tables = document.querySelectorAll('table.rank');
+                const groups = ['learning', 'playing'];
+                groups.forEach(function (group, index) {
+                    const table = tables[index];
+                    if (!table) return;
+                    const body = table.tBodies[0];
+                    if (!body) return;
+                    while (body.rows.length > 1) body.deleteRow(1);
+                    data.resources.filter(item => item.category === group).forEach(function (item) {
+                        if (!/^https?:\/\//i.test(String(item.url || ''))) return;
+                        const row = body.insertRow();
+                        const nameCell = row.insertCell();
+                        const link = document.createElement('a');
+                        link.href = item.url;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        link.textContent = item.title || '';
+                        nameCell.appendChild(link);
+                        const language = row.insertCell();
+                        language.className = 'text-center';
+                        language.textContent = item.language || '';
+                        row.insertCell().innerHTML = item.description_html || '';
+                    });
+                });
+            } catch (error) {
+                console.warn('線上資源使用原始內容作為備援。', error);
+            }
+        });
+    </script>
 </head>
 
 <body>
