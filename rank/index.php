@@ -514,11 +514,6 @@ $totalRecords = array_sum($counts);
 <?php if ($message !== ''): ?><div class="success"><?= h($message) ?></div><?php endif; ?>
 
 <?php if ($view === 'dashboard'): ?>
-    <section class="hero">
-        <div><h1>排名系統</h1><p>直接讀取 MySQL，管理棋士、比賽、對局、排名、段級、歷程、名人與首頁訊息資料，並集中使用等級分重算工具。</p></div>
-        <div class="badge"><?= number_format($totalRecords) ?> 筆資料</div>
-    </section>
-
     <section class="cards">
         <?php foreach ($views as $key => $meta): ?>
             <a class="card" href="<?= h(listUrl($key)) ?>"><div class="label"><?= h($meta['title']) ?></div><div class="number"><?= number_format($counts[$key] ?? 0) ?></div></a>
@@ -527,7 +522,7 @@ $totalRecords = array_sum($counts);
 
     <section class="quick-grid">
         <div class="panel">
-            <div class="panel-head"><div><h2>最近比賽</h2><div class="sub">直接從 TOURNAMENT 讀取</div></div><a class="btn" href="<?= h(listUrl('tournaments')) ?>">全部比賽</a></div>
+            <div class="panel-head"><h2>最近比賽</h2><a class="btn" href="<?= h(listUrl('tournaments')) ?>">全部比賽</a></div>
             <?php if ($recentTournaments): ?>
             <div class="table-wrap"><table class="data"><thead><tr><th>賽號</th><th>賽名</th><th>開始</th><th>結束</th><th>戰績</th></tr></thead><tbody>
             <?php foreach ($recentTournaments as $tour): ?>
@@ -538,7 +533,7 @@ $totalRecords = array_sum($counts);
         </div>
 
         <div class="panel">
-            <div class="panel-head"><div><h2>功能入口</h2><div class="sub">常用管理與重算功能</div></div></div>
+            <div class="panel-head"><h2>功能入口</h2></div>
             <div class="quick-links">
                 <a class="quick-link" href="<?= h(listUrl('players')) ?>"><span>棋士資料</span><strong>PLAYER →</strong></a>
                 <a class="quick-link" href="<?= h(listUrl('games')) ?>"><span>對局資料</span><strong>GAME →</strong></a>
@@ -552,10 +547,6 @@ $totalRecords = array_sum($counts);
     </section>
 
 <?php elseif ($view === 'rating-tools'): ?>
-    <section class="hero">
-        <div><h1>等級分工具</h1><p>集中管理台灣排名與 RenjuNet Elo 的重算、驗證及最新排名查詢。</p></div>
-        <div class="badge">重算／檢查／RenjuNet</div>
-    </section>
     <section class="panel tools-panel">
         <div class="tool-tabs">
             <?php foreach ($ratingTools as $key => $meta): ?>
@@ -573,14 +564,9 @@ $totalRecords = array_sum($counts);
     </section>
 
 <?php elseif ($current): ?>
-    <section class="hero">
-        <div><h1><?= h($current['title']) ?></h1><p><?= h($current['desc']) ?>。顯示所有符合資料，可選擇指定欄位或搜尋全部欄位。</p></div>
-        <div class="badge"><?= number_format($counts[$view] ?? 0) ?> 筆</div>
-    </section>
-
     <section class="panel">
         <div class="panel-head">
-            <div><h2><?= h($current['table']) ?></h2><div class="sub">MySQL 即時資料<?= $q !== '' ? ' · 本次找到 ' . number_format(count($rows)) . ' 筆' : ' · 顯示全部 ' . number_format(count($rows)) . ' 筆' ?></div></div>
+            <h2><?= h($current['title']) ?></h2>
             <div class="panel-tools">
                 <a class="btn primary" href="<?= h(listUrl($view, $q, $searchField, ['new' => 1])) ?>">＋ 新增</a>
                 <?php if ($view === 'games'): ?><a class="btn" href="renjunet-game-import.php">從 RenjuNet 匯入棋譜</a><?php endif; ?>
@@ -600,16 +586,6 @@ $totalRecords = array_sum($counts);
                     </div>
                 </details>
                 <?php endif; ?>
-                <form class="search" method="get">
-                    <input type="hidden" name="view" value="<?= h($view) ?>">
-                    <select name="field_search" aria-label="搜尋欄位">
-                        <option value="">全部欄位</option>
-                        <?php foreach ($columns as $column): ?><option value="<?= h($column) ?>" <?= $searchField === $column ? 'selected' : '' ?>><?= h(adminColumnLabel($current['table'], $column)) ?></option><?php endforeach; ?>
-                    </select>
-                    <input type="search" name="q" value="<?= h($q) ?>" placeholder="輸入關鍵字…">
-                    <button class="btn" type="submit">搜尋</button>
-                    <?php if ($q !== '' || $searchField !== ''): ?><a class="btn" href="<?= h(listUrl($view)) ?>">清除</a><?php endif; ?>
-                </form>
             </div>
         </div>
 
