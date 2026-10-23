@@ -64,6 +64,8 @@ jobs:
               'rule.htm',
               'rank/index.php',
               'rank/pagination.js',
+               'rank/pagination.css',
+               'rank/server-pagination.php',
                'rank/table-tools.js',
                'rank/table-tools.css',
                'rank/action-icons.php',
