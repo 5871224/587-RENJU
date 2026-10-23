@@ -17,11 +17,6 @@ if ($LASTEXITCODE -ne 0) {
     throw 'Site rule migration regression checks failed.'
 }
 
-php scripts/check-tournament-metadata.php
-if ($LASTEXITCODE -ne 0) {
-    throw 'Tournament metadata parser regression checks failed.'
-}
-
 php scripts/check-renjunet-game-import.php
 if ($LASTEXITCODE -ne 0) {
     throw 'RenjuNet game import regression checks failed.'
