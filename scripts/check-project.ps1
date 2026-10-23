@@ -12,6 +12,11 @@ foreach ($file in $phpFiles) {
     }
 }
 
+php scripts/check-rank-inline-create.php
+if ($LASTEXITCODE -ne 0) {
+    throw 'Rank inline-create regression checks failed.'
+}
+
 php scripts/check-site-rule-migration.php
 if ($LASTEXITCODE -ne 0) {
     throw 'Site rule migration regression checks failed.'
