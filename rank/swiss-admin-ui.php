@@ -46,7 +46,7 @@ function swissHistoryRow(array $eligible, int $index, array $row): string {
     $html .= '<td><select name="rows[' . $index . '][player]">' . swissHistoryPlayerOptions($eligible, (int)($row['player'] ?? 0)) . '</select></td>';
     $html .= '<td><input type="text" name="rows[' . $index . '][summary]" value="' . swissH($row['summary'] ?? '') . '"></td>';
     $html .= '<td><input type="text" name="rows[' . $index . '][title]" value="' . swissH($row['title'] ?? '') . '"></td>';
-    $html .= '<td><button type="button" class="history-row-delete">刪除</button></td></tr>';
+    $html .= '<td><button type="button" class="history-row-delete icon-action icon-action--danger" title="刪除" aria-label="刪除">' . rankActionIcon('delete') . '</button></td></tr>';
     return $html;
 }
 
@@ -137,7 +137,7 @@ function swissDenRow(array $data, array $eligible, int $index, array $row): stri
     $html .= '<td class="den-score" data-den-score>' . swissH($row['promotion'] ?? '') . '</td>';
     $html .= '<td><select name="rows[' . $index . '][rank]" data-den-rank>' . swissDenRankOptions((string)($row['rank'] ?? '初段')) . '</select></td>';
     $html .= '<td><input type="text" name="rows[' . $index . '][reason]" data-den-reason value="' . swissH($row['reason'] ?? '') . '"></td>';
-    $html .= '<td><button type="button" class="den-row-delete">刪除</button></td></tr>';
+    $html .= '<td><button type="button" class="den-row-delete icon-action icon-action--danger" title="刪除" aria-label="刪除">' . rankActionIcon('delete') . '</button></td></tr>';
     return $html;
 }
 
