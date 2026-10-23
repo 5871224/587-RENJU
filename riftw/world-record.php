@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/login.php';
+require_once __DIR__ . '/world-record-paged.php';
 
 function wrH($value): string {
     return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -883,7 +884,7 @@ $openings = array_values(array_unique(array_filter(array_map(
     static fn($value): int => max(0, wrInt($value)), array_slice($openingInput, 0, 80)
 ))));
 sort($openings, SORT_NUMERIC);
-$page = max(1, wrInt($input['p'] ?? 1, 1));
+$page = min(1000000, max(1, wrInt($input['p'] ?? 1, 1)));
 $filters = ['record' => $record, 'country' => $country, 'color' => $color,
     'from' => $from, 'to' => $to, 'min_games' => $minGames,
     'rated' => $ratedMode, 'player' => $playerName];
@@ -972,47 +973,73 @@ try {
             array_push($params, ...$openings);
         }
         [$source, $sourceParams] = wrBuildQuery($color, $conditions, $params);
-        $all = wrAggregate($MYSQL, $source, $sourceParams);
-        $qualified = array_filter($all, static fn($item) => (int)$item['games'] >= $minGames);
-        if (str_starts_with($record, 'streak-')) {
-            $rows = wrStreak($MYSQL, $source, $sourceParams, $qualified, $record);
-        } else {
-            $rows = array_values($qualified);
-            $metric = match ($record) {
-                'score' => 'points', 'wins' => 'wins', 'draws' => 'draws', default => 'games'
-            };
-            usort($rows, static function ($a, $b) use ($record, $metric): int {
-                $av = $record === 'games' ? (float)$a['games'] : (float)$a[$metric] / (float)$a['games'];
-                $bv = $record === 'games' ? (float)$b['games'] : (float)$b[$metric] / (float)$b['games'];
-                return ($bv <=> $av)
-                    ?: ((int)$b['games'] <=> (int)$a['games'])
-                    ?: ((int)$a['pid'] <=> (int)$b['pid']);
-            });
+        $displayRows = null;
+        // Ordinary rate/count leaderboards use window-function ranking and
+        // database LIMIT/OFFSET; only 100 selected rows are transferred.
+        if (!str_starts_with($record, 'streak-')) {
+            try {
+                [$displayRows, $total, $page] = wrPagedAggregate(
+                    $MYSQL, $source, $sourceParams, $record,
+                    $minGames, $country, $playerName, $page
+                );
+                $paginationMode = 'sql';
+            } catch (Throwable $paginationError) {
+                // Fall back safely on older hosts without window functions.
+                error_log('World record SQL pagination unavailable: ' . $paginationError->getMessage());
+            }
         }
-        // Rank the full worldwide cohort first. Each normalized displayed
-        // country/region then gets its own independent ranking. Country and
-        // player searches only narrow the rows shown, not either rank.
-        $regionCounters = [];
-        foreach ($rows as $index => &$rankingRow) {
-            $region = wrCountryName(
-                $rankingRow['country_name'] ?? '',
-                $rankingRow['country_abbr'] ?? ''
-            );
-            $regionCounters[$region] = ($regionCounters[$region] ?? 0) + 1;
-            $rankingRow['rank'] = $index + 1;
-            $rankingRow['region_rank'] = $regionCounters[$region];
+        if ($displayRows === null) {
+            $importVersion = (string)$MYSQL->query('SELECT MAX(id) FROM RENJUNET_IMPORT')->fetchColumn();
+            $cacheKey = json_encode([
+                $importVersion, $record, $ratedMode, $color, $minGames,
+                $from, $to, $selectedRules, $openings
+            ], JSON_UNESCAPED_UNICODE);
+            $rows = wrReadRankingCache($cacheKey);
+            if ($rows === null) {
+                $all = wrAggregate($MYSQL, $source, $sourceParams);
+                $qualified = array_filter($all, static fn($item) => (int)$item['games'] >= $minGames);
+                if (str_starts_with($record, 'streak-')) {
+                    $rows = wrStreak($MYSQL, $source, $sourceParams, $qualified, $record);
+                } else {
+                    $rows = array_values($qualified);
+                    $metric = match ($record) {
+                        'score' => 'points', 'wins' => 'wins',
+                        'draws' => 'draws', default => 'games'
+                    };
+                    usort($rows, static function ($a, $b) use ($record, $metric): int {
+                        $av = $record === 'games' ? (float)$a['games'] : (float)$a[$metric] / (float)$a['games'];
+                        $bv = $record === 'games' ? (float)$b['games'] : (float)$b[$metric] / (float)$b['games'];
+                        return ($bv <=> $av)
+                            ?: ((int)$b['games'] <=> (int)$a['games'])
+                            ?: ((int)$a['pid'] <=> (int)$b['pid']);
+                    });
+                }
+                $regionCounters = [];
+                foreach ($rows as $index => &$rankingRow) {
+                    $region = wrCountryName(
+                        $rankingRow['country_name'] ?? '',
+                        $rankingRow['country_abbr'] ?? ''
+                    );
+                    $regionCounters[$region] = ($regionCounters[$region] ?? 0) + 1;
+                    $rankingRow['rank'] = $index + 1;
+                    $rankingRow['region_rank'] = $regionCounters[$region];
+                }
+                unset($rankingRow);
+                wrWriteRankingCache($cacheKey, $rows);
+                $paginationMode = 'php';
+            } else {
+                $paginationMode = 'cache';
+            }
+            if ($country > 0 || $playerName !== '') {
+                $rows = array_values(array_filter($rows, static function ($player) use ($country, $playerName): bool {
+                    return ($country === 0 || (int)$player['country_id'] === $country)
+                        && ($playerName === '' || wrPlayerMatches($player, $playerName));
+                }));
+            }
+            $total = count($rows);
+            $page = min($page, max(1, (int)ceil($total / 100)));
+            $displayRows = array_slice($rows, ($page - 1) * 100, 100);
         }
-        unset($rankingRow);
-        if ($country > 0 || $playerName !== '') {
-            $rows = array_values(array_filter($rows, static function ($player) use ($country, $playerName): bool {
-                return ($country === 0 || (int)$player['country_id'] === $country)
-                    && ($playerName === '' || wrPlayerMatches($player, $playerName));
-            }));
-        }
-        $total = count($rows);
-        $pages = max(1, (int)ceil($total / 100));
-        $page = min($page, $pages);
-        $displayRows = array_slice($rows, ($page - 1)*100, 100);
     }
     }
 } catch (Throwable $exception) {
@@ -1021,6 +1048,7 @@ try {
 }
 if ($isResultsRequest) {
     header('Content-Type: text/html; charset=UTF-8');
+    header('X-World-Record-Pagination: ' . ($paginationMode ?? 'error'));
     header('Cache-Control: private, no-store');
     require __DIR__ . '/world-record-results.php';
     exit;
