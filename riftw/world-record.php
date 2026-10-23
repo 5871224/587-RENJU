@@ -891,7 +891,10 @@ if ($selectedRules) $filters['rule'] = $selectedRules;
 if ($openings) $filters['opening'] = $openings;
 $error = ''; $rows = []; $total = 0; $displayRows = [];
 $countries = []; $rules = []; $openingOptions = []; $sourceDate = '';
+$isResultsRequest = (($_GET['part'] ?? '') === 'results');
 try {
+    // The filter controls render immediately; expensive rankings load separately.
+    if (!$isResultsRequest) {
     // Filter dropdowns reflect the current rated/all-games mode; only include
     // countries and rules that have valid games of that kind.
     $ratedCondition = $ratedMode === 'rated' ? 'AND T.rated = 1' : '';
@@ -944,6 +947,8 @@ try {
     $openingOptions = $MYSQL->query('SELECT id, abbr, name FROM RENJUNET_OPENING ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
     $stamp = $MYSQL->query('SELECT database_date FROM RENJUNET_IMPORT ORDER BY imported_at DESC, id DESC LIMIT 1')->fetchColumn();
     $sourceDate = is_string($stamp) ? $stamp : '';
+    }
+    if ($isResultsRequest) {
     if ($from !== '' && $to !== '' && $from > $to) {
         $error = '開始日期不可晚於結束日期。';
     } else {
@@ -1009,9 +1014,16 @@ try {
         $page = min($page, $pages);
         $displayRows = array_slice($rows, ($page - 1)*100, 100);
     }
+    }
 } catch (Throwable $exception) {
     error_log('world-record.php: ' . $exception->getMessage());
     $error = '世界紀錄查詢失敗，請確認 RenjuNet 同步資料是否完整。';
+}
+if ($isResultsRequest) {
+    header('Content-Type: text/html; charset=UTF-8');
+    header('Cache-Control: private, no-store');
+    require __DIR__ . '/world-record-results.php';
+    exit;
 }
 ?><!doctype html>
 <html lang="zh-Hant">
@@ -1077,10 +1089,17 @@ try {
 .wr-pagination nav a,.wr-pagination nav strong{border:1px solid #c8d4e1;min-width:34px;padding:7px 9px;text-align:center;border-radius:7px;box-sizing:border-box;text-decoration:none;background:white;color:#284058}
 .wr-pagination nav strong{background:#dfeaf5}
 .wr-error{color:#a32b2b}
+.wr-loading{display:flex;gap:12px;align-items:center;justify-content:center;margin:24px auto;padding:27px 12px;color:#41627e;font-size:15px;font-weight:600}
+.wr-loading[hidden]{display:none!important}
+.wr-spinner{display:inline-block;box-sizing:border-box;width:25px;height:25px;border:3px solid #c6dcee;border-top-color:#2474b7;border-radius:50%;animation:wr-spin .7s linear infinite}
+.wr-spinner-small{display:inline-block;box-sizing:border-box;width:15px;height:15px;border:2px solid #ffffff80;border-top-color:#fff;border-radius:50%;animation:wr-spin .7s linear infinite}
+@keyframes wr-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.wr-spinner,.wr-spinner-small{animation-duration:1.6s}}
 @media(max-width:900px){.wr-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.wr-main{padding:12px}.wr-filters{grid-template-columns:1fr}.wr-filter-openings .wr-opening-panel{width:100%;max-width:100%}.wr-pagination{justify-content:center}}
 </style>
-<script src="record-sticky-header.js?v=20261023a" defer></script>
+<script src="record-sticky-header.js?v=20261023b" defer></script>
+<script src="world-record-async.js?v=20261023a" defer></script>
 <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 <script>
 $(function(){ $.ajax({url:"https://587.renju.org.tw/menu.html",async:false,success:function(text){$("#myDiv").html(text);}}); });
@@ -1188,7 +1207,7 @@ document.addEventListener('DOMContentLoaded',function(){
 <main class="wr-main">
 <h1>世界紀錄</h1>
 <p class="wr-note">資料來源：RenjuNet（<?= wrH($sourceDate !== '' ? '更新至 '.$sourceDate : '本地同步資料') ?>）。</p>
-<form method="get" class="wr-filters">
+<form method="get" class="wr-filters" id="world-record-filters">
 <label>開始日期<input type="date" name="from" value="<?= wrH($from) ?>"></label>
 <label>結束日期<input type="date" name="to" value="<?= wrH($to) ?>"></label>
 <label>國家/地區
@@ -1251,63 +1270,10 @@ $status = $hasRated && $hasUnrated ? '部分計入排名' : ($hasRated ? '計入
 </label>
 <div class="wr-form-action"><button class="wr-action wr-action-primary" type="submit">查詢</button><a class="wr-action" href="world-record.php">清除篩選</a></div>
 </form>
-<h2 class="wr-title"><?= wrH($options[$record][0]) ?></h2>
-<?php if($error!==''): ?><p class="wr-error" role="alert"><?= wrH($error) ?></p>
-<?php else: ?>
-<div class="wr-tablebox" data-record-sticky>
-<table>
-<thead><tr><th>世界排名</th><th>區域排名</th><th>國家/地區</th><th>棋士</th>
-<?php if (in_array($record,['score','wins','draws'],true)): ?>
-<th>勝</th><th>和</th><th>負</th><th>局數</th><th><?= wrH(['score'=>'得分率','wins'=>'勝率','draws'=>'和棋率'][$record]) ?></th>
-<?php elseif ($record === 'games'): ?>
-<th>局數</th><th>勝</th><th>和</th><th>負</th>
-<?php else: ?>
-<th>連續局數</th><th>開始日</th><th>結束日</th>
-<?php endif; ?>
-</tr></thead>
-<tbody>
-<?php foreach ($displayRows as $i=>$r):
-    $roman=wrLabel($r);
-    $native=trim((string)$r['native_name']);
-    $disp=(string)$r['disp_id'];
-    $playerHref='https://www.renju.net/people/'.rawurlencode($disp).'/';
-?>
-<tr>
-<td><?= (int)$r['rank'] ?></td>
-<td><?= (int)$r['region_rank'] ?></td>
-<td><?= wrH(wrCountryName($r['country_name']??'', $r['country_abbr']??'')) ?></td>
-<td class="wr-name"><span class="wr-name-pair"><a href="<?= wrH($playerHref) ?>" target="_blank" rel="noopener noreferrer"><?= wrH($roman!==''?$roman:('#'.(int)$r['pid'])) ?></a><?php if($native!=='' && strcasecmp($native,$roman)!==0): ?><span class="wr-native"><?= wrH($native) ?></span><?php endif; ?></span></td>
-<?php if(in_array($record,['score','wins','draws'],true)):
-    $numerator=$record==='score'?(float)$r['points']:($record==='wins'?(float)$r['wins']:(float)$r['draws']);
-    $rate=round($numerator/(int)$r['games']*100,2);
-?>
-<td><?= (int)$r['wins'] ?></td><td><?= (int)$r['draws'] ?></td><td><?= (int)$r['losses'] ?></td>
-<td><?= (int)$r['games'] ?></td><td><?= number_format($rate,2) ?>%</td>
-<?php elseif($record==='games'): ?>
-<td><?= (int)$r['games'] ?></td><td><?= (int)$r['wins'] ?></td><td><?= (int)$r['draws'] ?></td><td><?= (int)$r['losses'] ?></td>
-<?php else: ?>
-<td><?= (int)$r['streak'] ?></td><td><?= wrH($r['started']) ?></td><td><?= wrH($r['ended']) ?></td>
-<?php endif; ?>
-</tr>
-<?php endforeach; ?>
-<?php if(!$displayRows): ?><tr><td colspan="<?= in_array($record, ['score','wins','draws'], true) ? 9 : ($record === 'games' ? 8 : 7) ?>">目前沒有符合篩選條件的紀錄。</td></tr><?php endif; ?>
-</tbody>
-</table>
+<div id="wr-loading" class="wr-loading" role="status" aria-live="polite">
+<span class="wr-spinner" aria-hidden="true"></span><span>查詢中，正在載入排名…</span>
 </div>
-<div class="wr-pagination"><span>共 <?= $total ?> 位棋士，每頁 100 筆</span>
-<nav aria-label="世界紀錄分頁">
-<?php if($page>1): ?><a href="<?= wrH(wrLink($filters,$page-1)) ?>">上一頁</a><?php endif; ?>
-<?php
-$pages=max(1,(int)ceil($total/100));
-$begin=max(1,$page-2);$last=min($pages,$page+2);
-if($begin>1){echo '<a href="'.wrH(wrLink($filters,1)).'">1</a>';if($begin>2)echo '…';}
-for($i=$begin;$i<=$last;$i++){
-    if($i===$page)echo '<strong aria-current="page">'.$i.'</strong>';
-    else echo '<a href="'.wrH(wrLink($filters,$i)).'">'.$i.'</a>';
-}
-if($last<$pages){if($last<$pages-1)echo '…';echo '<a href="'.wrH(wrLink($filters,$pages)).'">'.$pages.'</a>';}
-?>
-<?php if($page<$pages): ?><a href="<?= wrH(wrLink($filters,$page+1)) ?>">下一頁</a><?php endif; ?>
-</nav></div>
-<?php endif; ?>
+<section id="world-record-results" aria-live="polite"></section>
+<noscript><p class="wr-error">此頁需要 JavaScript 顯示查詢結果。</p><a href="world-record.php?part=results">查看預設排名</a></noscript>
+
 </main></body></html>
