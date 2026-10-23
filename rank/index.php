@@ -615,7 +615,7 @@ $totalRecords = array_sum($counts);
 <link rel="stylesheet" href="admin.css?v=20261023d">
 <link rel="stylesheet" href="pagination.css?v=20261023d">
 <style>.edit-field:has(textarea){grid-column:1/-1}.edit-field textarea{display:block;width:100%;min-height:190px;resize:vertical;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:14px/1.55 Consolas,monospace}.edit-field textarea[name*="content_html"]{min-height:420px}</style>
-<link rel="stylesheet" href="table-tools.css?v=20261023c">
+<link rel="stylesheet" href="table-tools.css?v=20261023e">
 </head>
 <body>
 <div class="app">
@@ -829,6 +829,7 @@ $totalRecords = array_sum($counts);
 </div>
 <script src="table-tools.js?v=20261023e"></script>
 <script src="inline-create.js?v=20261023a"></script>
+<script src="bottom-scroll.js?v=20261023a"></script>
 <script src="pagination.js?v=20261023d"></script>
 <?php if (in_array($view, ['site-resources','site-rules'], true)): ?><script src="resource-drag.js?v=20261023d"></script><?php endif; ?>
 </body>
