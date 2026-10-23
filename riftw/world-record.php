@@ -835,7 +835,32 @@ if ($openings) $filters['opening'] = $openings;
 $error = ''; $rows = []; $total = 0; $displayRows = [];
 $countries = []; $rules = []; $openingOptions = []; $sourceDate = '';
 try {
-    $countries = $MYSQL->query('SELECT id, name, abbr FROM RENJUNET_COUNTRY ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
+    // 只顯示至少有一局有效 RenjuNet 計分對局的棋士所屬國家／地區。
+    // 使用既有的 tournament / black / white 索引，先去重國家再列出選項。
+    $countries = $MYSQL->query("
+        SELECT C.id, C.name, C.abbr
+        FROM RENJUNET_COUNTRY C
+        JOIN (
+            SELECT P.country_id
+            FROM RENJUNET_TOURNAMENT T
+            JOIN RENJUNET_GAME G ON G.tournament_id = T.id
+            JOIN RENJUNET_PLAYER P ON P.id = G.black_player_id
+            WHERE T.rated = 1 AND T.end_date IS NOT NULL
+              AND G.black_player_id > 0 AND G.white_player_id > 0
+              AND G.black_player_id <> G.white_player_id
+              AND G.black_result IN (0, 0.5, 1)
+            UNION
+            SELECT P.country_id
+            FROM RENJUNET_TOURNAMENT T
+            JOIN RENJUNET_GAME G ON G.tournament_id = T.id
+            JOIN RENJUNET_PLAYER P ON P.id = G.white_player_id
+            WHERE T.rated = 1 AND T.end_date IS NOT NULL
+              AND G.black_player_id > 0 AND G.white_player_id > 0
+              AND G.black_player_id <> G.white_player_id
+              AND G.black_result IN (0, 0.5, 1)
+        ) UsedCountries ON UsedCountries.country_id = C.id
+        ORDER BY C.name
+    ")->fetchAll(PDO::FETCH_ASSOC);
     $rules = $MYSQL->query('SELECT id, name FROM RENJUNET_RULE ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
     $openingOptions = $MYSQL->query('SELECT id, abbr, name FROM RENJUNET_OPENING ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
     $stamp = $MYSQL->query('SELECT database_date FROM RENJUNET_IMPORT ORDER BY imported_at DESC, id DESC LIMIT 1')->fetchColumn();
