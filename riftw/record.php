@@ -103,12 +103,15 @@ function renderSelectedRecord(string $html, string $record, int $requestedPage):
     $offset = ($page - 1) * 50;
     $pageRows = array_slice($dataRows, $offset, 50);
     $ordinal = in_array($record, ['den-average', 'gender', 'zodiac', 'meijin-history'], true) ? '序號' : '排名';
-    $heading = preg_replace('~<TR([^>]*)>~i', '<TR$1><TH>' . $ordinal . '</TH>', $heading, 1);
-    $tableOpen = preg_replace('~<colgroup>~i', '<colgroup><col style="width:60px">', $table[1], 1);
+    if ($record !== 'leader') {
+        $heading = preg_replace('~<TR([^>]*)>~i', '<TR$1><TH>' . $ordinal . '</TH>', $heading, 1);
+    }
+    $tableOpen = $record === 'leader' ? $table[1] : preg_replace('~<colgroup>~i', '<colgroup><col style="width:60px">', $table[1], 1);
     echo '<div class="record-table-wrap">' . $tableOpen;
     echo $heading;
     foreach ($pageRows as $i => $row) {
-        echo preg_replace('~<TR([^>]*)>~i', '<TR$1><TD>' . ($offset + $i + 1) . '</TD>', $row, 1);
+        if ($record === 'leader') echo $row;
+        else echo preg_replace('~<TR([^>]*)>~i', '<TR$1><TD>' . ($offset + $i + 1) . '</TD>', $row, 1);
     }
     echo $table[3] . '</div>';
     echo '<div class="record-pagination"><span class="muted">共 ' . $total . ' 筆，每頁 50 筆</span><nav aria-label="紀錄分頁">';
@@ -550,25 +553,6 @@ ON M.名人=P2.代號");
 
      // 保留原先每次登頂的順序、日期與連續領頭天數，不彙整同一棋士。
      echo "<H2>五林盟主</H2>（歷年排名第一）<BR/><TABLE class='rank'><colgroup><col width='100'><col width='120'><col width='100'></colgroup><TR><TH>棋士</TH><TH>登頂日</TH><TH>領頭日數</TH></TR>";
-     foreach ($leaderSegments as $segment) {
-          if ($segment['playerId'] === null) continue;
-          $id = (int)$segment['playerId'];
-          if (!isset($leaderTotals[$id])) {
-               $leaderTotals[$id] = $segment;
-          } else {
-               $leaderTotals[$id]['days'] += $segment['days'];
-               if ($segment['start'] < $leaderTotals[$id]['start']) {
-                    $leaderTotals[$id]['start'] = $segment['start'];
-               }
-          }
-     }
-     $leaderSegments = array_values($leaderTotals);
-     usort($leaderSegments, static function ($a, $b) {
-          return ($b['days'] <=> $a['days'])
-               ?: strcmp($a['start'], $b['start'])
-               ?: ($a['playerId'] <=> $b['playerId']);
-     });
-     echo "<H2>五林盟主</H2>（歷年累計領頭日數）<BR/><TABLE class='rank'><colgroup><col width='100'><col width='120'><col width='100'></colgroup><TR><TH>棋士</TH><TH>首次登頂日</TH><TH>領頭日數</TH></TR>";
      foreach ($leaderSegments as $segment) {
           echo '<TR><TD>' . htmlspecialchars($segment['name'], ENT_QUOTES, 'UTF-8')
                . '</TD><TD>' . htmlspecialchars($segment['start'], ENT_QUOTES, 'UTF-8')
