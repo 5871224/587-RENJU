@@ -49,7 +49,7 @@ function wrCountryName($english, $abbr = ''): string {
         'Bangladesh' => '孟加拉',
         'Barbados' => '巴貝多',
         'Belarus' => '白俄羅斯',
-        'Belarusian Renju Association' => '白俄羅斯連珠協會',
+        'Belarusian Renju Association' => '白俄羅斯',
         'Belgium' => '比利時',
         'Belize' => '貝里斯',
         'Benin' => '貝南',
@@ -863,7 +863,13 @@ if (strlen($playerName) > 120) {
 $color = is_string($input['color'] ?? null) && in_array($input['color'], ['all','black','white'], true)
     ? $input['color'] : 'all';
 $country = max(0, wrInt($input['country'] ?? 0));
-$rule = max(0, wrInt($input['rule'] ?? 0));
+// Support both the new multi-select and legacy ?rule=ID URLs.
+$ruleInput = $input['rule'] ?? [];
+$ruleInput = is_array($ruleInput) ? $ruleInput : [$ruleInput];
+$selectedRules = array_values(array_unique(array_filter(array_map(
+    static fn($value): int => max(0, wrInt($value)), array_slice($ruleInput, 0, 100)
+))));
+sort($selectedRules, SORT_NUMERIC);
 $from = wrDate($input['from'] ?? '');
 $to = wrDate($input['to'] ?? '');
 $minGames = min(100000, max(0, wrInt($input['min_games'] ?? 10, 10)));
@@ -874,8 +880,9 @@ $openings = array_values(array_unique(array_filter(array_map(
 sort($openings, SORT_NUMERIC);
 $page = max(1, wrInt($input['p'] ?? 1, 1));
 $filters = ['record' => $record, 'country' => $country, 'color' => $color,
-    'rule' => $rule, 'from' => $from, 'to' => $to, 'min_games' => $minGames,
+    'from' => $from, 'to' => $to, 'min_games' => $minGames,
     'rated' => $ratedMode, 'player' => $playerName];
+if ($selectedRules) $filters['rule'] = $selectedRules;
 if ($openings) $filters['opening'] = $openings;
 $error = ''; $rows = []; $total = 0; $displayRows = [];
 $countries = []; $rules = []; $openingOptions = []; $sourceDate = '';
@@ -910,21 +917,23 @@ try {
         ORDER BY C.name
     ";
     $countries = $MYSQL->query($countrySql)->fetchAll(PDO::FETCH_ASSOC);
+    // Whether a game is rated is recorded on its tournament, not on its rule.
+    // For each used rule, show whether its games are rated, unrated, or mixed.
+    $ratedHaving = $ratedMode === 'rated' ? 'HAVING has_rated = 1' : '';
     $rules = $MYSQL->query("
-        SELECT R.id, R.name
+        SELECT R.id, R.name,
+            MAX(CASE WHEN T.rated = 1 THEN 1 ELSE 0 END) AS has_rated,
+            MAX(CASE WHEN T.rated <> 1 THEN 1 ELSE 0 END) AS has_unrated
         FROM RENJUNET_RULE R
-        WHERE EXISTS (
-            SELECT 1
-            FROM RENJUNET_GAME G
-            INNER JOIN RENJUNET_TOURNAMENT T ON T.id = G.tournament_id
-            WHERE G.rule_id = R.id
-              {$ratedCondition}
-              AND T.end_date IS NOT NULL
-              AND G.black_player_id > 0
-              AND G.white_player_id > 0
-              AND G.black_player_id <> G.white_player_id
-              AND G.black_result IN (0, 0.5, 1)
-        )
+        INNER JOIN RENJUNET_GAME G ON G.rule_id = R.id
+        INNER JOIN RENJUNET_TOURNAMENT T ON T.id = G.tournament_id
+        WHERE T.end_date IS NOT NULL
+          AND G.black_player_id > 0
+          AND G.white_player_id > 0
+          AND G.black_player_id <> G.white_player_id
+          AND G.black_result IN (0, 0.5, 1)
+        GROUP BY R.id, R.name
+        {$ratedHaving}
         ORDER BY R.name
     ")->fetchAll(PDO::FETCH_ASSOC);
     $openingOptions = $MYSQL->query('SELECT id, abbr, name FROM RENJUNET_OPENING ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
@@ -944,7 +953,10 @@ try {
         $params = [];
         if ($from !== '') { $conditions[] = 'T.end_date>=?'; $params[] = $from; }
         if ($to !== '') { $conditions[] = 'T.end_date<=?'; $params[] = $to; }
-        if ($rule > 0) { $conditions[] = 'G.rule_id=?'; $params[] = $rule; }
+        if ($selectedRules) {
+            $conditions[] = 'G.rule_id IN (' . implode(',', array_fill(0, count($selectedRules), '?')) . ')';
+            array_push($params, ...$selectedRules);
+        }
         if ($openings) {
             $conditions[] = 'G.opening_id IN (' . implode(',', array_fill(0, count($openings), '?')) . ')';
             array_push($params, ...$openings);
@@ -1012,6 +1024,8 @@ try {
 .wr-filters .wr-opening-list label{display:flex;flex-direction:row;align-items:center;gap:9px;min-height:32px;padding:6px 8px;margin:0;color:#273c55;font-size:14px;font-weight:400;white-space:normal;line-height:1.35;border-radius:6px;cursor:pointer}
 .wr-filters .wr-opening-list label[hidden]{display:none}
 .wr-filters .wr-opening-list label:hover{background:#edf5fc}
+.wr-filters .wr-rule-name{flex:1;min-width:0}
+.wr-filters .wr-rule-status{display:inline-flex;align-items:center;justify-content:center;padding:2px 6px;border:1px solid #d9e4ef;border-radius:5px;background:#f1f5f9;color:#48627c;font-size:12px;font-weight:400;white-space:nowrap}
 .wr-filters .wr-opening-list input[type=checkbox]{appearance:auto;flex:0 0 16px;width:16px;height:16px;min-height:0;margin:0;padding:0;border:initial;border-radius:3px;box-shadow:none;accent-color:#2474b7;cursor:pointer}
 .wr-opening-empty{margin:10px;color:#64748b;font-size:13px}
 .wr-opening-empty[hidden]{display:none}
@@ -1046,7 +1060,7 @@ try {
 <script>
 $(function(){ $.ajax({url:"https://587.renju.org.tw/menu.html",async:false,success:function(text){$("#myDiv").html(text);}}); });
 function wrUpdateLabel(){
-    const checks=[...document.querySelectorAll('.wr-opening-list input[type=checkbox]')];
+    const checks=[...document.querySelectorAll('#wr-opening-panel .wr-opening-list input[type=checkbox]')];
     const selected=checks.filter(x=>x.checked).length;
     const text=selected ? '已選 '+selected+' 種開局' : '全部開局';
     document.getElementById('wr-opening-text').textContent=text;
@@ -1064,12 +1078,13 @@ function wrToggleOpenings(){
     const panel=document.getElementById('wr-opening-panel');
     const trigger=document.getElementById('wr-opening-trigger');
     if(!panel.hidden){wrCloseOpenings(false);return;}
+    wrCloseRules(false);
     panel.hidden=false;
     trigger.setAttribute('aria-expanded','true');
     document.getElementById('wr-opening-search').focus();
 }
 function wrResetOpenings(){
-    document.querySelectorAll('.wr-opening-list input[type=checkbox]').forEach(c=>{c.checked=false;});
+    document.querySelectorAll('#wr-opening-panel .wr-opening-list input[type=checkbox]').forEach(c=>{c.checked=false;});
     document.getElementById('wr-opening-search').value='';
     wrSearchOpenings('');
     wrUpdateLabel();
@@ -1078,21 +1093,67 @@ function wrResetOpenings(){
 function wrSearchOpenings(term){
     const search=term.trim().toLocaleLowerCase();
     let visible=0;
-    document.querySelectorAll('.wr-opening-list label').forEach(function(label){
+    document.querySelectorAll('#wr-opening-panel .wr-opening-list label').forEach(function(label){
         const show=label.textContent.toLocaleLowerCase().includes(search);
         label.hidden=!show;
         if(show)visible++;
     });
     document.getElementById('wr-opening-empty').hidden=visible!==0;
 }
+function wrUpdateRulesLabel(){
+    const checks=[...document.querySelectorAll('#wr-rule-panel .wr-opening-list input[type=checkbox]')];
+    const selected=checks.filter(x=>x.checked).length;
+    document.getElementById('wr-rule-text').textContent=selected ? '已選 '+selected+' 種規則' : '全部規則';
+    document.getElementById('wr-rule-count').textContent=selected ? selected+' 種已選' : '未限制';
+}
+function wrCloseRules(restoreFocus){
+    const panel=document.getElementById('wr-rule-panel');
+    const trigger=document.getElementById('wr-rule-trigger');
+    if(panel.hidden)return;
+    panel.hidden=true;
+    trigger.setAttribute('aria-expanded','false');
+    if(restoreFocus)trigger.focus();
+}
+function wrToggleRules(){
+    const panel=document.getElementById('wr-rule-panel');
+    const trigger=document.getElementById('wr-rule-trigger');
+    if(!panel.hidden){wrCloseRules(false);return;}
+    wrCloseOpenings(false);
+    panel.hidden=false;
+    trigger.setAttribute('aria-expanded','true');
+    document.getElementById('wr-rule-search').focus();
+}
+function wrResetRules(){
+    document.querySelectorAll('#wr-rule-panel .wr-opening-list input[type=checkbox]').forEach(c=>{c.checked=false;});
+    document.getElementById('wr-rule-search').value='';
+    wrSearchRules('');
+    wrUpdateRulesLabel();
+    wrCloseRules(true);
+}
+function wrSearchRules(term){
+    const search=term.trim().toLocaleLowerCase();
+    let visible=0;
+    document.querySelectorAll('#wr-rule-panel .wr-opening-list label').forEach(function(label){
+        const show=label.textContent.toLocaleLowerCase().includes(search);
+        label.hidden=!show;
+        if(show)visible++;
+    });
+    document.getElementById('wr-rule-empty').hidden=visible!==0;
+}
 document.addEventListener('DOMContentLoaded',function(){
     wrUpdateLabel();
-    const wrapper=document.getElementById('wr-filter-openings');
+    wrUpdateRulesLabel();
+    const openings=document.getElementById('wr-filter-openings');
+    const rules=document.getElementById('wr-filter-rules');
     document.addEventListener('pointerdown',function(event){
-        if(!wrapper.contains(event.target))wrCloseOpenings(false);
+        if(!openings.contains(event.target))wrCloseOpenings(false);
+        if(!rules.contains(event.target))wrCloseRules(false);
     });
     document.addEventListener('keydown',function(event){
-        if(event.key==='Escape')wrCloseOpenings(true);
+        if(event.key==='Escape'){
+            wrCloseOpenings(true);
+            wrCloseRules(true);
+        }
     });
 });
 </script>
@@ -1116,11 +1177,24 @@ document.addEventListener('DOMContentLoaded',function(){
 <option value="black" <?= $color==='black'?'selected':'' ?>>持黑</option>
 <option value="white" <?= $color==='white'?'selected':'' ?>>持白</option>
 </select></label>
-<label>規則
-<select name="rule">
-<option value="0">全部規則</option>
-<?php foreach ($rules as $option): ?><option value="<?= (int)$option['id'] ?>" <?= $rule===(int)$option['id']?'selected':'' ?>><?= wrH($option['name']) ?></option><?php endforeach; ?>
-</select></label>
+<div class="wr-filter-openings" id="wr-filter-rules">
+<label for="wr-rule-trigger">規則</label>
+<button type="button" id="wr-rule-trigger" class="wr-opening-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="wr-rule-panel" onclick="wrToggleRules()"><span class="wr-opening-trigger-text" id="wr-rule-text">全部規則</span><span class="wr-opening-chevron" aria-hidden="true"></span></button>
+<div id="wr-rule-panel" class="wr-opening-panel" hidden>
+<div class="wr-opening-search"><input id="wr-rule-search" type="search" placeholder="搜尋規則" aria-label="搜尋規則" oninput="wrSearchRules(this.value)" autocomplete="off"></div>
+<div class="wr-opening-list" role="group" aria-label="選擇規則（可複選）">
+<?php foreach ($rules as $option):
+$hasRated = (int)$option['has_rated'] === 1;
+$hasUnrated = (int)$option['has_unrated'] === 1;
+$status = $hasRated && $hasUnrated ? '部分計入排名' : ($hasRated ? '計入排名' : '不計入排名');
+?>
+<label><input type="checkbox" name="rule[]" value="<?= (int)$option['id'] ?>" <?= in_array((int)$option['id'],$selectedRules,true)?'checked':'' ?> onchange="wrUpdateRulesLabel()"><span class="wr-rule-name"><?= wrH($option['name']) ?></span><span class="wr-rule-status"><?= wrH($status) ?></span></label>
+<?php endforeach; ?>
+<p class="wr-opening-empty" id="wr-rule-empty" hidden>沒有符合的規則</p>
+</div>
+<div class="wr-opening-footer"><button type="button" class="wr-opening-all" onclick="wrResetRules()">全部規則</button><span class="wr-opening-footer-right"><span class="wr-opening-count" id="wr-rule-count">未限制</span><button type="button" class="wr-opening-done" onclick="wrCloseRules(true)">完成</button></span></div>
+</div>
+</div>
 <div class="wr-filter-openings" id="wr-filter-openings">
 <label for="wr-opening-trigger">開局</label>
 <button type="button" id="wr-opening-trigger" class="wr-opening-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="wr-opening-panel" onclick="wrToggleOpenings()"><span class="wr-opening-trigger-text" id="wr-opening-text">全部開局</span><span class="wr-opening-chevron" aria-hidden="true"></span></button>
