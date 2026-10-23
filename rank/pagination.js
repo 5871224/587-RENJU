@@ -90,6 +90,9 @@
     hiddenField(form,'view',params.get('view')||'');
     hiddenField(form,'q',params.get('q')||'');
     hiddenField(form,'field_search',params.get('field_search')||'');
+    ['f','sort','dir','p'].forEach(function(key){
+      if(params.has(key))hiddenField(form,key,params.get(key));
+    });
     hiddenField(form,'original',token);
     form.addEventListener('submit',function(){
       saveReturnScroll();
@@ -188,7 +191,7 @@
   if(!tbody){restoreReturnScroll();return;}
   const allRows=Array.from(tbody.rows);
   let rows=allRows.slice();
-  if(!rows.length){restoreReturnScroll();return;}
+  if(!rows.length&&table.dataset.serverPaged!=='1'){restoreReturnScroll();return;}
 
   let totalPages=Math.max(1,Math.ceil(rows.length/pageSize));
   const baseStorageKey='renju-rank:'+String(params.get('view')||'')+':'+String(params.get('field_search')||'')+':'+String(params.get('q')||'');
@@ -203,6 +206,26 @@
   let sortDirection='asc';
   const wrap=table.closest('.table-wrap');
   if(!wrap){restoreReturnScroll();return;}
+
+  // GAME / RANK are paginated in MySQL, not by hiding DOM rows.
+  if(table.dataset.serverPaged==='1'){
+    current=Math.max(1,parseInt(params.get('p')||'1',10)||1);
+    const initial=parseInt(table.dataset.initialSort||'-1',10);
+    const direction=table.dataset.sortDir==='asc'?'asc':'desc';
+    sortColumn=Number.isInteger(initial)?initial:-1;
+    sortDirection=direction;
+    let filters={};
+    try{filters=JSON.parse(table.dataset.filters||'{}');}catch(e){}
+    if(window.RankTableTools){
+      window.RankTableTools.enhance(table,{
+        initialSort:sortColumn,
+        initialDirection:sortDirection,
+        server:{filters:filters}
+      });
+    }
+    restoreReturnScroll();
+    return;
+  }
 
   let topPager=null;
   let bottomPager=null;
