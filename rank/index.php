@@ -42,7 +42,7 @@ function normalizeFieldValue($value, array $meta) {
 function listUrl(string $view, string $q = '', string $searchField = '', array $extra = []): string {
     $params = ['view' => $view];
     $sourceView = (string)($_POST['view'] ?? $_GET['view'] ?? '');
-    if ($sourceView === $view && in_array($view, ['games', 'ranking'], true)) {
+    if ($sourceView === $view && $view !== 'dashboard' && $view !== 'rating-tools') {
         foreach (['f', 'sort', 'dir', 'p'] as $key) {
             $value = $_POST[$key] ?? $_GET[$key] ?? null;
             if (is_string($value) && $value !== '') $params[$key] = $value;
@@ -200,7 +200,7 @@ $current = null;
 $counts = [];
 $recentTournaments = [];
 $newDefaults = [];
-$serverPaged = in_array($view, ['games', 'ranking'], true);
+$serverPaged = isset($views[$view]);
 $serverFilters = [];
 $serverTotal = 0;
 $serverPage = 1;
@@ -209,10 +209,10 @@ $serverSort = -1;
 $serverDir = 'desc';
 
 try {
-    // Large GAME / RANK lists do not need home-page content DDL on each request.
-    if (!$serverPaged) ensureSiteNoticeTable($MYSQL);
+    // Initialize only the schema required by this page, not unrelated tables.
+    if (in_array($view, ['dashboard', 'site-notices'], true)) ensureSiteNoticeTable($MYSQL);
     try {
-        if (!$serverPaged) siteContentEnsureTables($MYSQL);
+        if (in_array($view, ['dashboard', 'site-resources', 'site-rules'], true)) siteContentEnsureTables($MYSQL);
     } catch (Throwable $contentError) {
         error_log('site-content initialization: ' . $contentError->getMessage());
         // 網站內容尚未建好時，不影響原有排名、比賽與首頁訊息管理。
@@ -316,13 +316,24 @@ try {
                 $stmtCurrent = $MYSQL->prepare('SELECT id FROM SITE_RESOURCE WHERE category=? ORDER BY sort_order,id FOR UPDATE');
                 $stmtCurrent->execute([$category]);
                 $existing = array_map('intval', $stmtCurrent->fetchAll(PDO::FETCH_COLUMN));
-                $expected = $existing;
+                // A paginated view submits only the visible rows of this category.
+                // Replace those slots in the complete order without moving unseen records.
+                $submittedSet = array_fill_keys($ids, true);
+                $matched = array_values(array_filter($existing, static fn(int $id): bool => isset($submittedSet[$id])));
+                $expected = $matched;
                 $submitted = $ids;
                 sort($expected, SORT_NUMERIC);
                 sort($submitted, SORT_NUMERIC);
-                if ($expected !== $submitted) throw new RuntimeException('資料已異動，請重新整理後再排序。');
+                if (!$matched || $expected !== $submitted) {
+                    throw new RuntimeException('排序項目與目前資料不符，請重新整理後再試。');
+                }
+                $next = 0;
+                foreach ($existing as &$storedId) {
+                    if (isset($submittedSet[$storedId])) $storedId = $ids[$next++];
+                }
+                unset($storedId);
                 $stmtUpdate = $MYSQL->prepare('UPDATE SITE_RESOURCE SET sort_order=? WHERE id=? AND category=?');
-                foreach ($ids as $index => $id) $stmtUpdate->execute([($index + 1) * 10, $id, $category]);
+                foreach ($existing as $index => $id) $stmtUpdate->execute([($index + 1) * 10, $id, $category]);
                 $MYSQL->commit();
                 echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE);
             } catch (Throwable $reorderError) {
@@ -531,9 +542,17 @@ try {
             $serverDir = (string)($_GET['dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
             $requestedPage = filter_var($_GET['p'] ?? 1, FILTER_VALIDATE_INT);
             $requestedPage = $requestedPage === false ? 1 : max(1, $requestedPage);
+            // Preserve the original manual/category ordering unless a header sort is selected.
+            $defaultOrder = match ($table) {
+                'SITE_RESOURCE' => "FIELD(category, 'learning', 'playing'), sort_order, id",
+                'SITE_RULE_ITEM' => "FIELD(page_slug, 'rulehome', 'renju-rule', 'gomoku-rule', 'other'), sort_order, id",
+                'SITE_NOTICE' => "`is_pinned` DESC, `notice_date` DESC, `sort_order` DESC, `id` DESC",
+                default => '',
+            };
             [$rows, $serverTotal, $serverPage, $serverLimit] = rankPagedQuery(
                 $MYSQL, $table, $columns, $columnMeta, $primaryKeys,
-                $q, $searchField, $serverFilters, $requestedPage, $serverSort, $serverDir
+                $q, $searchField, $serverFilters, $requestedPage, $serverSort, $serverDir,
+                $defaultOrder
             );
         } else {
             $sql = 'SELECT * FROM ' . qi($table);
