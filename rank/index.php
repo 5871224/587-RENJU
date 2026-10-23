@@ -291,6 +291,15 @@ try {
             $newDefaults['sort_order'] = '0';
         }
 
+        // Keep an invalid inline addition visible with the submitted values.
+        if ($isNew && ($_POST['action'] ?? '') === 'create' && isset($_POST['field']) && is_array($_POST['field'])) {
+            foreach ($columns as $column) {
+                if (isset($_POST['field'][$column]) && is_scalar($_POST['field'][$column])) {
+                    $newDefaults[$column] = (string)$_POST['field'][$column];
+                }
+            }
+        }
+
         $action = $_SERVER['REQUEST_METHOD'] === 'POST' ? (string)($_POST['action'] ?? '') : '';
         if ($action !== '' && in_array($table, ['SITE_RESOURCE','SITE_RULE_ITEM'], true)) {
             $csrf = (string)($_POST['csrf'] ?? '');
@@ -637,7 +646,7 @@ $totalRecords = array_sum($counts);
             <div class="panel-head"><h2>最近比賽</h2><a class="btn" href="<?= h(listUrl('tournaments')) ?>">全部比賽</a></div>
             <?php if ($recentTournaments): ?>
             <?php if ($isNew && $columns): ?>
-        <form id="rank-inline-create-form" method="post" action="<?= h(listUrl($view, $q, $searchField)) ?>">
+        <form id="rank-inline-create-form" method="post" action="<?= h(listUrl($view, $q, $searchField, ['new' => 1])) ?>">
             <input type="hidden" name="action" value="create">
             <input type="hidden" name="csrf" value="<?= h($_SESSION['rank_rebuild_csrf']) ?>">
             <input type="hidden" name="view" value="<?= h($view) ?>">
