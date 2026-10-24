@@ -21,8 +21,8 @@ jobs:
       - name: Check PHP and repository safety
         shell: pwsh
         run: ./scripts/check-project.ps1
-      - name: Check RenjuNet sync Python syntax
-        run: python -m py_compile scripts/renjunet_sync.py
+      - name: Check Python maintenance and deployment verification syntax
+        run: python -m py_compile scripts/renjunet_sync.py scripts/verify-rule-tree-deployment.py
 
   deploy:
     needs: validate
@@ -45,7 +45,7 @@ jobs:
           BEFORE_SHA: ${{ github.event.before }}
           CURRENT_SHA: ${{ github.sha }}
         run: |
-          import ftplib, os, posixpath, subprocess, sys
+          import ftplib, os, posixpath, subprocess, sys, hashlib
           def trim_linebreaks(value): return value.strip('\r\n')
           server=trim_linebreaks(os.environ['FTP_SERVER']); username=trim_linebreaks(os.environ['FTP_USERNAME']); password=trim_linebreaks(os.environ['FTP_PASSWORD']); server_dir=trim_linebreaks(os.environ.get('FTP_SERVER_DIR','')).strip(); event_name=os.environ.get('EVENT_NAME',''); before_sha=os.environ.get('BEFORE_SHA',''); current_sha=os.environ.get('CURRENT_SHA','HEAD'); zero_sha='0'*40
           command=['git','diff','--name-only','-z','--diff-filter=ACMRTUXB',before_sha,current_sha] if event_name=='push' and before_sha and before_sha!=zero_sha else ['git','diff-tree','--no-commit-id','--name-only','-r','-z',current_sha]
@@ -151,7 +151,23 @@ jobs:
           try: ftp.delete('swiss-render-regression.php')
           except ftplib.error_perm as exc:
             if not str(exc).startswith('550'): raise
+          # Confirm files reached the target directory, not merely that STOR succeeded.
+          # A mismatched FTP root or incomplete upload must fail the deployment.
+          for relative in ('rule.htm', 'rule-tree-visual.css', 'rank/index.php', 'rank/rule-tree-admin.css'):
+            ftp.cwd(base_dir); ensure_dir(posixpath.dirname(relative))
+            chunks=[]
+            ftp.retrbinary('RETR ' + posixpath.basename(relative), chunks.append)
+            remote_hash=hashlib.sha256(b''.join(chunks)).hexdigest()
+            local_hash=hashlib.sha256(open(relative,'rb').read()).hexdigest()
+            print('FTP read-back ' + relative + ': ' + ('MATCH' if remote_hash==local_hash else 'MISMATCH'))
+            if remote_hash!=local_hash:
+              raise RuntimeError('FTP file does not match repository: ' + relative)
           ftp.quit()
+
+      - name: Verify live rules serve deployed hover stylesheet
+        env:
+          CURRENT_SHA: ${{ github.sha }}
+        run: python scripts/verify-rule-tree-deployment.py
 
       - name: Verify public security boundaries
         shell: bash

@@ -30,7 +30,7 @@ assert.doesNotMatch(publicCss, /\.rule-tree-card-button:hover\s*\{/,
     'public rule button hover must not override shared style');
 assert.doesNotMatch(adminCss, /\.rule-tree-node-toggle:(?:hover|focus-visible)\s*\{/,
     'admin rule button hover must not override shared style');
-assert.match(read('rule.htm'), /rule-tree-visual\.css\?v=20261024u/);
-assert.match(read('rank/index.php'), /rule-tree-visual\.css\?v=20261024u/);
+assert.match(read('rule.htm'), /rule-tree-visual\.css\?v=20261024v/);
+assert.match(read('rank/index.php'), /rule-tree-visual\.css\?v=20261024v/);
 assert.match(read('.github/workflows/deploy.yml'), /'rule-tree-visual\.css'/);
 console.log('Rule visual palette: shared connector strokes, warm count badges and deployment paths OK');
