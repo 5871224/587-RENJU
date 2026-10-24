@@ -10,6 +10,7 @@
     const connectors = document.getElementById('rule-tree-connectors');
     const linkLayer = window.RenjuRuleTreeConnectors?.attach({
         layout:main, svg:connectors, rootList, childList:childrenList,
+        childPanel:main.querySelector('.rule-tree-panel--children'),
         root: () => rootList.querySelector('.rule-tree-card.is-selected'),
         children: () => Array.from(childrenList.querySelectorAll('.rule-tree-card')),
         headingSelector:'.rule-tree-card-button',
