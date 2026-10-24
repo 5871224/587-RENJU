@@ -5,9 +5,8 @@
 .rule-tree-heading{display:flex;gap:12px;align-items:center;padding:0 0 17px;border-bottom:1px solid var(--renju-border,#D8E1E7)}
 .rule-tree-heading h2{font-size:1.35rem;margin:0;color:var(--renju-primary-dark,#24577F)}
 .rule-tree-kicker{font-size:13px;font-weight:700;border-radius:6px;padding:5px 9px;color:var(--renju-primary-dark,#24577F);background:var(--renju-primary-soft,#E3F0F8)}
-.rule-tree-subheading{font-size:14px;color:var(--renju-text-muted,#71889B);margin:17px 1px 0}
 .rule-tree-list{display:flex;flex-direction:column;gap:11px;margin:22px 0 0}
-.rule-tree-panel--children .rule-tree-list{margin-top:17px}
+.rule-tree-panel--children .rule-tree-list{margin-top:22px}
 
 .rule-tree-card{position:relative;border:1px solid var(--renju-border,#D8E1E7);background:#fff;border-radius:10px;box-shadow:0 2px 5px rgba(31,61,85,.025);transition:border-color .15s,background-color .15s,box-shadow .15s}
 .rule-tree-card:hover{border-color:#9fc6e0}
@@ -74,3 +73,8 @@
 @media(max-width:880px){
     .rule-tree-connectors{display:none}
 }
+
+/* Shared trunk gives all branches one clean visual parent rather than a bundle of curves. */
+.rule-tree-connectors .rule-tree-trunk{stroke:#b5cbdc;stroke-width:1.8}
+.rule-tree-connectors .rule-tree-stem{stroke:#5b93be;stroke-width:2.2}
+.rule-tree-connectors .rule-tree-twig{stroke:#9dbdd3;stroke-width:1.8}
