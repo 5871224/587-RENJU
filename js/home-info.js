@@ -2,20 +2,18 @@
   'use strict';
 
   const INITIAL_LIMIT = 5;
-  const EXPANDED_LIMIT = 200;
   const state = {
-    competition: [],
+    activities: [],
     updates: [],
-    totals: { competition: null, updates: null },
-    expanded: { competition: false, updates: false },
+    totals: { activities: 0, updates: 0 },
+    expanded: { activities: false, updates: false },
   };
-
   const elements = {};
 
   function safeUrl(value) {
     const raw = String(value || '').trim();
     if (!raw) return '';
-    if (raw.startsWith('/')) return raw;
+    if (raw.startsWith('/') && !raw.startsWith('//')) return raw;
     try {
       const url = new URL(raw, window.location.origin);
       if (url.protocol === 'http:' || url.protocol === 'https:') return url.href;
@@ -46,15 +44,15 @@
     return td;
   }
 
-  function renderCompetition(rows) {
-    const tbody = elements.competitionBody;
-    tbody.textContent = '';
+  function renderActivities(rows) {
+    const tbody = elements.activityBody;
+    tbody.replaceChildren();
     if (!rows.length) {
       const tr = document.createElement('tr');
       const td = document.createElement('td');
       td.colSpan = 2;
       td.className = 'home-info-empty';
-      td.textContent = '目前沒有比賽資訊';
+      td.textContent = '目前沒有活動資訊';
       tr.appendChild(td);
       tbody.appendChild(tr);
       return;
@@ -63,7 +61,6 @@
     rows.forEach((row) => {
       const tr = document.createElement('tr');
       if (Number(row.is_featured) === 1) tr.className = 'home-info-featured';
-
       const dateTd = document.createElement('td');
       dateTd.className = 'home-info-date';
       dateTd.textContent = formatDate(row.published_date);
@@ -75,7 +72,7 @@
 
   function renderUpdates(rows) {
     const tbody = elements.updateBody;
-    tbody.textContent = '';
+    tbody.replaceChildren();
     if (!rows.length) {
       const tr = document.createElement('tr');
       const td = document.createElement('td');
@@ -98,26 +95,18 @@
     });
   }
 
-  function hasMore(type) {
-    const total = state.totals[type];
-    if (Number.isFinite(total)) return total > INITIAL_LIMIT;
-    const button = type === 'competition' ? elements.competitionMore : elements.updateMore;
-    return button.dataset.fallbackMore === 'true';
-  }
-
   function updateButtons() {
-    elements.competitionMore.hidden = !hasMore('competition');
-    elements.updateMore.hidden = !hasMore('updates');
-    elements.competitionMore.textContent = state.expanded.competition ? '收合 ↑' : '查看更多 →';
-    elements.updateMore.textContent = state.expanded.updates ? '收合 ↑' : '查看更多 →';
+    for (const type of ['activities', 'updates']) {
+      const button = type === 'activities' ? elements.activityMore : elements.updateMore;
+      button.hidden = state.totals[type] <= INITIAL_LIMIT;
+      button.textContent = state.expanded[type] ? '收合 ↑' : '查看更多 →';
+    }
   }
 
   function renderType(type) {
-    if (type === 'competition') {
-      renderCompetition(state.expanded.competition ? state.competition : state.competition.slice(0, INITIAL_LIMIT));
-    } else {
-      renderUpdates(state.expanded.updates ? state.updates : state.updates.slice(0, INITIAL_LIMIT));
-    }
+    const rows = state.expanded[type] ? state[type] : state[type].slice(0, INITIAL_LIMIT);
+    if (type === 'activities') renderActivities(rows);
+    else renderUpdates(rows);
     updateButtons();
   }
 
@@ -128,33 +117,28 @@
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
-    if (!data || !Array.isArray(data.competition) || !Array.isArray(data.updates)) {
+    if (!data || !Array.isArray(data.activities) || !Array.isArray(data.updates)) {
       throw new Error('Invalid response');
     }
     return data;
   }
 
   function applyData(data) {
-    state.competition = data.competition;
+    state.activities = data.activities;
     state.updates = data.updates;
-    state.totals.competition = Number.isFinite(Number(data.totals?.competition))
-      ? Number(data.totals.competition)
-      : data.competition.length;
-    state.totals.updates = Number.isFinite(Number(data.totals?.updates))
-      ? Number(data.totals.updates)
-      : data.updates.length;
+    state.totals.activities = Number(data.totals?.activities ?? data.activities.length);
+    state.totals.updates = Number(data.totals?.updates ?? data.updates.length);
   }
 
   async function loadInitial() {
     try {
-      const data = await fetchInfo(INITIAL_LIMIT);
-      applyData(data);
-      renderCompetition(state.competition);
+      applyData(await fetchInfo(INITIAL_LIMIT));
+      renderActivities(state.activities);
       renderUpdates(state.updates);
       updateButtons();
     } catch (error) {
       console.error('首頁資訊載入失敗。', error);
-      [elements.competitionBody, elements.updateBody].forEach((tbody) => {
+      for (const tbody of [elements.activityBody, elements.updateBody]) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 2;
@@ -162,8 +146,8 @@
         td.textContent = '資訊暫時無法載入，請稍後重新整理';
         tr.appendChild(td);
         tbody.replaceChildren(tr);
-      });
-      state.totals.competition = 0;
+      }
+      state.totals.activities = 0;
       state.totals.updates = 0;
       updateButtons();
     }
@@ -176,34 +160,31 @@
       return;
     }
 
-    const button = type === 'competition' ? elements.competitionMore : elements.updateMore;
+    const button = type === 'activities' ? elements.activityMore : elements.updateMore;
     button.disabled = true;
     button.textContent = '載入中…';
 
     try {
-      const data = await fetchInfo(EXPANDED_LIMIT);
-      applyData(data);
+      // 僅在需要展開時讀取全部活動與更新資訊，非固定 200 筆上限。
+      applyData(await fetchInfo('all'));
       state.expanded[type] = true;
       renderType(type);
     } catch (error) {
       console.error('查看更多載入失敗。', error);
-      button.disabled = false;
       button.textContent = '載入失敗，點此重試';
-      return;
+    } finally {
+      button.disabled = false;
     }
-
-    button.disabled = false;
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    elements.competitionBody = document.getElementById('competition-info-body');
+    elements.activityBody = document.getElementById('activity-info-body');
     elements.updateBody = document.getElementById('update-info-body');
-    elements.competitionMore = document.getElementById('competition-info-more');
+    elements.activityMore = document.getElementById('activity-info-more');
     elements.updateMore = document.getElementById('update-info-more');
+    if (!elements.activityBody || !elements.updateBody || !elements.activityMore || !elements.updateMore) return;
 
-    if (!elements.competitionBody || !elements.updateBody || !elements.competitionMore || !elements.updateMore) return;
-
-    elements.competitionMore.addEventListener('click', () => toggle('competition'));
+    elements.activityMore.addEventListener('click', () => toggle('activities'));
     elements.updateMore.addEventListener('click', () => toggle('updates'));
     loadInitial();
   });
