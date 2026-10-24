@@ -418,7 +418,22 @@ function siteContentMigrateRuleHierarchy(PDO $db): void
         $renjuId = $findParent($roots, '連珠規則');
         $gomokuId = $findParent($roots, '無禁規則');
         if ($renjuId === 0 || $gomokuId === 0 || $renjuId === $gomokuId) {
-            throw new RuntimeException('Cannot identify the two original first-level game rules; rule hierarchy was not changed.');
+            // Edited legacy headings may no longer contain the original names.
+            // Do not guess a parent and incorrectly attach opening rules to it.
+            $insertRoot = $db->prepare("INSERT INTO SITE_RULE_ITEM
+                (page_slug,parent_id,title,content_text,sort_order,is_visible)
+                VALUES ('rulehome',NULL,?,'',?,1)");
+            $highest = (int)$db->query('SELECT COALESCE(MAX(sort_order),0) FROM SITE_RULE_ITEM WHERE parent_id IS NULL')
+                ->fetchColumn();
+            if ($renjuId === 0 || $renjuId === $gomokuId) {
+                $insertRoot->execute(['連珠規則', $highest + 10]);
+                $renjuId = (int)$db->lastInsertId();
+                $highest += 10;
+            }
+            if ($gomokuId === 0 || $gomokuId === $renjuId) {
+                $insertRoot->execute(['無禁規則', $highest + 10]);
+                $gomokuId = (int)$db->lastInsertId();
+            }
         }
         $link = $db->prepare('UPDATE SITE_RULE_ITEM SET parent_id=? WHERE page_slug=? AND parent_id IS NULL');
         $link->execute([$renjuId, 'renju-rule']);
@@ -446,4 +461,34 @@ function siteContentMigrateRuleHierarchy(PDO $db): void
         if ($db->inTransaction()) $db->rollBack();
         throw $error;
     }
+}
+
+
+/** Pure tree projection, useful for both public API and regression testing. */
+function siteContentBuildRuleTree(array $rows): array
+{
+    $roots = [];
+    $locations = [];
+    foreach ($rows as $row) {
+        if ($row['parent_id'] !== null || (int)($row['is_visible'] ?? 1) !== 1) continue;
+        $id = (int)$row['id'];
+        $locations[$id] = count($roots);
+        $roots[] = [
+            'id'=>$id,
+            'title'=>(string)$row['title'],
+            'content_text'=>(string)($row['content_text'] ?? ''),
+            'children'=>[],
+        ];
+    }
+    foreach ($rows as $row) {
+        if ($row['parent_id'] === null || (int)($row['is_visible'] ?? 1) !== 1) continue;
+        $parent = (int)$row['parent_id'];
+        if (!isset($locations[$parent])) continue;
+        $roots[$locations[$parent]]['children'][] = [
+            'id'=>(int)$row['id'],
+            'title'=>(string)$row['title'],
+            'content_text'=>(string)($row['content_text'] ?? ''),
+        ];
+    }
+    return $roots;
 }
