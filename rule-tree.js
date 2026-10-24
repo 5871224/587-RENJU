@@ -109,6 +109,18 @@
         })
         .then(data => {
             if (!Array.isArray(data.roots)) throw new Error('規則資料格式不正確');
+            for (const [key,titleId,noteId,fallback] of [
+                ['game','rule-first-title','rule-game-section-note','行棋規則'],
+                ['opening','rule-second-title','rule-opening-section-note','開局規則']
+            ]) {
+                const details = data.sections?.[key];
+                const title = document.getElementById(titleId);
+                const note = document.getElementById(noteId);
+                title.textContent = typeof details?.title === 'string' && details.title.trim()
+                    ? details.title : fallback;
+                note.textContent = typeof details?.note === 'string' ? details.note : '';
+                note.hidden = !note.textContent.trim();
+            }
             roots = data.roots.map(root => ({
                 id: Number(root.id), title:String(root.title || ''),
                 content_text:String(root.content_text || ''),
