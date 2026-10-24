@@ -1,63 +1,65 @@
-/* Display plain-text rule steps as aligned list items. No HTML from database is executed. */
+/* Format stored plain text into aligned list rows. No database HTML is trusted. */
 (function () {
     'use strict';
     function escapeHtml(value) {
-        return String(value).replace(/[&<>"']/g, symbol => ({
+        return String(value).replace(/[&<>"']/g, char => ({
             '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
-        }[symbol]));
+        }[char]));
     }
 
-    function formatHtml(text) {
-        const lines = String(text || '').replace(/\r\n?/g, '\n').split('\n');
+    // 'game' = first-level move rules; 'opening' = second-level opening rules.
+    // Markers are independent badges: intentionally no lines joining list items.
+    function formatHtml(text, kind = 'game') {
+        const rows = String(text || '').replace(/\r\n?/g, '\n').split('\n');
         let html = '';
-        let previousBlank = false;
-        lines.forEach(rawLine => {
-            const line = rawLine.trim();
+        let blank = false;
+        for (const raw of rows) {
+            const line = raw.trim();
             if (!line) {
-                if (!previousBlank && html) html += '<div class="rule-text-paragraph-gap" aria-hidden="true"></div>';
-                previousBlank = true;
-                return;
+                if (!blank && html) html += '<div class="rule-text-paragraph-gap" aria-hidden="true"></div>';
+                blank = true;
+                continue;
             }
-            previousBlank = false;
+            blank = false;
+            const renderItem = (marker, copy, cssClass) =>
+                '<div class="rule-text-item ' + cssClass + '">' +
+                '<span class="rule-text-marker" aria-hidden="true">' + escapeHtml(marker) + '</span>' +
+                '<span class="rule-text-copy">' + escapeHtml(copy) + '</span></div>';
 
-            // Recognize full/half-width numeric steps without mistaking dates or
-            // numbers embedded in ordinary sentences for list headings.
+            // Original rules contain full-width numbered steps immediately followed
+            // by text, e.g. １開局方、２另一方, plus western 1. or 2) forms.
             let match = /^([１-９][０-９]?|[1-9][0-9]?)(?![０-９0-9])(?:[.．、)）]\s*)?(.+)$/u.exec(line);
             if (match) {
-                html += '<div class="rule-text-item rule-text-step"><span class="rule-text-marker">' +
-                    escapeHtml(match[1]) + '</span><span class="rule-text-copy">' +
-                    escapeHtml(match[2].trim()) + '</span></div>';
-                return;
+                html += renderItem(match[1], match[2].trim(), 'rule-text-step');
+                continue;
             }
-
-            match = /^([一二三四五六七八九十]+[、．.])\s*(.+)$/u.exec(line);
+            match = /^([一二三四五六七八九十]+)[、．.]\s*(.+)$/u.exec(line);
             if (match) {
-                html += '<div class="rule-text-item rule-text-step"><span class="rule-text-marker">' +
-                    escapeHtml(match[1]) + '</span><span class="rule-text-copy">' +
-                    escapeHtml(match[2].trim()) + '</span></div>';
-                return;
+                html += renderItem(match[1], match[2].trim(), 'rule-text-step');
+                continue;
             }
-
             match = /^([●○•※▪◦])\s*(.+)$/u.exec(line);
             if (match) {
-                const isNote = match[1] === '※';
                 const nested = match[1] === '○' || match[1] === '◦';
-                html += '<div class="rule-text-item' + (nested ? ' rule-text-nested' : '') +
-                    (isNote ? ' rule-text-note' : '') + '"><span class="rule-text-marker">' +
-                    escapeHtml(match[1]) + '</span><span class="rule-text-copy">' +
-                    escapeHtml(match[2].trim()) + '</span></div>';
-                return;
+                const isNote = match[1] === '※';
+                const marker = isNote ? '※' : (nested ? '○' : '•');
+                html += renderItem(marker, match[2].trim(),
+                    'rule-text-bullet' + (nested ? ' rule-text-nested' : '') +
+                    (isNote ? ' rule-text-note' : ''));
+                continue;
             }
-
-            match = /^([-–])\s+(.+)$/u.exec(line);
+            match = /^[-–]\s+(.+)$/u.exec(line);
             if (match) {
-                html += '<div class="rule-text-item rule-text-nested"><span class="rule-text-marker">–</span>' +
-                    '<span class="rule-text-copy">' + escapeHtml(match[2]) + '</span></div>';
-                return;
+                html += renderItem('–', match[1], 'rule-text-bullet rule-text-nested');
+                continue;
             }
             html += '<div class="rule-text-paragraph">' + escapeHtml(line) + '</div>';
-        });
-        return html;
+        }
+        // The root style has no connecting tracks, while opening rules use
+        // individual numbered badges and aligned hanging-indented paragraphs.
+        return '<div class="rule-text-group rule-text-group--' +
+            (kind === 'opening' ? 'opening' : 'game') + '">' + html + '</div>';
     }
+
     window.RenjuRuleTreeContent = {formatHtml};
 })();
