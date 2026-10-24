@@ -29,7 +29,8 @@ try {
         $rows = $db->query('SELECT id,parent_id,title,content_text,is_visible
             FROM SITE_RULE_ITEM ORDER BY (parent_id IS NOT NULL),sort_order,id')->fetchAll(PDO::FETCH_ASSOC);
         $roots = siteContentBuildRuleTree($rows);
-        echo json_encode(['roots'=>$roots], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        $sections = siteContentRuleTreeSections($db);
+        echo json_encode(['roots'=>$roots,'sections'=>$sections], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     } elseif (isset($_GET['slug'])) {
         $slug = (string)$_GET['slug'];
         if (!preg_match('/^[a-z0-9-]{1,80}$/', $slug)) {
