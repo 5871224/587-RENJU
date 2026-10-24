@@ -1,0 +1,50 @@
+/* Shared visual tokens for the public rule tree and admin rule-tree editor.
+   Connectors and rule-count badges have one source of truth. */
+.rule-tree-layout,
+.rule-tree-grid {
+    --rule-tree-link-color: #90b5ce;
+    --rule-tree-opening-bg: #fcf8f1;
+}
+
+/* All segments (root stem, bends, shared trunk and child branches)
+   inherit this ONE stroke definition so no join changes tone or thickness. */
+.rule-tree-connectors .rule-tree-branch,
+.rule-tree-admin-connectors .rule-tree-branch {
+    fill: none;
+    stroke: var(--rule-tree-link-color);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+.rule-tree-connectors .rule-tree-origin,
+.rule-tree-admin-connectors .rule-tree-origin {
+    fill: var(--rule-tree-link-color);
+}
+.rule-tree-connectors .rule-tree-endpoint,
+.rule-tree-admin-connectors .rule-tree-endpoint {
+    fill: #fff;
+    stroke: var(--rule-tree-link-color);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+}
+
+/* Child-count bubbles match the warm opening-rules panel, not old blue. */
+.rule-tree-card-count,
+.rule-tree-child-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-width: 23px;
+    height: 23px;
+    padding: 0 6px;
+    border: 1px solid #e9dfd2;
+    border-radius: 999px;
+    background: var(--rule-tree-opening-bg);
+    color: #806f5f;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+    box-sizing: border-box;
+}
