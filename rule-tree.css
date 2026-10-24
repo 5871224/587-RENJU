@@ -102,6 +102,8 @@
 
 /* A rule's optional single-line caption appears immediately after its title. */
 .rule-tree-card-title .rule-tree-item-note {
-    display:inline;color:#7c91a4;font-size:13px;font-weight:400;
-    white-space:nowrap;vertical-align:baseline;
+    display:inline-block;max-width:min(100%,280px);
+    overflow:hidden;text-overflow:ellipsis;
+    color:#7c91a4;font-size:13px;font-weight:400;
+    white-space:nowrap;vertical-align:middle;
 }
