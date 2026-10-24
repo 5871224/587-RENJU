@@ -8,12 +8,12 @@
 .rule-tree-subheading{font-size:14px;color:var(--renju-text-muted,#71889B);margin:17px 1px 0}
 .rule-tree-list{display:flex;flex-direction:column;gap:11px;margin:22px 0 0}
 .rule-tree-panel--children .rule-tree-list{margin-top:17px}
-.rule-tree-panel--children:before{content:"";position:absolute;left:-29px;top:102px;bottom:40px;border-left:2px solid #b3cde1;pointer-events:none}
+
 .rule-tree-card{position:relative;border:1px solid var(--renju-border,#D8E1E7);background:#fff;border-radius:10px;box-shadow:0 2px 5px rgba(31,61,85,.025);transition:border-color .15s,background-color .15s,box-shadow .15s}
 .rule-tree-card:hover{border-color:#9fc6e0}
 .rule-tree-card.is-selected{background:#f4f9fc;border-color:var(--renju-primary,#5B93BE);box-shadow:0 0 0 1px var(--renju-primary,#5B93BE)}
-.rule-tree-panel--roots .rule-tree-card.is-selected:after{content:"";position:absolute;top:23px;left:calc(100% + 1px);width:calc(var(--rule-gap) + 2px);height:2px;background:var(--renju-primary,#5B93BE);pointer-events:none;z-index:1}
-.rule-tree-panel--children .rule-tree-card:before{content:"";position:absolute;top:23px;left:-30px;width:29px;height:2px;background:#b3cde1;pointer-events:none}
+
+
 .rule-tree-card-button{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:14px 16px;border:0;background:transparent;font:inherit;font-weight:700;font-size:17px;line-height:1.45;color:var(--renju-primary-dark,#24577F);cursor:pointer;border-radius:10px}
 .rule-tree-card-button:hover{color:#1769aa}
 .rule-tree-card-chevron{width:20px;height:20px;display:grid;place-items:center;flex:none;color:#6489a7;transition:transform .16s}
@@ -28,3 +28,49 @@
 
 /* Honor the loading and error states even when the grid declaration is present. */
 #rule-tree-layout[hidden],#rule-tree-state[hidden]{display:none!important}
+
+
+/* A-style soft panels, D-style curved mind-map links (drawn by rule-tree.js). */
+.rule-tree-layout{
+    --rule-gap:72px;
+    position:relative;
+}
+.rule-tree-panel{z-index:1}
+.rule-tree-panel--roots{
+    background:linear-gradient(180deg,#edf6fc 0%,#f6fafd 100%);
+}
+.rule-tree-panel--children{
+    background:linear-gradient(180deg,#fcf8f1 0%,#fcfaf6 100%);
+}
+.rule-tree-connectors{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    overflow:visible;
+    pointer-events:none;
+    z-index:2;
+    display:block;
+}
+.rule-tree-card{background:rgba(255,255,255,.98)}
+.rule-tree-card.is-selected{background:#e9f4fc}
+.rule-tree-connectors .rule-tree-branch{
+    fill:none;
+    stroke:#9bc1db;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    vector-effect:non-scaling-stroke;
+}
+.rule-tree-connectors .rule-tree-endpoint{
+    fill:#fff;
+    stroke:#5b93be;
+    stroke-width:2;
+    vector-effect:non-scaling-stroke;
+}
+.rule-tree-connectors .rule-tree-origin{
+    fill:#5b93be;
+}
+@media(max-width:880px){
+    .rule-tree-connectors{display:none}
+}
