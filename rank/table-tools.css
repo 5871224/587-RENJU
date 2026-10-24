@@ -91,7 +91,7 @@ table.data .rank-inline-create-row .rank-inline-create-actions .btn {
 table.rank-enhanced { border-collapse: separate; border-spacing: 0; }
 table.rank-enhanced > thead > tr > th {
   position: sticky !important;
-  top: 0 !important;
+  top: var(--rank-sticky-top, 0px) !important;
   z-index: 4 !important;
   background: #edf4f9;
   background-clip: padding-box;
@@ -186,3 +186,30 @@ table.rank-enhanced > thead > tr > th.rank-sortable:focus-visible { outline:2px 
 .icon-action--danger:hover {background:#fff0ee !important;border-color:#d58077 !important}
 .actions-cell,.swiss-record-actions {align-items:center;gap:7px}
 .actions-cell form,.swiss-record-actions form {display:inline-flex;align-items:center;margin:0}
+
+/* Horizontal movement uses a translated table, so the 操作 column needs
+   a counter-translation to remain at the visible table's right edge. */
+table.rank-actions-pinned > thead > tr:last-child > th:last-child,
+table.rank-actions-pinned > tbody > tr > td:last-child {
+  transform: translate3d(var(--rank-actions-shift, 0px), 0, 0);
+  background: #fff;
+  background-clip: padding-box;
+  box-shadow: -3px 0 7px -4px rgba(15, 23, 42, .32);
+}
+table.rank-actions-pinned > thead > tr:last-child > th:last-child {
+  z-index: 8 !important;
+  background: #edf4f9;
+}
+table.rank-actions-pinned > tbody > tr > td:last-child {
+  position: relative;
+  z-index: 3;
+}
+table.rank-actions-pinned > tbody > tr:hover > td:last-child { background: #f7fbff; }
+table.rank-actions-pinned > tbody > tr.rank-inline-create-row > td:last-child { background: #f1f8ff; }
+/* Preserve true table-cell layout and the shared icon button sizing. */
+table.rank-actions-pinned > tbody > tr > td.actions-cell {
+  display: table-cell;
+  white-space: nowrap;
+}
+table.rank-actions-pinned > tbody > tr > td.actions-cell > * { vertical-align: middle; }
+table.rank-actions-pinned > tbody > tr > td.actions-cell > * + * { margin-left: 7px !important; }

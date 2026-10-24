@@ -30,6 +30,11 @@
     const x = Math.max(0, Math.min(max, amount));
     horizontal.set(item.table, x);
     item.table.style.transform = x > 0 ? 'translate3d(' + (-x) + 'px,0,0)' : '';
+    if (item.table.classList.contains('rank-actions-pinned')) {
+      // Counteract the table's horizontal movement while keeping the column
+      // visible at the wrapper edge, without creating another scroll container.
+      item.table.style.setProperty('--rank-actions-shift', (-Math.max(0, max - x)) + 'px');
+    }
     return x;
   }
 
@@ -39,6 +44,10 @@
       if (!eligible(wrapper)) return;
       const table = wrapper.querySelector('table');
       wrapper.classList.add('rank-viewport-wrap');
+      // Only data tables with a trailing 操作 header need a pinned right column.
+      const lastHeader = table.tHead && table.tHead.rows.length
+        ? table.tHead.rows[table.tHead.rows.length - 1].lastElementChild : null;
+      table.classList.toggle('rank-actions-pinned', !!(lastHeader && lastHeader.textContent.trim() === '操作'));
       const item = items.find(function (i) { return i.wrapper === wrapper && i.table === table; }) ||
         {wrapper: wrapper, table: table};
       present.push(item);
@@ -67,6 +76,12 @@
 
   function refresh() {
     scheduled = false;
+    // Keep sticky column headers immediately below the top navigation bar.
+    // The navigation becomes non-sticky on narrow screens.
+    const topbar = document.querySelector('.topbar');
+    const stickyNav = topbar && window.getComputedStyle(topbar).position === 'sticky';
+    const navHeight = stickyNav ? Math.max(0, topbar.getBoundingClientRect().height) : 0;
+    document.documentElement.style.setProperty('--rank-sticky-top', navHeight + 'px');
     discover();
     const target = pick();
     if (!target) {

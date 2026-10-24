@@ -164,7 +164,8 @@ $ratingTools = [
     'latest' => ['title' => '重算後最新排名', 'file' => 'rating-latest.php', 'desc' => '查看由歷史資料重新計算後的最新棋士排名'],
 ];
 
-$view = isset($_POST['view']) ? (string)$_POST['view'] : (isset($_GET['view']) ? (string)$_GET['view'] : 'dashboard');
+$view = isset($_POST['view']) ? (string)$_POST['view'] : (isset($_GET['view']) ? (string)$_GET['view'] : 'players');
+if ($view === 'dashboard') $view = 'players';
 $q = trim((string)($_POST['q'] ?? $_GET['q'] ?? ''));
 $searchField = trim((string)($_POST['field_search'] ?? $_GET['field_search'] ?? ''));
 $tool = trim((string)($_GET['tool'] ?? 'review'));
@@ -199,8 +200,6 @@ $editRow = null;
 $editToken = trim((string)($_GET['edit'] ?? ''));
 $isNew = isset($_GET['new']) && $_GET['new'] === '1';
 $current = null;
-$counts = [];
-$recentTournaments = [];
 $newDefaults = [];
 $serverPaged = isset($views[$view]);
 $serverFilters = [];
@@ -212,9 +211,9 @@ $serverDir = 'desc';
 
 try {
     // Initialize only the schema required by this page, not unrelated tables.
-    if (in_array($view, ['dashboard', 'site-notices'], true)) ensureSiteNoticeTable($MYSQL);
+    if ($view === 'site-notices') ensureSiteNoticeTable($MYSQL);
     try {
-        if (in_array($view, ['dashboard', 'site-resources', 'site-rules'], true)) siteContentEnsureTables($MYSQL);
+        if (in_array($view, ['site-resources', 'site-rules'], true)) siteContentEnsureTables($MYSQL);
     } catch (Throwable $contentError) {
         error_log('site-content initialization: ' . $contentError->getMessage());
         // 網站內容尚未建好時，不影響原有排名、比賽與首頁訊息管理。
@@ -241,18 +240,7 @@ try {
         exit;
     }
 
-    // Do not COUNT all ten tables on every data management page.
-    if ($view === 'dashboard') {
-        foreach ($views as $key => $meta) {
-            $counts[$key] = (int)$MYSQL->query('SELECT COUNT(*) FROM ' . qi($meta['table']))->fetchColumn();
-        }
-    }
-
-    if ($view === 'dashboard') {
-        $recentTournaments = $MYSQL->query(
-            'SELECT `賽號`,`賽名`,`開始`,`結束` FROM `TOURNAMENT` ORDER BY `賽號` DESC LIMIT 12'
-        )->fetchAll(PDO::FETCH_ASSOC);
-    } elseif ($view === 'rating-tools') {
+    if ($view === 'rating-tools') {
         // 等級分工具內容在下方直接整合；只有尚未整合的工具使用明確的嵌入入口。
     } elseif (isset($views[$view])) {
         $current = $views[$view];
@@ -612,7 +600,6 @@ try {
 } catch (Throwable $e) {
     $error = $e->getMessage();
 }
-$totalRecords = array_sum($counts);
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -621,10 +608,10 @@ $totalRecords = array_sum($counts);
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>台灣連珠排名管理</title>
 <link rel="stylesheet" href="../renju.css">
-<link rel="stylesheet" href="admin.css?v=20261023d">
+<link rel="stylesheet" href="admin.css?v=20261024a">
 <link rel="stylesheet" href="pagination.css?v=20261023d">
 <style>.edit-field:has(textarea){grid-column:1/-1}.edit-field textarea{display:block;width:100%;min-height:190px;resize:vertical;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:14px/1.55 Consolas,monospace}.edit-field textarea[name*="content_html"]{min-height:420px}</style>
-<link rel="stylesheet" href="table-tools.css?v=20261023e">
+<link rel="stylesheet" href="table-tools.css?v=20261024a">
 </head>
 <body>
 <div class="app">
@@ -634,40 +621,7 @@ $totalRecords = array_sum($counts);
 <?php if ($error !== ''): ?><div class="error">操作失敗：<?= h($error) ?></div><?php endif; ?>
 <?php if ($message !== ''): ?><div class="success"><?= h($message) ?></div><?php endif; ?>
 
-<?php if ($view === 'dashboard'): ?>
-    <section class="cards">
-        <?php foreach ($views as $key => $meta): ?>
-            <a class="card" href="<?= h(listUrl($key)) ?>"><div class="label"><?= h($meta['title']) ?></div><div class="number"><?= number_format($counts[$key] ?? 0) ?></div></a>
-        <?php endforeach; ?>
-    </section>
-
-    <section class="quick-grid">
-        <div class="panel">
-            <div class="panel-head"><h2>最近比賽</h2><a class="btn" href="<?= h(listUrl('tournaments')) ?>">全部比賽</a></div>
-            <?php if ($recentTournaments): ?>
-        <div class="table-wrap"><table class="data"><thead><tr><th>賽號</th><th>賽名</th><th>開始</th><th>結束</th><th>戰績</th></tr></thead><tbody>
-            <?php foreach ($recentTournaments as $tour): ?>
-                <tr><td><?= h($tour['賽號']) ?></td><td><?= h($tour['賽名']) ?></td><td><?= h($tour['開始']) ?></td><td><?= h($tour['結束']) ?></td><td><a class="action-link" href="swiss.php?TOUR=<?= rawurlencode((string)$tour['賽號']) ?>">戰績</a></td></tr>
-            <?php endforeach; ?>
-            </tbody></table></div>
-            <?php else: ?><div class="empty">目前沒有比賽資料。</div><?php endif; ?>
-        </div>
-
-        <div class="panel">
-            <div class="panel-head"><h2>功能入口</h2></div>
-            <div class="quick-links">
-                <a class="quick-link" href="<?= h(listUrl('players')) ?>"><span>棋士資料</span><strong>PLAYER →</strong></a>
-                <a class="quick-link" href="<?= h(listUrl('games')) ?>"><span>對局資料</span><strong>GAME →</strong></a>
-                <a class="quick-link" href="<?= h(listUrl('history')) ?>"><span>歷程資料</span><strong>SUMMARY →</strong></a>
-                <a class="quick-link" href="<?= h(listUrl('site-notices')) ?>"><span>首頁訊息</span><strong>SITE_NOTICE →</strong></a>
-                <a class="quick-link" href="<?= h(listUrl('rating-tools')) ?>"><span>等級分工具</span><strong>重算／檢查 →</strong></a>
-                <a class="quick-link" href="swiss.php"><span>戰績表</span><strong>開啟 →</strong></a>
-                <div class="notice">刪除只會刪除目前資料表的該筆資料，不會自動刪除其他資料表的關聯紀錄。</div>
-            </div>
-        </div>
-    </section>
-
-<?php elseif ($view === 'rating-tools'): ?>
+<?php if ($view === 'rating-tools'): ?>
     <section class="panel tools-panel">
         <div class="tool-tabs">
             <?php foreach ($ratingTools as $key => $meta): ?>
@@ -838,7 +792,7 @@ $totalRecords = array_sum($counts);
 </div>
 <script src="table-tools.js?v=20261023e"></script>
 <script src="inline-create.js?v=20261023b"></script>
-<script src="bottom-scroll.js?v=20261023a"></script>
+<script src="bottom-scroll.js?v=20261024a"></script>
 <script src="pagination.js?v=20261023d"></script>
 <?php if (in_array($view, ['site-resources','site-rules'], true)): ?><script src="resource-drag.js?v=20261023d"></script><?php endif; ?>
 </body>
