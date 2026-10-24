@@ -70,6 +70,10 @@
         function draw() {
             frame = 0;
             svg.replaceChildren();
+            if (options.childPanel?.hidden) {
+                options.childPanel.style.marginTop = '';
+                return;
+            }
             if (layout.hidden ||
                 window.matchMedia('(max-width: ' + (options.mobileWidth || 880) + 'px)').matches) {
                 if (options.childPanel) options.childPanel.style.marginTop = '';
