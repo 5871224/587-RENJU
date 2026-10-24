@@ -13,6 +13,9 @@ $(function () {
 function changeRecord(value) {
     const target = new URL(window.location.href);
     target.searchParams.set("record", value);
+    const keyword = document.getElementById("record-player").value.trim();
+    if (keyword) target.searchParams.set("player", keyword);
+    else target.searchParams.delete("player");
     target.searchParams.delete("p");
     window.location.href = target.toString();
 }
@@ -22,6 +25,14 @@ function changeRecord(value) {
 .record-select-line {display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0 22px;}
 .record-select-line label {font-weight:600;white-space:nowrap;}
 .record-select-line select {font:inherit;min-width:460px;max-width:100%;padding:10px 36px 10px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#182432;}
+.record-player-field {display:flex;align-items:center;gap:8px;min-width:0;}
+.record-player-field label {font-weight:600;white-space:nowrap;}
+.record-player-field input {font:inherit;width:195px;min-width:0;height:42px;box-sizing:border-box;padding:8px 11px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#182432;}
+.record-player-field input:focus {border-color:#5286b4;outline:2px solid #5286b433;outline-offset:1px;}
+.record-search-button,.record-search-clear {display:inline-flex;align-items:center;justify-content:center;min-height:42px;box-sizing:border-box;padding:8px 14px;border:1px solid #2474b7;border-radius:8px;background:#2474b7;color:#fff;font:inherit;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;white-space:nowrap;}
+.record-search-button:hover {background:#195c95;border-color:#195c95;}
+.record-search-clear {background:#fff;color:#23384e;border-color:#c6d1de;}
+.record-search-clear:hover {background:#eaf1f8;}
 .record-title {margin:8px 0 4px;}
 .record-description {color:#586579;margin-bottom:16px;}
 .record-table-wrap {width:100%;overflow-x:auto;}
@@ -33,7 +44,8 @@ function changeRecord(value) {
 .record-pagination a,.record-pagination .current {display:inline-flex;align-items:center;justify-content:center;min-width:34px;padding:7px 10px;border:1px solid #d0d9e2;border-radius:6px;text-decoration:none;color:#31435b;background:#fff;box-sizing:border-box;}
 .record-pagination .current {font-weight:700;background:#e8edf3;border-color:#9badc2;}
 .record-pagination .muted {color:#64748b;}
-@media(max-width:600px) {.record-shell {padding:10px 12px 28px;}.record-select-line {align-items:stretch;flex-direction:column;gap:6px;}.record-select-line select {width:100%;min-width:0;}.record-pagination {justify-content:center;}}
+@media(max-width:800px) {.record-select-line {align-items:stretch;flex-direction:column;gap:8px;}.record-select-line select {width:100%;min-width:0;}.record-player-field input {flex:1;width:auto;}}
+@media(max-width:600px) {.record-shell {padding:10px 12px 28px;}.record-pagination {justify-content:center;}}
 </style>
 <script src="record-sticky-header.js?v=20261023a" defer></script>
 </head>
@@ -72,6 +84,11 @@ $selected = (string)($_GET['record'] ?? 'score');
 if (!isset($recordOptions[$selected])) $selected = 'score';
 $requestedPage = filter_input(INPUT_GET, 'p', FILTER_VALIDATE_INT);
 $page = ($requestedPage !== false && $requestedPage !== null && $requestedPage > 0) ? $requestedPage : 1;
+$playerSearch = is_string($_GET['player'] ?? null) ? trim($_GET['player']) : '';
+if (strlen($playerSearch) > 120) {
+    $playerSearch = function_exists('mb_strcut')
+        ? mb_strcut($playerSearch, 0, 120, 'UTF-8') : substr($playerSearch, 0, 120);
+}
 $YY = isset($_GET['DATE']) ? $_GET['DATE'] : date('Y-m-d');
 $Y5 = (new DateTimeImmutable($YY))->modify('-5 years')->format('Y-m-d');
 
@@ -81,9 +98,28 @@ function recordEscape($value) {
 function recordPageLink(string $record, int $page): string {
     $params = ['record' => $record, 'p' => $page];
     if (isset($_GET['DATE'])) $params['DATE'] = $_GET['DATE'];
+    if (isset($_GET['player']) && is_string($_GET['player']) && trim($_GET['player']) !== '') {
+        $params['player'] = trim($_GET['player']);
+    }
     return 'record.php?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
 }
-function renderSelectedRecord(string $html, string $record, int $requestedPage): void {
+function recordPlayerRowMatches(string $row, string $record, string $keyword): bool {
+    // For the meijin history the names appear in three columns, not the first.
+    // Statistics-only records have no individual players and thus cannot match.
+    if (in_array($record, ['den-average', 'gender', 'zodiac'], true)) return false;
+    preg_match_all('~<TD\\b[^>]*>(.*?)</TD>~si', $row, $cells);
+    $columns = $record === 'meijin-history' ? [1, 2, 3] : [0];
+    foreach ($columns as $column) {
+        $name = html_entity_decode(strip_tags($cells[1][$column] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if ($name !== '' && (function_exists('mb_stripos')
+            ? mb_stripos($name, $keyword, 0, 'UTF-8') !== false
+            : stripos($name, $keyword) !== false)) {
+            return true;
+        }
+    }
+    return false;
+}
+function renderSelectedRecord(string $html, string $record, int $requestedPage, string $playerSearch): void {
     if (!preg_match('~(<TABLE\b[^>]*>)(.*?)(</TABLE>)~si', $html, $table)) {
         echo '<p>目前沒有符合此項紀錄的資料。</p>';
         return;
@@ -111,11 +147,24 @@ function renderSelectedRecord(string $html, string $record, int $requestedPage):
             $gradeRowRanks[$index] = $gradeCounts[$grade];
         }
     }
-    $total = count($dataRows);
+    // Filter after assigning original positions, so player search does not
+    // renumber the ranking or the per-Dan rankings on other pages.
+    $matchingRowIndices = array_keys($dataRows);
+    if ($playerSearch !== '') {
+        $matchingRowIndices = array_values(array_filter(
+            $matchingRowIndices,
+            static fn($index) => recordPlayerRowMatches($dataRows[$index], $record, $playerSearch)
+        ));
+    }
+    $total = count($matchingRowIndices);
+    if ($total === 0 && $playerSearch !== '') {
+        echo '<p>找不到符合「' . recordEscape($playerSearch) . '」的棋士。</p>';
+        return;
+    }
     $pageCount = max(1, (int)ceil($total / 100));
     $page = min($requestedPage, $pageCount);
     $offset = ($page - 1) * 100;
-    $pageRows = array_slice($dataRows, $offset, 100);
+    $pageRows = array_slice($matchingRowIndices, $offset, 100);
     $ordinal = in_array($record, ['den-average', 'gender', 'zodiac', 'meijin-history'], true) ? '序號' : '排名';
     if ($record !== 'leader') {
         $heading = preg_replace('~<TR([^>]*)>~i', '<TR$1><TH>' . $ordinal . '</TH>', $heading, 1);
@@ -123,10 +172,11 @@ function renderSelectedRecord(string $html, string $record, int $requestedPage):
     $tableOpen = $record === 'leader' ? $table[1] : preg_replace('~<colgroup>~i', '<colgroup><col style="width:60px">', $table[1], 1);
     echo '<div class="record-table-wrap" data-record-sticky>' . $tableOpen;
     echo $heading;
-    foreach ($pageRows as $i => $row) {
+    foreach ($pageRows as $originalIndex) {
+        $row = $dataRows[$originalIndex];
         if ($record === 'leader') echo $row;
         else {
-            $rank = $gradeRowRanks[$offset + $i] ?? ($offset + $i + 1);
+            $rank = $gradeRowRanks[$originalIndex] ?? ($originalIndex + 1);
             echo preg_replace('~<TR([^>]*)>~i', '<TR$1><TD>' . $rank . '</TD>', $row, 1);
         }
     }
@@ -151,14 +201,27 @@ function renderSelectedRecord(string $html, string $record, int $requestedPage):
     echo '</nav></div>';
 }
 ?>
-<div class="record-select-line">
+<form class="record-select-line" method="get" action="record.php">
 <label for="record-picker">選擇紀錄</label>
-<select id="record-picker" onchange="changeRecord(this.value)">
+<select id="record-picker" name="record" onchange="changeRecord(this.value)">
 <?php foreach ($recordOptions as $key => $option): ?>
 <option value="<?= recordEscape($key) ?>" <?= $key === $selected ? 'selected' : '' ?>><?= recordEscape($option[0] . ' - ' . $option[1]) ?></option>
 <?php endforeach; ?>
 </select>
+<div class="record-player-field">
+<label for="record-player">棋士</label>
+<input id="record-player" name="player" type="search" value="<?= recordEscape($playerSearch) ?>" placeholder="搜尋棋士姓名" maxlength="120" autocomplete="off">
+<button class="record-search-button" type="submit">查詢</button>
+<?php if ($playerSearch !== ''):
+    $clearParams = ['record' => $selected];
+    if (isset($_GET['DATE'])) $clearParams['DATE'] = $_GET['DATE'];
+    $clearUrl = 'record.php?' . http_build_query($clearParams, '', '&', PHP_QUERY_RFC3986);
+?>
+<a class="record-search-clear" href="<?= recordEscape($clearUrl) ?>">清除</a>
+<?php endif; ?>
 </div>
+<?php if (isset($_GET['DATE'])): ?><input type="hidden" name="DATE" value="<?= recordEscape($_GET['DATE']) ?>"><?php endif; ?>
+</form>
 <h2 class="record-title"><?= recordEscape($recordOptions[$selected][0]) ?></h2>
 <?php
 ob_start();
@@ -602,7 +665,7 @@ ON M.名人=P2.代號");
           break;
 }
 $html = ob_get_clean();
-renderSelectedRecord($html, $selected, $page);
+renderSelectedRecord($html, $selected, $page, $playerSearch);
 ?>
 </main>
 </body>
