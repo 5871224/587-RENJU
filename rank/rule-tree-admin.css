@@ -97,7 +97,9 @@
 .rule-tree-title-line{flex:1;min-width:0;overflow-wrap:anywhere}
 .rule-tree-title-line .rule-tree-name{display:inline}
 .rule-tree-item-note{
-    display:inline;color:#7c91a4;font-size:12px;font-weight:400;
+    display:inline-block;max-width:min(100%,230px);
+    overflow:hidden;text-overflow:ellipsis;vertical-align:middle;
+    color:#7c91a4;font-size:12px;font-weight:400;
     white-space:nowrap;margin-left:6px;
 }
 .rule-tree-section-dialog input[type=text],#rule-tree-field-note{
