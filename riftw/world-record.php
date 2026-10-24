@@ -848,14 +848,14 @@ function wrStreak(PDO $db, string $source, array $params, array $qualified, stri
     return $rows;
 }
 $options = [
-    'score' => ['神乎棋技', '期間最高得分率'],
-    'wins' => ['只許成功', '期間最高勝率'],
-    'draws' => ['以和為貴', '期間最高和棋率'],
-    'games' => ['業精於勤', '期間對局最多'],
-    'streak-win' => ['連戰皆捷', '個人最高連續獲勝局數'],
-    'streak-unbeaten' => ['獨孤求敗', '個人最高連續不敗局數'],
-    'streak-draw' => ['和氣一團', '個人最高連續和棋局數'],
-    'streak-nondraw' => ['誓不兩立', '個人最高連續不和棋局數'],
+    'score' => ['神乎棋技', '最高得分率'],
+    'wins' => ['只許成功', '最高勝率'],
+    'draws' => ['以和為貴', '最高和棋率'],
+    'games' => ['業精於勤', '對局最多'],
+    'streak-win' => ['連戰皆捷', '最高連續獲勝局數'],
+    'streak-unbeaten' => ['獨孤求敗', '最高連續不敗局數'],
+    'streak-draw' => ['和氣一團', '最高連續和棋局數'],
+    'streak-nondraw' => ['誓不兩立', '最高連續不和棋局數'],
 ];
 $input = $_GET;
 $record = is_string($input['record'] ?? null) && isset($options[$input['record']])
