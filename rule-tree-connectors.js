@@ -28,12 +28,14 @@
         const sides = [];
         if (high.length) sides.push({end:high[0],direction:-1});
         if (low.length) sides.push({end:low[0],direction:1});
+        const commonRadius = sides.length
+            ? Math.min(maxRadius, ...sides.map(side => Math.abs(side.end.point.y - fromY) / 2.5))
+            : 0;
         const outer = [], used = new Set();
 
         for (const side of sides) {
             const point = side.end.point;
-            const dy = Math.abs(point.y - fromY);
-            const radius = Math.min(maxRadius, dy / 2.5);
+            const radius = commonRadius;
             const startX = trunkX - radius;
             const lastX = trunkX + radius;
             // The first turn at the parent and the last turn into the child
@@ -48,10 +50,7 @@
 
         // Draw the common horizontal segment only once. The curved arms
         // continue from its end; never overlap it with multiple full curves.
-        const initialX = sides.length
-            ? trunkX - Math.max(...sides.map(side =>
-                Math.min(maxRadius, Math.abs(side.end.point.y - fromY) / 2.5)))
-            : trunkX;
+        const initialX = sides.length ? trunkX - commonRadius : trunkX;
         const stem = 'M ' + fromX + ' ' + fromY + ' H ' + initialX;
         const inner = [];
         targets.forEach((point,index) => {
