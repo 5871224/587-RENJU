@@ -39,6 +39,12 @@
         const title = document.createElement('span');
         title.className = 'rule-tree-card-title';
         title.textContent = rule.title;
+        if (rule.note.trim()) {
+            const note = document.createElement('span');
+            note.className = 'rule-tree-item-note';
+            note.textContent = rule.note;
+            title.append(' ', note);
+        }
         button.append(icon, title);
         if (isRoot && rule.children.length) {
             const count = document.createElement('span');
@@ -124,10 +130,10 @@
                 note.hidden = !note.textContent.trim();
             }
             roots = data.roots.map(root => ({
-                id: Number(root.id), title:String(root.title || ''),
+                id: Number(root.id), title:String(root.title || ''), note:String(root.note || ''),
                 content_text:String(root.content_text || ''),
                 children: Array.isArray(root.children) ? root.children.map(child => ({
-                    id:Number(child.id),title:String(child.title || ''),
+                    id:Number(child.id),title:String(child.title || ''),note:String(child.note || ''),
                     content_text:String(child.content_text || '')
                 })) : []
             }));
