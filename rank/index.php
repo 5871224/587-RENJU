@@ -615,8 +615,8 @@ try {
 <title>台灣連珠排名管理</title>
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20261024s">
-<?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="rule-tree-admin.css?v=20261024u">
-<?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="../rule-tree-visual.css?v=20261024u"><?php endif; ?>
+<?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="rule-tree-admin.css?v=20261024v">
+<?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="../rule-tree-visual.css?v=20261024v"><?php endif; ?>
 <?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="../rule-tree-content.css?v=20261024k"><?php endif; ?><?php endif; ?>
 <link rel="stylesheet" href="pagination.css?v=20261023d">
 <link rel="stylesheet" href="table-tools.css?v=20261024a">
