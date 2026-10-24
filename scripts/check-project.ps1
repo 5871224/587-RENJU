@@ -72,6 +72,11 @@ if ($LASTEXITCODE -ne 0) {
     throw 'Rule tree visual style regression failed.'
 }
 
+node scripts/check-rank-style-structure.js
+if ($LASTEXITCODE -ne 0) {
+    throw 'Rank stylesheet structure regression failed.'
+}
+
 $credentialFiles = @(
     'riftw/login.php',
     'CH/testlogin.php',
