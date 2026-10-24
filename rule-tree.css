@@ -14,7 +14,6 @@
 
 
 .rule-tree-card-button{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:14px 16px;border:0;background:transparent;font:inherit;font-weight:700;font-size:17px;line-height:1.45;color:var(--renju-primary-dark,#24577F);cursor:pointer;border-radius:10px}
-.rule-tree-card-button:hover{color:#1769aa}
 .rule-tree-card-chevron{width:20px;height:20px;display:grid;place-items:center;flex:none;color:#6489a7;transition:transform .16s}
 .rule-tree-card-chevron svg{width:17px;height:17px}
 .rule-tree-card-button[aria-expanded="true"] .rule-tree-card-chevron{transform:rotate(90deg)}
