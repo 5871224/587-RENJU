@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>規則｜台灣連珠</title>
     <link href="renju.css" rel="stylesheet" type="text/css">
-    <link href="rule-tree.css?v=20261024c" rel="stylesheet" type="text/css">
+    <link href="rule-tree.css?v=20261024f" rel="stylesheet" type="text/css">
     <link href="rule-tree-content.css?v=20261024d" rel="stylesheet" type="text/css">
     <script src="js/jquery-3.7.1.min.js"></script>
     <script>
@@ -17,7 +17,7 @@
     </script>
     <script src="rule-tree-connectors.js?v=20261024e" defer></script>
     <script src="rule-tree-content.js?v=20261024d" defer></script>
-    <script src="rule-tree.js?v=20261024e" defer></script>
+    <script src="rule-tree.js?v=20261024f" defer></script>
 </head>
 <body>
     <div id="myDiv"></div>
@@ -31,6 +31,7 @@
                 <div class="rule-tree-heading">
                     
                     <h2 id="rule-first-title">行棋規則</h2>
+                    <span class="rule-tree-section-note" id="rule-game-section-note" hidden></span>
                 </div>
                 <div class="rule-tree-list" id="rule-tree-roots"></div>
             </section>
@@ -38,6 +39,7 @@
                 <div class="rule-tree-heading">
                     
                     <h2 id="rule-second-title">開局規則</h2>
+                    <span class="rule-tree-section-note" id="rule-opening-section-note" hidden></span>
                 </div>
                 <div class="rule-tree-list" id="rule-tree-children"></div>
             </section>
