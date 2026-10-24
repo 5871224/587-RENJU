@@ -46,7 +46,10 @@
         const open = expanded.has(item.id);
         const active = isRoot && item.id === selected;
         const count = isRoot ? children(item.id).length : 0;
-        const body = open && item.content_text ? '<div class="rule-tree-node-body">' + escapeHtml(item.content_text) + '</div>' : '';
+        const formatted = window.RenjuRuleTreeContent?.formatHtml
+            ? window.RenjuRuleTreeContent.formatHtml(item.content_text, isRoot ? 'game' : 'opening')
+            : escapeHtml(item.content_text);
+        const body = open && item.content_text ? '<div class="rule-tree-node-body">' + formatted + '</div>' : '';
         const badge = item.is_visible ? '' : '<span class="rule-tree-hidden">隱藏</span>';
         const countBadge = isRoot && count ? '<span class="rule-tree-child-count">' + count + '</span>' : '';
         return '<article class="rule-tree-entry' + (active ? ' is-selected' : '') + (item.is_visible ? '' : ' is-hidden') +
