@@ -88,3 +88,13 @@
     white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%
 }
 .rule-tree-heading .rule-tree-section-note[hidden]{display:none!important}
+
+/* Only game rules without children are shown as a single, full-width column. */
+.rule-tree-layout.rule-tree-single-level {
+    grid-template-columns: minmax(0,1fr);
+}
+.rule-tree-layout.rule-tree-single-level .rule-tree-panel--children,
+.rule-tree-panel--children[hidden],
+.rule-tree-layout.rule-tree-single-level .rule-tree-connectors {
+    display: none !important;
+}
