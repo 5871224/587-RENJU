@@ -616,7 +616,7 @@ try {
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20261024a">
 <?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="rule-tree-admin.css?v=20261024h">
-<?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="../rule-tree-content.css?v=20261024d"><?php endif; ?><?php endif; ?>
+<?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="../rule-tree-content.css?v=20261024j"><?php endif; ?><?php endif; ?>
 <link rel="stylesheet" href="pagination.css?v=20261023d">
 <style>.edit-field:has(textarea){grid-column:1/-1}.edit-field textarea{display:block;width:100%;min-height:190px;resize:vertical;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:14px/1.55 Consolas,monospace}.edit-field textarea[name*="content_html"]{min-height:420px}</style>
 <link rel="stylesheet" href="table-tools.css?v=20261024a">
