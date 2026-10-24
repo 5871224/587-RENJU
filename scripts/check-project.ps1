@@ -62,6 +62,11 @@ if ($LASTEXITCODE -ne 0) {
     throw 'Rule tree display formatting regression failed.'
 }
 
+node scripts/check-rule-tree-connectors.js
+if ($LASTEXITCODE -ne 0) {
+    throw 'Rule tree connector geometry regression failed.'
+}
+
 $credentialFiles = @(
     'riftw/login.php',
     'CH/testlogin.php',

@@ -33,6 +33,7 @@
         layout:document.querySelector('.rule-tree-grid'),
         svg:document.getElementById('rule-tree-admin-connectors'),
         rootList:rootsEl, childList:childEl,
+        childPanel:page.querySelector('.rule-tree-column--child'),
         root: () => rootsEl.querySelector('.rule-tree-entry.is-selected'),
         children: () => Array.from(childEl.querySelectorAll('.rule-tree-entry')),
         headingSelector:'.rule-tree-node-header',

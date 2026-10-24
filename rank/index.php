@@ -804,6 +804,6 @@ try {
 <script src="bottom-scroll.js?v=20261024a"></script>
 <script src="pagination.js?v=20261023d"></script>
 <?php if ($view === 'site-resources'): ?><script src="resource-drag.js?v=20261023d"></script><?php endif; ?>
-<?php if ($view === 'site-rules'): ?><script src="../rule-tree-connectors.js?v=20261024c"></script><script src="../rule-tree-content.js?v=20261024d"></script><script src="rule-tree-admin.js?v=20261024d"></script><?php endif; ?>
+<?php if ($view === 'site-rules'): ?><script src="../rule-tree-connectors.js?v=20261024e"></script><script src="../rule-tree-content.js?v=20261024d"></script><script src="rule-tree-admin.js?v=20261024e"></script><?php endif; ?>
 </body>
 </html>
