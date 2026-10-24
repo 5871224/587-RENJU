@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>規則｜台灣連珠</title>
     <link href="renju.css" rel="stylesheet" type="text/css">
-    <link href="rule-tree.css?v=20261024a" rel="stylesheet" type="text/css">
+    <link href="rule-tree.css?v=20261024b" rel="stylesheet" type="text/css">
     <script src="js/jquery-3.7.1.min.js"></script>
     <script>
         $(function () {
@@ -14,16 +14,16 @@
             });
         });
     </script>
-    <script src="rule-tree.js?v=20261024a" defer></script>
+    <script src="rule-tree.js?v=20261024b" defer></script>
 </head>
 <body>
     <div id="myDiv"></div>
     <main>
         <h1>規則</h1>
         <hr>
-        <p class="rule-tree-intro">選取左側行棋規則，可查看右側對應的開局規則；點擊任一規則即可展開或收合詳細內容。</p>
         <p class="rule-tree-state" id="rule-tree-state" role="status">正在載入規則資料……</p>
         <div class="rule-tree-layout" id="rule-tree-layout" hidden>
+            <svg class="rule-tree-connectors" id="rule-tree-connectors" aria-hidden="true" focusable="false" preserveAspectRatio="none"></svg>
             <section class="rule-tree-panel rule-tree-panel--roots" aria-labelledby="rule-first-title">
                 <div class="rule-tree-heading">
                     <span class="rule-tree-kicker">第一層</span>
