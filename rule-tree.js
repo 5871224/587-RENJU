@@ -5,6 +5,7 @@
     if (!main) return;
     const rootList = document.getElementById('rule-tree-roots');
     const childrenList = document.getElementById('rule-tree-children');
+    const childPanel = main.querySelector('.rule-tree-panel--children');
 
     const state = document.getElementById('rule-tree-state');
     const connectors = document.getElementById('rule-tree-connectors');
@@ -62,6 +63,12 @@
     function render() {
         rootList.replaceChildren();
         childrenList.replaceChildren();
+        const selectedRoot = roots.find(item => item.id === selected);
+        const hasChildren = !!selectedRoot && selectedRoot.children.length > 0;
+        // Never display an empty right-hand category on the public site.
+        // With no children, let the left-hand rule tree use the full width.
+        childPanel.hidden = !hasChildren;
+        main.classList.toggle('rule-tree-single-level', !hasChildren);
         linkLayer?.redraw();
         for (const root of roots) rootList.append(makeCard(root, true));
         const root = roots.find(item => item.id === selected);
@@ -73,12 +80,7 @@
             return;
         }
         for (const child of root.children) childrenList.append(makeCard(child, false));
-        if (!root.children.length) {
-            const empty = document.createElement('p');
-            empty.className = 'rule-tree-empty';
-            empty.textContent = '這項行棋規則目前沒有第二層規則。';
-            childrenList.append(empty);
-        }
+
     }
 
     main.addEventListener('click', event => {
