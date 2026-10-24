@@ -98,6 +98,19 @@ function renderSelectedRecord(string $html, string $record, int $requestedPage):
     $dataRows = array_values(array_filter($rows, static function ($row) {
         return strpos($row, '<TD>　</TD>') === false;
     }));
+    // 長江前浪、當年之勇：各段位分別由第 1 名開始排名。
+    // 先對完整資料計算段位名次，再分頁，避免下一頁重新從第 1 名起算。
+    $gradeRowRanks = [];
+    if (in_array($record, ['den-early', 'den-young'], true)) {
+        $gradeCounts = [];
+        foreach ($dataRows as $index => $recordRow) {
+            preg_match_all('~<TD\\b[^>]*>(.*?)</TD>~si', $recordRow, $gradeCells);
+            $grade = trim(strip_tags($gradeCells[1][2] ?? ''));
+            if ($grade === '') continue;
+            $gradeCounts[$grade] = ($gradeCounts[$grade] ?? 0) + 1;
+            $gradeRowRanks[$index] = $gradeCounts[$grade];
+        }
+    }
     $total = count($dataRows);
     $pageCount = max(1, (int)ceil($total / 100));
     $page = min($requestedPage, $pageCount);
@@ -112,7 +125,10 @@ function renderSelectedRecord(string $html, string $record, int $requestedPage):
     echo $heading;
     foreach ($pageRows as $i => $row) {
         if ($record === 'leader') echo $row;
-        else echo preg_replace('~<TR([^>]*)>~i', '<TR$1><TD>' . ($offset + $i + 1) . '</TD>', $row, 1);
+        else {
+            $rank = $gradeRowRanks[$offset + $i] ?? ($offset + $i + 1);
+            echo preg_replace('~<TR([^>]*)>~i', '<TR$1><TD>' . $rank . '</TD>', $row, 1);
+        }
     }
     echo $table[3] . '</div>';
     echo '<div class="record-pagination"><span class="muted">共 ' . $total . ' 筆，每頁 100 筆</span><nav aria-label="紀錄分頁">';
