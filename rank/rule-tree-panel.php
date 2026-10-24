@@ -20,14 +20,14 @@ $treeJson = json_encode($ruleTreeRows ?? [], JSON_UNESCAPED_UNICODE | JSON_INVAL
         <svg class="rule-tree-admin-connectors" id="rule-tree-admin-connectors" aria-hidden="true" focusable="false" preserveAspectRatio="none"></svg>
         <section class="rule-tree-column rule-tree-column--root" aria-label="第一層行棋規則">
             <header class="rule-tree-column-head">
-                <span class="rule-tree-level">第一層</span><h3>行棋規則</h3>
+                <h3>行棋規則</h3>
                 <span class="rule-tree-count" id="rule-tree-root-count"></span>
             </header>
             <div class="rule-tree-stack" id="rule-tree-root-list"></div>
         </section>
         <section class="rule-tree-column rule-tree-column--child" aria-label="第二層開局規則">
             <header class="rule-tree-column-head">
-                <span class="rule-tree-level">第二層</span><h3>開局規則</h3>
+                <h3>開局規則</h3>
                 <span class="rule-tree-count" id="rule-tree-child-count"></span>
             </header>
             <div class="rule-tree-stack" id="rule-tree-child-list"></div>
