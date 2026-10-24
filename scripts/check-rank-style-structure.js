@@ -37,6 +37,12 @@ assert.doesNotMatch(rules, /\.rule-tree-section-dialog\s+textarea\s*\{/,
 assert.doesNotMatch(rules, /\.rule-tree-column--child:before/,
     'CSS-based connectors were replaced with the shared SVG and must stay removed');
 
+// The site-wide button:hover turns buttons dark blue; rule nodes must override
+// that through their own canonical hover state, without hiding the text.
+assert.match(rules,
+    /\.rule-tree-node-toggle:hover,\.rule-tree-node-toggle:focus-visible\s*\{\s*background:#edf6fc;color:var\(--renju-primary-dark,#24577F\)\s*\}/,
+    'Rule rows need a light hover/focus background and readable text color');
+
 // Safeguard relevant mobile layout and table-action styles against accidental deletion.
 assert.match(rules, /@media\s*\(max-width:820px\)/);
 assert.match(rules, /\.rule-tree-node-body\s*\{padding-left:16px\}/);
