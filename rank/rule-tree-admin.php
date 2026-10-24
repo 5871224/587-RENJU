@@ -73,6 +73,27 @@ function rankRuleTreeHandlePost(PDO $db, string $csrf): void
             exit;
         }
 
+        if ($action === 'tree_section_save') {
+            $section = (string)($_POST['section_key'] ?? '');
+            if (!in_array($section, ['game', 'opening'], true)) {
+                throw new RuntimeException('無效的規則區塊。');
+            }
+            $title = trim((string)($_POST['section_title'] ?? ''));
+            $note = trim(str_replace(["\r\n", "\r"], "\n", (string)($_POST['section_note'] ?? '')));
+            if ($title === '' || mb_strlen($title, 'UTF-8') > 100) {
+                throw new RuntimeException('區塊名稱不可空白，最多 100 字。');
+            }
+            if (mb_strlen($note, 'UTF-8') > 500) {
+                throw new RuntimeException('區塊註記最多 500 字。');
+            }
+            $update = $db->prepare('UPDATE SITE_RULE_TREE_SECTION
+                SET title=?,note=? WHERE section_key=?');
+            $update->execute([$title,$note,$section]);
+            header('Location: ?view=site-rules&saved=1&selected=' .
+                max(0, (int)($_POST['selected'] ?? 0)), true, 303);
+            exit;
+        }
+
         if ($action === 'tree_save') {
             $id = filter_var($_POST['id'] ?? 0, FILTER_VALIDATE_INT);
             if ($id === false || $id < 0) throw new RuntimeException('資料編號不正確。');
