@@ -156,7 +156,7 @@ $views = [
     'meijin' => ['title' => '名人', 'table' => 'MEIJIN', 'desc' => '名人戰歷史資料'],
     'site-notices' => ['title' => '首頁訊息', 'table' => 'SITE_NOTICE', 'desc' => '首頁更新、比賽訊息與一般消息'],
     'site-resources' => ['title' => '線上資源', 'table' => 'SITE_RESOURCE', 'desc' => '學習網站與下棋網站的連結、語言、介紹及排序'],
-    'site-rules' => ['title' => '規則內容', 'table' => 'SITE_RULE_ITEM', 'desc' => '四個分頁分類，每條規則獨立一筆資料'],
+    'site-rules' => ['title' => '規則內容', 'table' => 'SITE_RULE_ITEM', 'desc' => '行棋規則與開局規則的兩層樹狀管理'],
 ];
 $ratingTools = [
     'review' => ['title' => '台灣排名重算檢查', 'file' => 'rating-review.php', 'desc' => '整合逐場差異、完整性檢查與每位棋士最終差異，所有明細皆可分頁查看'],
@@ -242,6 +242,11 @@ try {
 
     if ($view === 'rating-tools') {
         // 等級分工具內容在下方直接整合；只有尚未整合的工具使用明確的嵌入入口。
+    } elseif ($view === 'site-rules') {
+        require_once __DIR__ . '/rule-tree-admin.php';
+        rankRuleTreeHandlePost($MYSQL, (string)$_SESSION['rank_rebuild_csrf']);
+        $current = $views[$view];
+        $ruleTreeRows = rankRuleTreeRows($MYSQL);
     } elseif (isset($views[$view])) {
         $current = $views[$view];
         $table = $current['table'];
@@ -609,6 +614,7 @@ try {
 <title>台灣連珠排名管理</title>
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20261024a">
+<?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="rule-tree-admin.css?v=20261024a"><?php endif; ?>
 <link rel="stylesheet" href="pagination.css?v=20261023d">
 <style>.edit-field:has(textarea){grid-column:1/-1}.edit-field textarea{display:block;width:100%;min-height:190px;resize:vertical;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:14px/1.55 Consolas,monospace}.edit-field textarea[name*="content_html"]{min-height:420px}</style>
 <link rel="stylesheet" href="table-tools.css?v=20261024a">
@@ -638,6 +644,8 @@ try {
         <?php endif; ?>
     </section>
 
+<?php elseif ($view === 'site-rules'): ?>
+    <?php require __DIR__ . '/rule-tree-panel.php'; ?>
 <?php elseif ($current): ?>
     <section class="panel">
         <div class="panel-head">
@@ -794,6 +802,7 @@ try {
 <script src="inline-create.js?v=20261023b"></script>
 <script src="bottom-scroll.js?v=20261024a"></script>
 <script src="pagination.js?v=20261023d"></script>
-<?php if (in_array($view, ['site-resources','site-rules'], true)): ?><script src="resource-drag.js?v=20261023d"></script><?php endif; ?>
+<?php if ($view === 'site-resources'): ?><script src="resource-drag.js?v=20261023d"></script><?php endif; ?>
+<?php if ($view === 'site-rules'): ?><script src="rule-tree-admin.js?v=20261024a"></script><?php endif; ?>
 </body>
 </html>

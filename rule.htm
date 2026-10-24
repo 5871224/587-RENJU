@@ -1,161 +1,46 @@
-<!DOCTYPE HTML>
-<html>
-
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>規則</title>
-	<link href="renju.css" rel="stylesheet" type="text/css">
-	<style>
-        #contentBody .site-rule-plain-text {
-            line-height: 1.75;
-            overflow-wrap: anywhere;
-            margin: 0 0 1.5em;
-        }
-        #contentBody .site-rule-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 1.65em 0 0.65em;
-            color: var(--renju-primary-dark);
-            line-height: 1.4;
-        }
-        #contentBody .site-rule-title::before {
-            content: "";
-            display: inline-block;
-            flex: 0 0 5px;
-            height: 1.15em;
-            border-radius: 4px;
-            background: var(--renju-primary);
-        }
-    </style>
-	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
-	<script type="text/javascript">
-		$(document).ready(function () {
-			// 載入主選單
-			htmlobj = $.ajax({
-				url: "https://587.renju.org.tw/menu.html",
-				async: false
-			});
-			$("#myDiv").html(htmlobj.responseText);
-
-			// 預設載入行棋規則
-			loadRuleOptions();
-		});
-
-        function loadRuleOptions() {
-            $.ajax({
-                url: 'api/site-content.php',
-                data: { kind: 'rules' },
-                dataType: 'json',
-                cache: false,
-                success: function (data) {
-                    if (!Array.isArray(data.rules)) {
-                        loadContent('rule/rulehome.htm');
-                        return;
-                    }
-                    const selector = document.getElementById('rule-select');
-                    selector.replaceChildren();
-                    data.rules.forEach(function (rule) {
-                        if (!/^[a-z0-9-]{1,80}$/.test(String(rule.slug || ''))) return;
-                        const option = document.createElement('option');
-                        option.value = 'rule/' + rule.slug + '.htm';
-                        option.textContent = rule.title || rule.slug;
-                        selector.appendChild(option);
-                    });
-                    if (selector.options.length) {
-                        loadContent(selector.value);
-                    } else {
-                        document.getElementById('contentBody').textContent = '目前沒有公開的規則內容。';
-                    }
-                },
-                error: function () {
-                    loadContent('rule/rulehome.htm');
-                }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>規則｜台灣連珠</title>
+    <link href="renju.css" rel="stylesheet" type="text/css">
+    <link href="rule-tree.css?v=20261024a" rel="stylesheet" type="text/css">
+    <script src="js/jquery-3.7.1.min.js"></script>
+    <script>
+        $(function () {
+            $.ajax({url:'menu.html',async:false}).done(function (menu) {
+                $('#myDiv').html(menu);
             });
-        }
-
-        function renderRuleContent(html) {
-            $('#contentBody').html(html);
-            // 舊版靜態備援仍含「◎」，與動態資料使用同一套簡潔標題樣式。
-            $('#contentBody h3').each(function () {
-                this.textContent = (this.textContent || '').replace(/^\s*◎\s*/u, '');
-                this.classList.add('site-rule-title');
-            });
-            window.scrollTo(0, 0);
-        }
-
-        function loadStaticRule(url) {
-            // 資料庫故障時，原有四份 HTML 仍可正常顯示。
-            if (!/^rule\/(?:rulehome|renju-rule|gomoku-rule|other)\.htm$/.test(url)) {
-                $('#contentBody').text('規則內容暫時無法讀取。');
-                return;
-            }
-            $.ajax({
-                url: url,
-                success: function (data) {
-                    var bodyContent = data.match(/<body[^>]*>([\s\S.]*)<\/body>/i);
-                    var content = bodyContent ? bodyContent[1] : data;
-                    var div = document.createElement('div');
-                    div.innerHTML = content;
-                    $(div).find('#myDiv').remove();
-                    // 備援靜態頁也只顯示連結文字，不提供可點擊的超連結。
-                    $(div).find('a').each(function () {
-                        this.replaceWith(document.createTextNode(this.textContent || ''));
-                    });
-                    renderRuleContent(div.innerHTML);
-                },
-                error: function () {
-                    $('#contentBody').text('規則內容暫時無法讀取。');
-                }
-            });
-        }
-
-        function loadContent(url) {
-            if (!url) return;
-            const match = /^rule\/([a-z0-9-]{1,80})\.htm$/.exec(url);
-            if (!match) return;
-            $.ajax({
-                url: 'api/site-content.php',
-                data: { kind: 'rules', slug: match[1] },
-                dataType: 'json',
-                cache: false,
-                success: function (data) {
-                    if (typeof data.body_html === 'string') {
-                        renderRuleContent(data.body_html);
-                    } else {
-                        loadStaticRule(url);
-                    }
-                },
-                error: function () {
-                    loadStaticRule(url);
-                }
-            });
-        }
-
-	</script>
+        });
+    </script>
+    <script src="rule-tree.js?v=20261024a" defer></script>
 </head>
-
 <body>
-	<div id="myDiv"></div>
-	<div>
-		<h1>規則</h1>
-		<hr>
-
-		<div class="rule-selector-container site-panel site-panel--center">
-			<label for="rule-select" class="form-label">選擇規則分類：</label>
-			<select id="rule-select" class="rule-selector" onchange="loadContent(this.value)">
-				<option value="rule/rulehome.htm">行棋規則</option>
-				<option value="rule/renju-rule.htm">禁手開局規則</option>
-				<option value="rule/gomoku-rule.htm">無禁開局規則</option>
-				<option value="rule/other.htm">其他玩法</option>
-			</select>
-		</div>
-
-		<div id="contentBody">
-			<!-- 動態加載內容 -->
-		</div>
-	</div>
+    <div id="myDiv"></div>
+    <main>
+        <h1>規則</h1>
+        <hr>
+        <p class="rule-tree-intro">選取左側行棋規則，可查看右側對應的開局規則；點擊任一規則即可展開或收合詳細內容。</p>
+        <p class="rule-tree-state" id="rule-tree-state" role="status">正在載入規則資料……</p>
+        <div class="rule-tree-layout" id="rule-tree-layout" hidden>
+            <section class="rule-tree-panel rule-tree-panel--roots" aria-labelledby="rule-first-title">
+                <div class="rule-tree-heading">
+                    <span class="rule-tree-kicker">第一層</span>
+                    <h2 id="rule-first-title">行棋規則</h2>
+                </div>
+                <div class="rule-tree-list" id="rule-tree-roots"></div>
+            </section>
+            <section class="rule-tree-panel rule-tree-panel--children" aria-labelledby="rule-second-title">
+                <div class="rule-tree-heading">
+                    <span class="rule-tree-kicker">第二層</span>
+                    <h2 id="rule-second-title">開局規則</h2>
+                </div>
+                <p class="rule-tree-subheading" id="rule-tree-selected"></p>
+                <div class="rule-tree-list" id="rule-tree-children"></div>
+            </section>
+        </div>
+        <noscript>此頁的樹狀展開功能需要 JavaScript。你仍可查看 <a href="rule/rulehome.htm">原始行棋規則</a>。</noscript>
+    </main>
 </body>
-
 </html>

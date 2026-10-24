@@ -22,6 +22,11 @@ if ($LASTEXITCODE -ne 0) {
     throw 'Site rule migration regression checks failed.'
 }
 
+php scripts/check-rule-tree.php
+if ($LASTEXITCODE -ne 0) {
+    throw 'Two-level rule tree regression checks failed.'
+}
+
 php scripts/check-renjunet-game-import.php
 if ($LASTEXITCODE -ne 0) {
     throw 'RenjuNet game import regression checks failed.'
@@ -45,7 +50,7 @@ if ($LASTEXITCODE -ne 0) {
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
     throw 'Node.js is required for Swiss JavaScript syntax validation.'
 }
-foreach ($file in @('rank/swiss-ui.js', 'rank/swiss-admin-ui.js', 'rank/sched-import.js', 'rank/resource-drag.js')) {
+foreach ($file in @('rank/swiss-ui.js', 'rank/swiss-admin-ui.js', 'rank/sched-import.js', 'rank/resource-drag.js', 'rank/rule-tree-admin.js', 'rule-tree.js')) {
     node --check $file
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax check failed: $file"

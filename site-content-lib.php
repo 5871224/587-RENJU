@@ -111,6 +111,7 @@ function siteContentEnsureTables(PDO $db): void
         siteContentSeed($db);
         siteContentMigrateRuleItems($db);
         siteContentMigrateRuleText($db);
+        siteContentMigrateRuleHierarchy($db);
     } finally {
         $db->query("SELECT RELEASE_LOCK('site_content_seed_587')");
     }
@@ -381,4 +382,113 @@ function siteContentMigrateRuleText(PDO $db): void
         if ($db->inTransaction()) $db->rollBack();
         throw $error;
     }
+}
+
+
+/**
+ * Fixed-depth rule tree. Existing 行棋規則 become level one; each original
+ * opening-rule category becomes children of its corresponding first-level rule.
+ * The 其他玩法 section receives its own first-level node without modifying
+ * any of the five original entries. Keep page_slug for legacy compatibility.
+ */
+function siteContentMigrateRuleHierarchy(PDO $db): void
+{
+    $column = $db->query("SHOW COLUMNS FROM SITE_RULE_ITEM LIKE 'parent_id'")->fetch(PDO::FETCH_ASSOC);
+    if (!$column) {
+        $db->exec('ALTER TABLE SITE_RULE_ITEM
+            ADD COLUMN parent_id INT UNSIGNED NULL DEFAULT NULL AFTER page_slug,
+            ADD KEY idx_site_rule_parent (parent_id,sort_order,id)');
+    }
+    $key = 'rules-two-level-tree-v4';
+    $done = $db->prepare('SELECT 1 FROM SITE_CONTENT_META WHERE meta_key=?');
+    $done->execute([$key]);
+    if ($done->fetchColumn()) return;
+
+    $db->beginTransaction();
+    try {
+        $roots = $db->query("SELECT id,title,sort_order FROM SITE_RULE_ITEM
+            WHERE page_slug='rulehome' AND parent_id IS NULL ORDER BY sort_order,id FOR UPDATE")
+            ->fetchAll(PDO::FETCH_ASSOC);
+        $findParent = static function (array $rows, string $name): int {
+            foreach ($rows as $row) {
+                if (mb_strpos((string)$row['title'], $name, 0, 'UTF-8') !== false) return (int)$row['id'];
+            }
+            return 0;
+        };
+        $renjuId = $findParent($roots, '連珠規則');
+        $gomokuId = $findParent($roots, '無禁規則');
+        if ($renjuId === 0 || $gomokuId === 0 || $renjuId === $gomokuId) {
+            // Edited legacy headings may no longer contain the original names.
+            // Do not guess a parent and incorrectly attach opening rules to it.
+            $insertRoot = $db->prepare("INSERT INTO SITE_RULE_ITEM
+                (page_slug,parent_id,title,content_text,sort_order,is_visible)
+                VALUES ('rulehome',NULL,?,'',?,1)");
+            $highest = (int)$db->query('SELECT COALESCE(MAX(sort_order),0) FROM SITE_RULE_ITEM WHERE parent_id IS NULL')
+                ->fetchColumn();
+            if ($renjuId === 0 || $renjuId === $gomokuId) {
+                $insertRoot->execute(['連珠規則', $highest + 10]);
+                $renjuId = (int)$db->lastInsertId();
+                $highest += 10;
+            }
+            if ($gomokuId === 0 || $gomokuId === $renjuId) {
+                $insertRoot->execute(['無禁規則', $highest + 10]);
+                $gomokuId = (int)$db->lastInsertId();
+            }
+        }
+        $link = $db->prepare('UPDATE SITE_RULE_ITEM SET parent_id=? WHERE page_slug=? AND parent_id IS NULL');
+        $link->execute([$renjuId, 'renju-rule']);
+        $link->execute([$gomokuId, 'gomoku-rule']);
+
+        $other = $db->query("SELECT id FROM SITE_RULE_ITEM
+            WHERE page_slug='other' AND parent_id IS NULL AND title='其他玩法'
+            ORDER BY id LIMIT 1 FOR UPDATE")->fetchColumn();
+        if (!$other) {
+            $next = (int)$db->query('SELECT COALESCE(MAX(sort_order),0)+10 FROM SITE_RULE_ITEM WHERE parent_id IS NULL')
+                ->fetchColumn();
+            $add = $db->prepare("INSERT INTO SITE_RULE_ITEM
+                (page_slug,parent_id,title,content_text,sort_order,is_visible)
+                VALUES ('other',NULL,'其他玩法','',?,1)");
+            $add->execute([$next]);
+            $other = (int)$db->lastInsertId();
+        }
+        $otherItems = $db->prepare("UPDATE SITE_RULE_ITEM SET parent_id=?
+            WHERE page_slug='other' AND id<>? AND parent_id IS NULL");
+        $otherItems->execute([(int)$other,(int)$other]);
+
+        $db->prepare('INSERT IGNORE INTO SITE_CONTENT_META(meta_key) VALUES (?)')->execute([$key]);
+        $db->commit();
+    } catch (Throwable $error) {
+        if ($db->inTransaction()) $db->rollBack();
+        throw $error;
+    }
+}
+
+
+/** Pure tree projection, useful for both public API and regression testing. */
+function siteContentBuildRuleTree(array $rows): array
+{
+    $roots = [];
+    $locations = [];
+    foreach ($rows as $row) {
+        if ($row['parent_id'] !== null || (int)($row['is_visible'] ?? 1) !== 1) continue;
+        $id = (int)$row['id'];
+        $locations[$id] = count($roots);
+        $roots[] = [
+            'id'=>$id,
+            'title'=>(string)$row['title'],
+            'content_text'=>(string)($row['content_text'] ?? ''),
+            'children'=>[],
+        ];
+    }
+    foreach ($rows as $row) {
+        if ($row['parent_id'] === null || (int)($row['is_visible'] ?? 1) !== 1) continue;
+        $parent = (int)$row['parent_id'];
+        if (!isset($locations[$parent])) continue;
+        $roots[$locations[$parent]]['children'][] = [
+            'id'=>(int)$row['id'],
+            'title'=>(string)$row['title'],
+            'content_text'=>(string)($row['content_text'] ?? ''),
+        ];
+    }
+    return $roots;
 }

@@ -11,7 +11,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
     exit;
 }
 $kind = (string)($_GET['kind'] ?? '');
-if (!in_array($kind, ['resources', 'rules'], true)) {
+if (!in_array($kind, ['resources', 'rules', 'rule_tree'], true)) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid kind']);
     exit;
@@ -24,6 +24,12 @@ try {
     if ($kind === 'resources') {
         $rows = $db->query('SELECT category,title,url,language,description_html,sort_order FROM SITE_RESOURCE WHERE is_visible=1 ORDER BY FIELD(category,\'learning\',\'playing\'),sort_order,id')->fetchAll(PDO::FETCH_ASSOC);
         echo json_encode(['resources' => $rows], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    } elseif ($kind === 'rule_tree') {
+        // The helper excludes hidden nodes and orphaned children.
+        $rows = $db->query('SELECT id,parent_id,title,content_text,is_visible
+            FROM SITE_RULE_ITEM ORDER BY (parent_id IS NOT NULL),sort_order,id')->fetchAll(PDO::FETCH_ASSOC);
+        $roots = siteContentBuildRuleTree($rows);
+        echo json_encode(['roots'=>$roots], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     } elseif (isset($_GET['slug'])) {
         $slug = (string)$_GET['slug'];
         if (!preg_match('/^[a-z0-9-]{1,80}$/', $slug)) {
