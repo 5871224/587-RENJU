@@ -43,6 +43,7 @@
             const note = document.createElement('span');
             note.className = 'rule-tree-item-note';
             note.textContent = rule.note;
+            note.title = rule.note;
             title.append(' ', note);
         }
         button.append(icon, title);
