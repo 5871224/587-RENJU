@@ -20,7 +20,6 @@
 .rule-tree-grip:hover,.rule-tree-grip:focus-visible{background:#e8f2fb;color:#1769aa;outline:2px solid transparent}
 .rule-tree-grip:active{cursor:grabbing}
 .rule-tree-node-toggle{flex:1;min-width:0;display:flex;align-items:center;gap:8px;text-align:left;background:transparent;border:0;color:var(--renju-primary-dark,#24577F);font:inherit;font-weight:600;padding:6px 2px;cursor:pointer}
-.rule-tree-node-toggle:hover,.rule-tree-node-toggle:focus-visible{background:#edf6fc;color:var(--renju-primary-dark,#24577F)}
 .rule-tree-node-toggle:hover .rule-tree-name{text-decoration:underline;text-underline-offset:3px}
 .rule-tree-chevron{display:inline-flex;flex:none;color:#6b8ba5;transition:transform .14s}
 .rule-tree-node-toggle.is-open .rule-tree-chevron{transform:rotate(90deg)}

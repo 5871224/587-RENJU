@@ -6,6 +6,14 @@
     --rule-tree-opening-bg: #fcf8f1;
 }
 
+/* A single interactive hover/focus style for both public and admin rules.
+   These selectors override renju.css's global button:hover without !important. */
+.rule-tree-layout .rule-tree-card-button:is(:hover, :focus-visible),
+.rule-tree-grid .rule-tree-node-toggle:is(:hover, :focus-visible) {
+    background: #edf6fc;
+    color: var(--renju-primary-dark, #24577F);
+}
+
 /* All segments (root stem, bends, shared trunk and child branches)
    inherit this ONE stroke definition so no join changes tone or thickness. */
 .rule-tree-connectors .rule-tree-branch,

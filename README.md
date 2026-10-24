@@ -41,7 +41,7 @@
 
 修改量小並不代表補丁式寫法；允許直接在正確位置進行最小必要修改，也允許有明確理由的媒體查詢、瀏覽器相容與資料庫過渡流程，但不得形成互相覆蓋的永久結構。
 
-規則樹專用約束：`rule-tree-visual.css` 是前後台連線及數量圓標樣式的唯一來源，不得在 `rule-tree.css` 或 `rank/rule-tree-admin.css` 再設定相同的線條顏色或圓標底色；由 `scripts/check-rule-tree-visual.js` 驗證。
+規則樹專用約束：`rule-tree-visual.css` 是前台 `rule.htm` 與後台 `rank/?view=site-rules` 的共用介面視覺來源，包括連線、數量圓標、規則按鈕的懸停與鍵盤聚焦樣式。**這兩頁共同的介面修改必須同步生效**，不得在 `rule-tree.css` 或 `rank/rule-tree-admin.css` 再設定各自版本。修改共用樣式時應同時更新兩頁的 CSS 快取版本，並由 `scripts/check-rule-tree-visual.js` 驗證。
 
 ## GitHub 自動部署
 
