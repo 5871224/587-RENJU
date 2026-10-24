@@ -89,10 +89,9 @@
 }
 .rule-tree-heading .rule-tree-section-note[hidden]{display:none!important}
 
-/* Only game rules without children are shown as a single, full-width column. */
-.rule-tree-layout.rule-tree-single-level {
-    grid-template-columns: minmax(0,1fr);
-}
+/* When no opening rules exist, retain both desktop grid tracks so the
+   first-level rules keep their original column width. On small screens the
+   existing 880px media query correctly collapses this to one full-width track. */
 .rule-tree-layout.rule-tree-single-level .rule-tree-panel--children,
 .rule-tree-panel--children[hidden],
 .rule-tree-layout.rule-tree-single-level .rule-tree-connectors {
