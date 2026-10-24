@@ -247,6 +247,7 @@ try {
         rankRuleTreeHandlePost($MYSQL, (string)$_SESSION['rank_rebuild_csrf']);
         $current = $views[$view];
         $ruleTreeRows = rankRuleTreeRows($MYSQL);
+        $ruleTreeSections = siteContentRuleTreeSections($MYSQL);
     } elseif (isset($views[$view])) {
         $current = $views[$view];
         $table = $current['table'];
@@ -804,6 +805,6 @@ try {
 <script src="bottom-scroll.js?v=20261024a"></script>
 <script src="pagination.js?v=20261023d"></script>
 <?php if ($view === 'site-resources'): ?><script src="resource-drag.js?v=20261023d"></script><?php endif; ?>
-<?php if ($view === 'site-rules'): ?><script src="../rule-tree-connectors.js?v=20261024e"></script><script src="../rule-tree-content.js?v=20261024d"></script><script src="rule-tree-admin.js?v=20261024e"></script><?php endif; ?>
+<?php if ($view === 'site-rules'): ?><script src="../rule-tree-connectors.js?v=20261024e"></script><script src="../rule-tree-content.js?v=20261024d"></script><script src="rule-tree-admin.js?v=20261024f"></script><?php endif; ?>
 </body>
 </html>
