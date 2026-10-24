@@ -614,7 +614,8 @@ try {
 <title>台灣連珠排名管理</title>
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20261024a">
-<?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="rule-tree-admin.css?v=20261024c"><?php endif; ?>
+<?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="rule-tree-admin.css?v=20261024c">
+<?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="../rule-tree-content.css?v=20261024d"><?php endif; ?><?php endif; ?>
 <link rel="stylesheet" href="pagination.css?v=20261023d">
 <style>.edit-field:has(textarea){grid-column:1/-1}.edit-field textarea{display:block;width:100%;min-height:190px;resize:vertical;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font:14px/1.55 Consolas,monospace}.edit-field textarea[name*="content_html"]{min-height:420px}</style>
 <link rel="stylesheet" href="table-tools.css?v=20261024a">
@@ -803,6 +804,6 @@ try {
 <script src="bottom-scroll.js?v=20261024a"></script>
 <script src="pagination.js?v=20261023d"></script>
 <?php if ($view === 'site-resources'): ?><script src="resource-drag.js?v=20261023d"></script><?php endif; ?>
-<?php if ($view === 'site-rules'): ?><script src="../rule-tree-connectors.js?v=20261024c"></script><script src="rule-tree-admin.js?v=20261024c"></script><?php endif; ?>
+<?php if ($view === 'site-rules'): ?><script src="../rule-tree-connectors.js?v=20261024c"></script><script src="../rule-tree-content.js?v=20261024d"></script><script src="rule-tree-admin.js?v=20261024d"></script><?php endif; ?>
 </body>
 </html>
