@@ -48,7 +48,11 @@
         if (opened && rule.content_text.trim()) {
             const content = document.createElement('div');
             content.className = 'rule-tree-card-content';
-            content.textContent = rule.content_text;
+            if (window.RenjuRuleTreeContent?.formatHtml) {
+                content.innerHTML = window.RenjuRuleTreeContent.formatHtml(rule.content_text, isRoot ? 'game' : 'opening');
+            } else {
+                content.textContent = rule.content_text;
+            }
             card.append(content);
         }
         return card;
