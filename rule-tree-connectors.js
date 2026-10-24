@@ -61,13 +61,15 @@
                 const room = target.x - trunkX;
                 const radius = Math.max(3, Math.min(12, room * .28));
                 const upward = target.y < fromY;
-                // A compact rounded elbow at the shared trunk; the remainder
-                // is a single horizontal line. This gives the D-style curve
-                // without overlapping the branch paths.
-                const startY = target.y + (upward ? radius : -radius);
-                const d = 'M ' + trunkX + ' ' + startY +
-                    ' Q ' + trunkX + ' ' + target.y + ' ' + (trunkX + radius) + ' ' + target.y +
-                    ' H ' + target.x;
+                // Use a short rounded elbow only where the shared trunk
+                // actually reaches it. A level branch stays a clean line.
+                const elbow = Math.min(radius, Math.abs(target.y - fromY));
+                const startY = target.y + (upward ? elbow : -elbow);
+                const d = elbow < 1
+                    ? 'M ' + trunkX + ' ' + target.y + ' H ' + target.x
+                    : 'M ' + trunkX + ' ' + startY +
+                      ' Q ' + trunkX + ' ' + target.y + ' ' + (trunkX + elbow) + ' ' + target.y +
+                      ' H ' + target.x;
                 svg.append(element('path', { d, class: branchClass + ' rule-tree-twig' }));
                 svg.append(element('circle', {
                     cx: target.x, cy: target.y, r: 3, class: 'rule-tree-endpoint'
