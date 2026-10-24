@@ -11,6 +11,11 @@
     const rootsEl = document.getElementById('rule-tree-root-list');
     const childEl = document.getElementById('rule-tree-child-list');
     const dialog = document.getElementById('rule-tree-dialog');
+    const sectionDialog = document.getElementById('rule-tree-section-dialog');
+    const sectionKey = document.getElementById('rule-tree-section-key');
+    const sectionTitle = document.getElementById('rule-tree-section-title');
+    const sectionNote = document.getElementById('rule-tree-section-note');
+    const sectionSelected = document.getElementById('rule-tree-section-selected');
     const form = document.getElementById('rule-tree-form');
     const parentSelect = document.getElementById('rule-tree-field-parent');
     const editId = document.getElementById('rule-tree-field-id');
@@ -89,7 +94,7 @@
         nameField.value = item ? item.title : '';
         contentField.value = item ? item.content_text : '';
         visibleField.value = !item || item.is_visible ? '1' : '0';
-        parentSelect.innerHTML = '<option value="">第一層｜行棋規則</option>' +
+        parentSelect.innerHTML = '<option value="">第一層｜' + escapeHtml(page.dataset.rootSectionTitle || '行棋規則') + '</option>' +
             allRoots.filter(root => !item || root.id !== item.id).map(root =>
             '<option value="' + root.id + '">' + escapeHtml(root.title) + '（第二層）</option>').join('');
         parentSelect.value = parent == null ? '' : String(parent);
@@ -135,7 +140,18 @@
         const action = actionButton.dataset.treeAction;
         const id = Number(actionButton.dataset.id);
         const item = data.find(r => r.id === id);
-        if (action === 'select-root' && item) {
+        if (action === 'edit-section') {
+            const section = actionButton.dataset.section;
+            if (!['game', 'opening'].includes(section)) return;
+            sectionKey.value = section;
+            sectionTitle.value = actionButton.dataset.sectionTitle || '';
+            sectionNote.value = actionButton.dataset.sectionNote || '';
+            sectionSelected.value = String(selected);
+            sectionDialog.showModal();
+            sectionTitle.focus();
+        } else if (action === 'close-section') {
+            sectionDialog.close();
+        } else if (action === 'select-root' && item) {
             if (selected === id) {
                 if (expanded.has(id)) expanded.delete(id); else expanded.add(id);
             } else {

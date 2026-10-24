@@ -105,6 +105,13 @@ function siteContentEnsureTables(PDO $db): void
         meta_key VARCHAR(80) NOT NULL PRIMARY KEY,
         completed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+    $db->exec('CREATE TABLE IF NOT EXISTS SITE_RULE_TREE_SECTION (
+        section_key VARCHAR(16) NOT NULL PRIMARY KEY,
+        title VARCHAR(100) NOT NULL,
+        note VARCHAR(500) NOT NULL DEFAULT \'\'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+    $db->exec("INSERT IGNORE INTO SITE_RULE_TREE_SECTION(section_key,title,note)
+        VALUES ('game','行棋規則',''),('opening','開局規則','')");
     $lock = (int)$db->query("SELECT GET_LOCK('site_content_seed_587', 10)")->fetchColumn();
     if ($lock !== 1) throw new RuntimeException('Could not acquire content import lock.');
     try {
@@ -491,4 +498,25 @@ function siteContentBuildRuleTree(array $rows): array
         ];
     }
     return $roots;
+}
+
+
+/** Read the editable captions of both fixed rule-tree columns. */
+function siteContentRuleTreeSections(PDO $db): array
+{
+    $sections = [
+        'game' => ['title' => '行棋規則', 'note' => ''],
+        'opening' => ['title' => '開局規則', 'note' => ''],
+    ];
+    $rows = $db->query('SELECT section_key,title,note FROM SITE_RULE_TREE_SECTION
+        WHERE section_key IN (\'game\',\'opening\')')->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($rows as $row) {
+        $key = (string)$row['section_key'];
+        if (!array_key_exists($key, $sections)) continue;
+        $sections[$key] = [
+            'title' => (string)$row['title'],
+            'note' => (string)$row['note'],
+        ];
+    }
+    return $sections;
 }

@@ -78,3 +78,13 @@
 .rule-tree-connectors .rule-tree-trunk{stroke:#b5cbdc;stroke-width:1.8}
 .rule-tree-connectors .rule-tree-stem{stroke:#5b93be;stroke-width:2.2}
 .rule-tree-connectors .rule-tree-twig{stroke:#9dbdd3;stroke-width:1.8}
+
+
+/* Editable headings: optional notes are lighter, smaller and inline after titles. */
+.rule-tree-heading{flex-wrap:wrap;row-gap:5px}
+.rule-tree-heading h2{flex:0 0 auto}
+.rule-tree-heading .rule-tree-section-note{
+    color:#7a91a3;font-size:13px;font-weight:400;line-height:1.55;
+    white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%
+}
+.rule-tree-heading .rule-tree-section-note[hidden]{display:none!important}
