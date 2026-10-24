@@ -25,3 +25,6 @@
 .rule-tree-empty{font-size:15px;color:var(--renju-text-muted,#71889B);padding:30px 10px;text-align:center;border:1px dashed #c7d7e3;border-radius:9px;background:#fff}
 .rule-tree-state{padding:35px 20px;text-align:center;color:var(--renju-text-muted,#71889B)}
 @media(max-width:880px){.rule-tree-layout{grid-template-columns:1fr;gap:22px}.rule-tree-panel--roots .rule-tree-card.is-selected:after,.rule-tree-panel--children:before,.rule-tree-panel--children .rule-tree-card:before{display:none}.rule-tree-panel{padding:16px}.rule-tree-card-button{font-size:16px}.rule-tree-card-content{padding:13px 17px;font-size:15px}.rule-tree-list{margin-top:16px}}
+
+/* Honor the loading and error states even when the grid declaration is present. */
+#rule-tree-layout[hidden],#rule-tree-state[hidden]{display:none!important}
