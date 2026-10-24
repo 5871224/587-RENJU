@@ -60,6 +60,7 @@ jobs:
               'js/home-info.js',
               'site-content-lib.php',
               'api/site-content.php',
+              'rule-tree-visual.css',
               'rule-tree-content.css',
               'rule-tree-content.js',
               'rule-tree.css',
