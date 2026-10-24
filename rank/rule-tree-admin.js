@@ -10,7 +10,6 @@
     }));
     const rootsEl = document.getElementById('rule-tree-root-list');
     const childEl = document.getElementById('rule-tree-child-list');
-    const selectedLabel = document.getElementById('rule-tree-selected-label');
     const dialog = document.getElementById('rule-tree-dialog');
     const form = document.getElementById('rule-tree-form');
     const parentSelect = document.getElementById('rule-tree-field-parent');
@@ -30,6 +29,15 @@
     let selected = roots().some(r => r.id === initial) ? initial :
         (roots().find(r => r.title.includes('連珠規則')) || roots()[0] || {}).id || 0;
     const expanded = new Set();
+    const linkLayer = window.RenjuRuleTreeConnectors?.attach({
+        layout:document.querySelector('.rule-tree-grid'),
+        svg:document.getElementById('rule-tree-admin-connectors'),
+        rootList:rootsEl, childList:childEl,
+        root: () => rootsEl.querySelector('.rule-tree-entry.is-selected'),
+        children: () => Array.from(childEl.querySelectorAll('.rule-tree-entry')),
+        headingSelector:'.rule-tree-node-header',
+        mobileWidth:820
+    });
     let armed = null;
     let dragged = null;
     let busy = false;
@@ -38,7 +46,10 @@
         const open = expanded.has(item.id);
         const active = isRoot && item.id === selected;
         const count = isRoot ? children(item.id).length : 0;
-        const body = open && item.content_text ? '<div class="rule-tree-node-body">' + escapeHtml(item.content_text) + '</div>' : '';
+        const formatted = window.RenjuRuleTreeContent?.formatHtml
+            ? window.RenjuRuleTreeContent.formatHtml(item.content_text, isRoot ? 'game' : 'opening')
+            : escapeHtml(item.content_text);
+        const body = open && item.content_text ? '<div class="rule-tree-node-body">' + formatted + '</div>' : '';
         const badge = item.is_visible ? '' : '<span class="rule-tree-hidden">隱藏</span>';
         const countBadge = isRoot && count ? '<span class="rule-tree-child-count">' + count + '</span>' : '';
         return '<article class="rule-tree-entry' + (active ? ' is-selected' : '') + (item.is_visible ? '' : ' is-hidden') +
@@ -64,9 +75,9 @@
         const nodes = active ? children(active.id) : [];
         childEl.innerHTML = nodes.map(r => entry(r,false)).join('') ||
             '<p class="rule-tree-empty">這項行棋規則目前沒有第二層規則。</p>';
-        selectedLabel.textContent = active ? '對應「' + active.title + '」' : '請選取左側行棋規則';
         document.getElementById('rule-tree-root-count').textContent = allRoots.length + ' 項';
         document.getElementById('rule-tree-child-count').textContent = nodes.length + ' 項';
+        linkLayer?.redraw();
     }
 
     function editor(item, defaultParent) {
