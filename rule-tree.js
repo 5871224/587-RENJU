@@ -73,7 +73,7 @@
         const selectedRoot = roots.find(item => item.id === selected);
         const hasChildren = !!selectedRoot && selectedRoot.children.length > 0;
         // Never display an empty right-hand category on the public site.
-        // With no children, let the left-hand rule tree use the full width.
+        // With no children, keep the desktop's original left grid track width.
         childPanel.hidden = !hasChildren;
         main.classList.toggle('rule-tree-single-level', !hasChildren);
         linkLayer?.redraw();
