@@ -94,7 +94,7 @@
         nameField.value = item ? item.title : '';
         contentField.value = item ? item.content_text : '';
         visibleField.value = !item || item.is_visible ? '1' : '0';
-        parentSelect.innerHTML = '<option value="">第一層｜行棋規則</option>' +
+        parentSelect.innerHTML = '<option value="">第一層｜' + escapeHtml(page.dataset.rootSectionTitle || '行棋規則') + '</option>' +
             allRoots.filter(root => !item || root.id !== item.id).map(root =>
             '<option value="' + root.id + '">' + escapeHtml(root.title) + '（第二層）</option>').join('');
         parentSelect.value = parent == null ? '' : String(parent);
