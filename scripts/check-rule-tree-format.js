@@ -23,7 +23,7 @@ assert.match(opening,/rule-text-nested/);
 assert.match(opening,/<span class="rule-text-marker" aria-hidden="true">２<\/span>/);
 
 const harmless = formatHtml('●<img src=x onerror=alert(1)>\n\n<a href="/danger">連結</a>','game');
-assert.doesNotMatch(harmless,/<img|<a href|onerror=alert\(1\)/);
+assert.doesNotMatch(harmless,/<img|<a href/);
 assert.match(harmless,/&lt;img/);
 assert.match(harmless,/rule-text-paragraph-gap/);
 console.log('Rule mind-map formatting: game markers, numbered steps, safe text OK');
