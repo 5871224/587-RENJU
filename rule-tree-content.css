@@ -1,0 +1,32 @@
+/* Rule details: standalone badges, consistent hanging alignment, no item-to-item lines. */
+.rule-text-group{display:flex;flex-direction:column;gap:7px;line-height:1.7;white-space:normal}
+.rule-text-item{display:grid;grid-template-columns:26px minmax(0,1fr);align-items:start;column-gap:10px;margin:0}
+.rule-text-marker{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:25px;height:25px;margin-top:1px;flex:none;
+    border-radius:8px;background:#e7f1f9;color:#24577f;
+    font:700 13px/1 "Microsoft JhengHei","微軟正黑體",sans-serif;
+}
+.rule-text-copy{min-width:0;line-height:1.75;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal}
+.rule-text-group--game .rule-text-bullet .rule-text-marker{
+    width:22px;height:22px;margin-left:2px;margin-top:2px;
+    border-radius:50%;background:#e7f2f9;color:#377eaf;font-size:19px;
+}
+.rule-text-step .rule-text-marker{
+    background:#daeefa;border:1px solid #a9cee6;border-radius:8px;
+    color:#27638c;font-weight:700;
+}
+.rule-text-note .rule-text-marker{
+    background:#fff1da;color:#ae7a36;border-radius:7px;font-size:14px;
+}
+.rule-text-nested{padding-left:23px}
+.rule-text-nested .rule-text-marker{
+    width:22px;height:22px;border-radius:50%;background:#f0f5f9;color:#7399b2;
+}
+.rule-text-paragraph{line-height:1.8;overflow-wrap:anywhere;white-space:pre-wrap}
+.rule-text-paragraph-gap{height:6px}
+@media(max-width:700px){
+    .rule-text-item{grid-template-columns:23px minmax(0,1fr);column-gap:8px}
+    .rule-text-marker{width:23px;height:23px}
+    .rule-text-nested{padding-left:12px}
+}
