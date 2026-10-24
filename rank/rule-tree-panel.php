@@ -5,14 +5,16 @@ $treeJson = json_encode($ruleTreeRows ?? [], JSON_UNESCAPED_UNICODE | JSON_INVAL
 ?>
 <section class="panel rule-tree-admin" id="rule-tree-admin"
     data-csrf="<?= h((string)$_SESSION['rank_rebuild_csrf']) ?>"
-    data-selected="<?= (int)($_GET['selected'] ?? 0) ?>">
+    data-selected="<?= (int)($_GET['selected'] ?? 0) ?>"
+    data-root-section-title="<?= h($ruleTreeSections['game']['title']) ?>"
+    data-child-section-title="<?= h($ruleTreeSections['opening']['title']) ?>">
     <div class="panel-head rule-tree-admin-head">
         <div>
             <h2>規則內容</h2>
         </div>
         <div class="panel-tools rule-tree-toolbar">
-            <button class="btn primary" type="button" data-tree-action="add-root">＋ 新增行棋規則</button>
-            <button class="btn" type="button" data-tree-action="add-child">＋ 新增子規則</button>
+            <button class="btn primary" type="button" data-tree-action="add-root">＋ 新增<?= h($ruleTreeSections['game']['title']) ?></button>
+            <button class="btn" type="button" data-tree-action="add-child">＋ 新增<?= h($ruleTreeSections['opening']['title']) ?></button>
             <a class="btn" href="../rule.htm" target="_blank" rel="noopener">檢視前台</a>
         </div>
     </div>
@@ -78,7 +80,7 @@ $treeJson = json_encode($ruleTreeRows ?? [], JSON_UNESCAPED_UNICODE | JSON_INVAL
             <input type="hidden" name="id" id="rule-tree-field-id" value="0">
             <label>所屬層級
                 <select name="parent_id" id="rule-tree-field-parent">
-                    <option value="">第一層｜行棋規則</option>
+                    <option value="">第一層｜<?= h($ruleTreeSections['game']['title']) ?></option>
                 </select>
             </label>
             <label>規則名稱
