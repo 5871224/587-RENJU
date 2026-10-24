@@ -1,16 +1,16 @@
 /* Public rules: two-column expandable hierarchy */
 .rule-tree-intro{margin:5px 0 24px;font-size:15px;color:var(--renju-text-muted,#71889B)}
-.rule-tree-layout{--rule-gap:52px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--rule-gap);align-items:start;margin:0 0 50px}
-.rule-tree-panel{position:relative;min-width:0;padding:22px 22px 28px;background:var(--renju-surface,#FBF8F2);border:1px solid var(--renju-border,#D8E1E7);border-radius:13px;box-shadow:0 5px 22px rgba(36,69,95,.05)}
+.rule-tree-layout{--rule-gap:72px;position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--rule-gap);align-items:start;margin:0 0 50px}
+.rule-tree-panel{position:relative;z-index:1;min-width:0;padding:22px 22px 28px;background:var(--renju-surface,#FBF8F2);border:1px solid var(--renju-border,#D8E1E7);border-radius:13px;box-shadow:0 5px 22px rgba(36,69,95,.05)}
 .rule-tree-heading{display:flex;gap:12px;align-items:center;padding:0 0 17px;border-bottom:1px solid var(--renju-border,#D8E1E7)}
 .rule-tree-heading h2{font-size:1.35rem;margin:0;color:var(--renju-primary-dark,#24577F)}
 .rule-tree-kicker{font-size:13px;font-weight:700;border-radius:6px;padding:5px 9px;color:var(--renju-primary-dark,#24577F);background:var(--renju-primary-soft,#E3F0F8)}
 .rule-tree-list{display:flex;flex-direction:column;gap:11px;margin:22px 0 0}
 .rule-tree-panel--children .rule-tree-list{margin-top:22px}
 
-.rule-tree-card{position:relative;border:1px solid var(--renju-border,#D8E1E7);background:#fff;border-radius:10px;box-shadow:0 2px 5px rgba(31,61,85,.025);transition:border-color .15s,background-color .15s,box-shadow .15s}
+.rule-tree-card{position:relative;border:1px solid var(--renju-border,#D8E1E7);background:rgba(255,255,255,.98);border-radius:10px;box-shadow:0 2px 5px rgba(31,61,85,.025);transition:border-color .15s,background-color .15s,box-shadow .15s}
 .rule-tree-card:hover{border-color:#9fc6e0}
-.rule-tree-card.is-selected{background:#f4f9fc;border-color:var(--renju-primary,#5B93BE);box-shadow:0 0 0 1px var(--renju-primary,#5B93BE)}
+.rule-tree-card.is-selected{background:#e9f4fc;border-color:var(--renju-primary,#5B93BE);box-shadow:0 0 0 1px var(--renju-primary,#5B93BE)}
 
 
 .rule-tree-card-button{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:14px 16px;border:0;background:transparent;font:inherit;font-weight:700;font-size:17px;line-height:1.45;color:var(--renju-primary-dark,#24577F);cursor:pointer;border-radius:10px}
@@ -19,7 +19,7 @@
 .rule-tree-card-chevron svg{width:17px;height:17px}
 .rule-tree-card-button[aria-expanded="true"] .rule-tree-card-chevron{transform:rotate(90deg)}
 .rule-tree-card-title{flex:1;min-width:0;overflow-wrap:anywhere}
-.rule-tree-card-count{font-size:12px;font-weight:500;background:#e6f0f6;color:#476c86;border-radius:20px;padding:3px 8px;flex:none}
+
 .rule-tree-card-content{border-top:1px solid #dfeaf1;padding:15px 19px 18px 47px;line-height:1.8;font-size:16px;color:var(--renju-text,#29465F);white-space:pre-wrap;overflow-wrap:anywhere}
 .rule-tree-empty{font-size:15px;color:var(--renju-text-muted,#71889B);padding:30px 10px;text-align:center;border:1px dashed #c7d7e3;border-radius:9px;background:#fff}
 .rule-tree-state{padding:35px 20px;text-align:center;color:var(--renju-text-muted,#71889B)}
@@ -29,12 +29,9 @@
 #rule-tree-layout[hidden],#rule-tree-state[hidden]{display:none!important}
 
 
-/* A-style soft panels, D-style curved mind-map links (drawn by rule-tree.js). */
-.rule-tree-layout{
-    --rule-gap:72px;
-    position:relative;
-}
-.rule-tree-panel{z-index:1}
+/* Panel surfaces and SVG placement. Colors are defined in rule-tree-visual.css. */
+
+
 .rule-tree-panel--roots{
     background:linear-gradient(180deg,#edf6fc 0%,#f6fafd 100%);
 }
@@ -51,33 +48,19 @@
     z-index:2;
     display:block;
 }
-.rule-tree-card{background:rgba(255,255,255,.98)}
-.rule-tree-card.is-selected{background:#e9f4fc}
-.rule-tree-connectors .rule-tree-branch{
-    fill:none;
-    stroke:#9bc1db;
-    stroke-width:2;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-    vector-effect:non-scaling-stroke;
-}
-.rule-tree-connectors .rule-tree-endpoint{
-    fill:#fff;
-    stroke:#5b93be;
-    stroke-width:2;
-    vector-effect:non-scaling-stroke;
-}
-.rule-tree-connectors .rule-tree-origin{
-    fill:#5b93be;
-}
+
+
+
+
+
 @media(max-width:880px){
     .rule-tree-connectors{display:none}
 }
 
-/* Shared trunk gives all branches one clean visual parent rather than a bundle of curves. */
-.rule-tree-connectors .rule-tree-trunk{stroke:#b5cbdc;stroke-width:1.8}
-.rule-tree-connectors .rule-tree-stem{stroke:#5b93be;stroke-width:2.2}
-.rule-tree-connectors .rule-tree-twig{stroke:#9dbdd3;stroke-width:1.8}
+
+
+
+
 
 
 /* Editable headings: optional notes are lighter, smaller and inline after titles. */
