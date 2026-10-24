@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 function rankRuleTreeRows(PDO $db): array
 {
-    return $db->query('SELECT id,parent_id,page_slug,title,content_text,sort_order,is_visible
+    return $db->query('SELECT id,parent_id,page_slug,title,note,content_text,sort_order
         FROM SITE_RULE_ITEM ORDER BY (parent_id IS NOT NULL),sort_order,id')->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -79,7 +79,7 @@ function rankRuleTreeHandlePost(PDO $db, string $csrf): void
                 throw new RuntimeException('無效的規則區塊。');
             }
             $title = trim((string)($_POST['section_title'] ?? ''));
-            $note = trim(str_replace(["\r\n", "\r"], "\n", (string)($_POST['section_note'] ?? '')));
+            $note = trim((string)preg_replace('/\\s+/u', ' ', (string)($_POST['section_note'] ?? '')));
             if ($title === '' || mb_strlen($title, 'UTF-8') > 100) {
                 throw new RuntimeException('區塊名稱不可空白，最多 100 字。');
             }
@@ -101,6 +101,8 @@ function rankRuleTreeHandlePost(PDO $db, string $csrf): void
             if ($name === '' || mb_strlen($name, 'UTF-8') > 200) {
                 throw new RuntimeException('規則名稱不可空白，且最多 200 字。');
             }
+            $note = trim((string)preg_replace('/\\s+/u', ' ', (string)($_POST['note'] ?? '')));
+            if (mb_strlen($note, 'UTF-8') > 500) throw new RuntimeException('規則註記最多 500 字。');
             $body = str_replace(["\r\n","\r"], "\n", (string)($_POST['content_text'] ?? ''));
             if (strlen($body) > 1200000) throw new RuntimeException('內容長度超過限制。');
             $parentRaw = (string)($_POST['parent_id'] ?? '');
@@ -108,7 +110,6 @@ function rankRuleTreeHandlePost(PDO $db, string $csrf): void
                 throw new RuntimeException('請選擇正確的第一層規則。');
             }
             $parentId = $parentRaw === '' ? null : (int)$parentRaw;
-            $visible = (string)($_POST['is_visible'] ?? '0') === '1' ? 1 : 0;
             $db->beginTransaction();
             if ($parentId !== null) rankRuleTreeValidParent($db, $parentId);
             if ($id) {
@@ -126,15 +127,15 @@ function rankRuleTreeHandlePost(PDO $db, string $csrf): void
                     ? rankRuleTreeLegacySlug($db,$parentId) : (string)$original['page_slug'];
                 if ($parentId === null) $slug = rankRuleTreeLegacySlug($db,null,(string)$original['page_slug']);
                 $save = $db->prepare('UPDATE SITE_RULE_ITEM SET
-                    parent_id=?,page_slug=?,title=?,content_text=?,is_visible=? WHERE id=?');
-                $save->execute([$parentId,$slug,$name,$body,$visible,$id]);
+                    parent_id=?,page_slug=?,title=?,note=?,content_text=?,is_visible=1 WHERE id=?');
+                $save->execute([$parentId,$slug,$name,$note,$body,$id]);
             } else {
                 $slug = rankRuleTreeLegacySlug($db,$parentId);
                 $next = $db->prepare('SELECT COALESCE(MAX(sort_order),0)+10 FROM SITE_RULE_ITEM WHERE parent_id <=> ?');
                 $next->execute([$parentId]);
                 $save = $db->prepare('INSERT INTO SITE_RULE_ITEM
-                    (parent_id,page_slug,title,content_text,sort_order,is_visible) VALUES (?,?,?,?,?,?)');
-                $save->execute([$parentId,$slug,$name,$body,(int)$next->fetchColumn(),$visible]);
+                    (parent_id,page_slug,title,note,content_text,sort_order,is_visible) VALUES (?,?,?,?,?,?,1)');
+                $save->execute([$parentId,$slug,$name,$note,$body,(int)$next->fetchColumn()]);
                 $id = (int)$db->lastInsertId();
             }
             $db->commit();

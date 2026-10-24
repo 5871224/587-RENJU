@@ -26,7 +26,7 @@ try {
         echo json_encode(['resources' => $rows], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     } elseif ($kind === 'rule_tree') {
         // The helper excludes hidden nodes and orphaned children.
-        $rows = $db->query('SELECT id,parent_id,title,content_text,is_visible
+        $rows = $db->query('SELECT id,parent_id,title,note,content_text
             FROM SITE_RULE_ITEM ORDER BY (parent_id IS NOT NULL),sort_order,id')->fetchAll(PDO::FETCH_ASSOC);
         $roots = siteContentBuildRuleTree($rows);
         $sections = siteContentRuleTreeSections($db);
@@ -45,12 +45,15 @@ try {
         if ($page) {
             $heading = htmlspecialchars((string)$page['title'], ENT_QUOTES, 'UTF-8');
             $body = '<h2>' . $heading . '</h2><hr>';
-            $stmt = $db->prepare('SELECT title,content_text FROM SITE_RULE_ITEM
-                WHERE page_slug=? AND is_visible=1 ORDER BY sort_order,id');
+            $stmt = $db->prepare('SELECT title,note,content_text FROM SITE_RULE_ITEM
+                WHERE page_slug=? ORDER BY sort_order,id');
             $stmt->execute([$slug]);
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $item) {
                 $name = htmlspecialchars((string)$item['title'], ENT_QUOTES, 'UTF-8');
-                $body .= '<h3>' . $name . '</h3><div class="site-rule-plain-text">' .
+                $note = trim((string)$item['note']);
+                $noteHtml = $note !== '' ? ' <small class="site-rule-note">' .
+                    htmlspecialchars($note, ENT_QUOTES, 'UTF-8') . '</small>' : '';
+                $body .= '<h3>' . $name . $noteHtml . '</h3><div class="site-rule-plain-text">' .
                     nl2br(htmlspecialchars((string)$item['content_text'], ENT_QUOTES, 'UTF-8'), false) . '</div>';
             }
         }
@@ -59,7 +62,7 @@ try {
     } else {
         $rows = $db->query('SELECT p.slug,p.title FROM SITE_RULE_PAGE p
             WHERE p.is_visible=1 AND EXISTS (
-                SELECT 1 FROM SITE_RULE_ITEM i WHERE i.page_slug=p.slug AND i.is_visible=1
+                SELECT 1 FROM SITE_RULE_ITEM i WHERE i.page_slug=p.slug
             ) ORDER BY p.sort_order,p.id')->fetchAll(PDO::FETCH_ASSOC);
         echo json_encode(['rules' => $rows], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     }

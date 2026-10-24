@@ -5,8 +5,8 @@
     if (!page) return;
     const data = JSON.parse(document.getElementById('rule-tree-data').textContent || '[]').map(row => ({
         id: Number(row.id), parent_id: row.parent_id == null ? null : Number(row.parent_id),
-        title: String(row.title || ''), content_text: String(row.content_text || ''),
-        is_visible: Number(row.is_visible) === 1, sort_order: Number(row.sort_order) || 0
+        title: String(row.title || ''), note: String(row.note || ''),
+        content_text: String(row.content_text || ''), sort_order: Number(row.sort_order) || 0
     }));
     const rootsEl = document.getElementById('rule-tree-root-list');
     const childEl = document.getElementById('rule-tree-child-list');
@@ -21,8 +21,10 @@
     const editId = document.getElementById('rule-tree-field-id');
     const nameField = document.getElementById('rule-tree-field-title');
     const contentField = document.getElementById('rule-tree-field-content');
-    const visibleField = document.getElementById('rule-tree-field-visible');
+    const noteField = document.getElementById('rule-tree-field-note');
     const deleteForm = document.getElementById('rule-tree-delete-form');
+    const editIcon = page.dataset.editIcon || '';
+    const deleteIcon = page.dataset.deleteIcon || '';
     const icon = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 7h12M6 12h12M6 17h12"/></svg>';
     const chevron = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
     const roots = () => data.filter(item => item.parent_id === null).sort((a,b) => a.sort_order - b.sort_order || a.id - b.id);
@@ -56,18 +58,18 @@
             ? window.RenjuRuleTreeContent.formatHtml(item.content_text, isRoot ? 'game' : 'opening')
             : escapeHtml(item.content_text);
         const body = open && item.content_text ? '<div class="rule-tree-node-body">' + formatted + '</div>' : '';
-        const badge = item.is_visible ? '' : '<span class="rule-tree-hidden">隱藏</span>';
+        const note = item.note.trim() ? '<span class="rule-tree-item-note" title="' + escapeHtml(item.note) + '">' + escapeHtml(item.note) + '</span>' : '';
         const countBadge = isRoot && count ? '<span class="rule-tree-child-count">' + count + '</span>' : '';
-        return '<article class="rule-tree-entry' + (active ? ' is-selected' : '') + (item.is_visible ? '' : ' is-hidden') +
+        return '<article class="rule-tree-entry' + (active ? ' is-selected' : '') +
             '" data-id="' + item.id + '" data-parent="' + (item.parent_id ?? '') + '">' +
             '<div class="rule-tree-node-header">' +
             '<button class="rule-tree-grip" type="button" aria-label="拖曳排序" title="拖曳調整排序">' + icon + '</button>' +
             '<button type="button" class="rule-tree-node-toggle' + (open ? ' is-open' : '') +
             '" data-tree-action="' + (isRoot ? 'select-root' : 'toggle-child') + '" data-id="' + item.id + '" aria-expanded="' + String(open) + '">' +
-            '<span class="rule-tree-chevron">' + chevron + '</span><span class="rule-tree-name">' + escapeHtml(item.title) + '</span>' +
-            badge + countBadge + '</button>' +
-            '<button type="button" class="rule-tree-edit" data-tree-action="edit" data-id="' + item.id + '" title="編輯" aria-label="編輯 ' + escapeHtml(item.title) + '">編輯</button>' +
-            '<button type="button" class="rule-tree-remove" data-tree-action="delete" data-id="' + item.id + '" title="刪除" aria-label="刪除 ' + escapeHtml(item.title) + '">×</button></div>' +
+            '<span class="rule-tree-chevron">' + chevron + '</span><span class="rule-tree-title-line"><span class="rule-tree-name">' + escapeHtml(item.title) +
+            '</span>' + note + '</span>' + countBadge + '</button>' +
+            '<button type="button" class="icon-action" data-tree-action="edit" data-id="' + item.id + '" title="修改" aria-label="修改 ' + escapeHtml(item.title) + '">' + editIcon + '</button>' +
+            '<button type="button" class="icon-action icon-action--danger" data-tree-action="delete" data-id="' + item.id + '" title="刪除" aria-label="刪除 ' + escapeHtml(item.title) + '">' + deleteIcon + '</button></div>' +
             body + '</article>';
     }
 
@@ -93,7 +95,7 @@
         editId.value = item ? String(item.id) : '0';
         nameField.value = item ? item.title : '';
         contentField.value = item ? item.content_text : '';
-        visibleField.value = !item || item.is_visible ? '1' : '0';
+        noteField.value = item ? item.note : '';
         parentSelect.innerHTML = '<option value="">第一層｜' + escapeHtml(page.dataset.rootSectionTitle || '行棋規則') + '</option>' +
             allRoots.filter(root => !item || root.id !== item.id).map(root =>
             '<option value="' + root.id + '">' + escapeHtml(root.title) + '（第二層）</option>').join('');

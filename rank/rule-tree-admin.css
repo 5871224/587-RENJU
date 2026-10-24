@@ -30,10 +30,6 @@
 .rule-tree-name{min-width:0;overflow-wrap:anywhere}
 .rule-tree-hidden{background:#eef0f3;color:#64748b;font-size:11px;font-weight:400;border-radius:4px;padding:2px 5px;white-space:nowrap}
 .rule-tree-child-count{color:#637d91;font-size:12px;font-weight:500;background:#eaf1f5;padding:1px 6px;border-radius:20px}
-.rule-tree-edit,.rule-tree-remove{font:inherit;font-size:12px;flex:none;padding:4px 5px;border:none;border-radius:5px;background:transparent;color:#6b8193;cursor:pointer}
-.rule-tree-edit:hover{color:#1769aa;background:#e8f2fb}
-.rule-tree-remove{font-size:18px;line-height:1}
-.rule-tree-remove:hover{color:#b1534c;background:#fff0ef}
 .rule-tree-node-body{white-space:pre-wrap;overflow-wrap:anywhere;border-top:1px solid #e5ecf2;padding:13px 15px 17px 43px;line-height:1.7;color:#364e61;font-size:14px}
 .rule-tree-empty{padding:18px 12px;color:var(--renju-text-muted,#71889B);font-size:14px;text-align:center}
 .rule-tree-entry.dragging{opacity:.45}
@@ -94,3 +90,20 @@
 }
 .rule-tree-section-edit svg{width:16px;height:16px}
 .rule-tree-section-dialog textarea{min-height:90px;resize:vertical}
+
+
+/* Rule actions reuse the exact icon-action SVG buttons used by admin tables. */
+.rule-tree-node-header > .icon-action { flex-shrink:0; }
+.rule-tree-title-line{flex:1;min-width:0;overflow-wrap:anywhere}
+.rule-tree-title-line .rule-tree-name{display:inline}
+.rule-tree-item-note{
+    display:inline-block;max-width:min(100%,230px);
+    overflow:hidden;text-overflow:ellipsis;vertical-align:middle;
+    color:#7c91a4;font-size:12px;font-weight:400;
+    white-space:nowrap;margin-left:6px;
+}
+.rule-tree-section-dialog input[type=text],#rule-tree-field-note{
+    width:100%;min-height:38px;padding:8px 10px;
+    border:1px solid #c7d5df;border-radius:7px;
+}
+.rule-tree-section-dialog textarea{display:none}
