@@ -20,19 +20,52 @@ $treeJson = json_encode($ruleTreeRows ?? [], JSON_UNESCAPED_UNICODE | JSON_INVAL
         <svg class="rule-tree-admin-connectors" id="rule-tree-admin-connectors" aria-hidden="true" focusable="false" preserveAspectRatio="none"></svg>
         <section class="rule-tree-column rule-tree-column--root" aria-label="第一層行棋規則">
             <header class="rule-tree-column-head">
-                <h3>行棋規則</h3>
+                <h3><?= h($ruleTreeSections['game']['title']) ?></h3>
+                <span class="rule-tree-section-note"><?= h($ruleTreeSections['game']['note']) ?></span>
                 <span class="rule-tree-count" id="rule-tree-root-count"></span>
+                <button type="button" class="rule-tree-section-edit" data-tree-action="edit-section" data-section="game"
+                    data-section-title="<?= h($ruleTreeSections['game']['title']) ?>"
+                    data-section-note="<?= h($ruleTreeSections['game']['note']) ?>"
+                    aria-label="編輯行棋規則區塊名稱與註記" title="編輯區塊名稱與註記"><?= rankActionIcon('edit') ?></button>
             </header>
             <div class="rule-tree-stack" id="rule-tree-root-list"></div>
         </section>
         <section class="rule-tree-column rule-tree-column--child" aria-label="第二層開局規則">
             <header class="rule-tree-column-head">
-                <h3>開局規則</h3>
+                <h3><?= h($ruleTreeSections['opening']['title']) ?></h3>
+                <span class="rule-tree-section-note"><?= h($ruleTreeSections['opening']['note']) ?></span>
                 <span class="rule-tree-count" id="rule-tree-child-count"></span>
+                <button type="button" class="rule-tree-section-edit" data-tree-action="edit-section" data-section="opening"
+                    data-section-title="<?= h($ruleTreeSections['opening']['title']) ?>"
+                    data-section-note="<?= h($ruleTreeSections['opening']['note']) ?>"
+                    aria-label="編輯開局規則區塊名稱與註記" title="編輯區塊名稱與註記"><?= rankActionIcon('edit') ?></button>
             </header>
             <div class="rule-tree-stack" id="rule-tree-child-list"></div>
         </section>
     </div>
+    <dialog class="rule-tree-dialog rule-tree-section-dialog" id="rule-tree-section-dialog" aria-labelledby="rule-tree-section-dialog-title">
+        <form method="post" action="?view=site-rules" id="rule-tree-section-form">
+            <header class="rule-tree-dialog-head">
+                <h3 id="rule-tree-section-dialog-title">編輯規則區塊</h3>
+                <button type="button" class="rule-tree-close" data-tree-action="close-section" aria-label="關閉">×</button>
+            </header>
+            <input type="hidden" name="view" value="site-rules">
+            <input type="hidden" name="action" value="tree_section_save">
+            <input type="hidden" name="csrf" value="<?= h((string)$_SESSION['rank_rebuild_csrf']) ?>">
+            <input type="hidden" name="section_key" id="rule-tree-section-key">
+            <input type="hidden" name="selected" id="rule-tree-section-selected">
+            <label>區塊名稱
+                <input type="text" name="section_title" id="rule-tree-section-title" maxlength="100" required>
+            </label>
+            <label>註記（選填，顯示於名稱右側）
+                <textarea name="section_note" id="rule-tree-section-note" maxlength="500" rows="3"></textarea>
+            </label>
+            <div class="rule-tree-dialog-actions">
+                <button type="button" class="btn" data-tree-action="close-section">取消</button>
+                <button type="submit" class="btn primary">儲存</button>
+            </div>
+        </form>
+    </dialog>
     <dialog class="rule-tree-dialog" id="rule-tree-dialog" aria-labelledby="rule-tree-dialog-title">
         <form method="post" action="?view=site-rules" id="rule-tree-form">
             <header class="rule-tree-dialog-head">
