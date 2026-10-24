@@ -19,6 +19,7 @@
 .rule-text-note .rule-text-marker{
     background:#fff1da;color:#ae7a36;border-radius:7px;font-size:14px;
 }
+.rule-text-group--game .rule-text-note .rule-text-marker{background:#fff1da;color:#ae7a36;border-radius:7px;font-size:14px}
 .rule-text-nested{padding-left:23px}
 .rule-text-nested .rule-text-marker{
     width:22px;height:22px;border-radius:50%;background:#f0f5f9;color:#7399b2;
