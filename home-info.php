@@ -7,19 +7,23 @@ header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
 require_once __DIR__ . '/db.php';
 
-$limitRaw = isset($_GET['limit']) ? (string) $_GET['limit'] : '5';
-$limit = ctype_digit($limitRaw) ? (int) $limitRaw : 5;
-$limit = max(1, min($limit, 200));
+// 初始僅讀取五筆；按「查看更多」時才讀取全部，避免每次進首頁載入完整清單。
+$limitRaw = (string)($_GET['limit'] ?? '5');
+$limitSql = '';
+if ($limitRaw !== 'all') {
+    $limit = ctype_digit($limitRaw) ? (int)$limitRaw : 5;
+    $limitSql = ' LIMIT ' . max(1, min($limit, 200));
+}
 
 try {
     $pdo = connectDatabase('renjuorg_587');
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-    // 首頁與 /rank/?view=site-notices 共用 SITE_NOTICE 作為唯一資料來源。
-    // 連結網址若有設定，以自訂網址為主；否則用關聯賽號連往賽事資料頁。
-    $competitionSql = "
-        SELECT
-            id,
+    // SITE_NOTICE 中的比賽訊息與瑞士制系統已公開的活動，合併為「活動資訊」。
+    // 一律依日期新到舊排列，只有同日期才使用置頂及自訂順序決定先後。
+    // 未填日期的活動排最後，且不對外揭露未公開活動。
+    $activitySql = "
+        SELECT 'notice' AS source, id AS source_id,
             DATE_FORMAT(notice_date, '%Y-%m-%d') AS published_date,
             title,
             CASE
@@ -28,11 +32,21 @@ try {
                     THEN CONCAT('/riftw/tourb.php?TOUR=', tour_id)
                 ELSE NULL
             END AS url,
-            is_pinned AS is_featured
+            is_pinned AS is_featured,
+            sort_order
         FROM SITE_NOTICE
         WHERE is_visible = 1 AND type = 'TOURNAMENT'
-        ORDER BY is_pinned DESC, notice_date DESC, sort_order DESC, id DESC
-        LIMIT {$limit}
+        UNION ALL
+        SELECT 'activity' AS source, id AS source_id,
+            DATE_FORMAT(event_date, '%Y-%m-%d') AS published_date,
+            name AS title,
+            CONCAT('/Sched/activity.html?id=', id) AS url,
+            0 AS is_featured,
+            0 AS sort_order
+        FROM `renjuorg_Sched`.`activities`
+        WHERE brief_public = 1
+        ORDER BY published_date DESC, is_featured DESC, sort_order DESC, source DESC, source_id DESC
+        {$limitSql}
     ";
 
     $updateSql = "
@@ -44,31 +58,33 @@ try {
         FROM SITE_NOTICE
         WHERE is_visible = 1 AND type IN ('UPDATE', 'NEWS')
         ORDER BY is_pinned DESC, notice_date DESC, sort_order DESC, id DESC
-        LIMIT {$limit}
+        {$limitSql}
     ";
 
-    $competition = $pdo->query($competitionSql)->fetchAll();
+    $activities = $pdo->query($activitySql)->fetchAll();
     $updates = $pdo->query($updateSql)->fetchAll();
 
-    $competitionTotal = (int) $pdo->query(
+    $noticeTotal = (int)$pdo->query(
         "SELECT COUNT(*) FROM SITE_NOTICE WHERE is_visible = 1 AND type = 'TOURNAMENT'"
     )->fetchColumn();
-    $updateTotal = (int) $pdo->query(
+    $publishedActivitiesTotal = (int)$pdo->query(
+        "SELECT COUNT(*) FROM `renjuorg_Sched`.`activities` WHERE brief_public = 1"
+    )->fetchColumn();
+    $updateTotal = (int)$pdo->query(
         "SELECT COUNT(*) FROM SITE_NOTICE WHERE is_visible = 1 AND type IN ('UPDATE', 'NEWS')"
     )->fetchColumn();
 
     echo json_encode([
-        'competition' => $competition,
+        'activities' => $activities,
         'updates' => $updates,
         'totals' => [
-            'competition' => $competitionTotal,
+            'activities' => $noticeTotal + $publishedActivitiesTotal,
             'updates' => $updateTotal,
         ],
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 } catch (Throwable $e) {
     error_log('home-info.php: ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode([
-        'error' => 'Unable to load homepage information.',
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    echo json_encode(['error' => 'Unable to load homepage information.'],
+        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 }
