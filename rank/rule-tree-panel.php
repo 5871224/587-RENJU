@@ -7,7 +7,9 @@ $treeJson = json_encode($ruleTreeRows ?? [], JSON_UNESCAPED_UNICODE | JSON_INVAL
     data-csrf="<?= h((string)$_SESSION['rank_rebuild_csrf']) ?>"
     data-selected="<?= (int)($_GET['selected'] ?? 0) ?>"
     data-root-section-title="<?= h($ruleTreeSections['game']['title']) ?>"
-    data-child-section-title="<?= h($ruleTreeSections['opening']['title']) ?>">
+    data-child-section-title="<?= h($ruleTreeSections['opening']['title']) ?>"
+    data-edit-icon="<?= h(rankActionIcon('edit')) ?>"
+    data-delete-icon="<?= h(rankActionIcon('delete')) ?>">
     <div class="panel-head rule-tree-admin-head">
         <div>
             <h2>規則內容</h2>
@@ -25,7 +27,7 @@ $treeJson = json_encode($ruleTreeRows ?? [], JSON_UNESCAPED_UNICODE | JSON_INVAL
                 <h3><?= h($ruleTreeSections['game']['title']) ?></h3>
                 <span class="rule-tree-section-note"><?= h($ruleTreeSections['game']['note']) ?></span>
                 <span class="rule-tree-count" id="rule-tree-root-count"></span>
-                <button type="button" class="rule-tree-section-edit" data-tree-action="edit-section" data-section="game"
+                <button type="button" class="icon-action rule-tree-section-edit" data-tree-action="edit-section" data-section="game"
                     data-section-title="<?= h($ruleTreeSections['game']['title']) ?>"
                     data-section-note="<?= h($ruleTreeSections['game']['note']) ?>"
                     aria-label="編輯行棋規則區塊名稱與註記" title="編輯區塊名稱與註記"><?= rankActionIcon('edit') ?></button>
@@ -37,7 +39,7 @@ $treeJson = json_encode($ruleTreeRows ?? [], JSON_UNESCAPED_UNICODE | JSON_INVAL
                 <h3><?= h($ruleTreeSections['opening']['title']) ?></h3>
                 <span class="rule-tree-section-note"><?= h($ruleTreeSections['opening']['note']) ?></span>
                 <span class="rule-tree-count" id="rule-tree-child-count"></span>
-                <button type="button" class="rule-tree-section-edit" data-tree-action="edit-section" data-section="opening"
+                <button type="button" class="icon-action rule-tree-section-edit" data-tree-action="edit-section" data-section="opening"
                     data-section-title="<?= h($ruleTreeSections['opening']['title']) ?>"
                     data-section-note="<?= h($ruleTreeSections['opening']['note']) ?>"
                     aria-label="編輯開局規則區塊名稱與註記" title="編輯區塊名稱與註記"><?= rankActionIcon('edit') ?></button>
@@ -60,7 +62,7 @@ $treeJson = json_encode($ruleTreeRows ?? [], JSON_UNESCAPED_UNICODE | JSON_INVAL
                 <input type="text" name="section_title" id="rule-tree-section-title" maxlength="100" required>
             </label>
             <label>註記（選填，顯示於名稱右側）
-                <textarea name="section_note" id="rule-tree-section-note" maxlength="500" rows="3"></textarea>
+                <input type="text" name="section_note" id="rule-tree-section-note" maxlength="500">
             </label>
             <div class="rule-tree-dialog-actions">
                 <button type="button" class="btn" data-tree-action="close-section">取消</button>
@@ -86,13 +88,11 @@ $treeJson = json_encode($ruleTreeRows ?? [], JSON_UNESCAPED_UNICODE | JSON_INVAL
             <label>規則名稱
                 <input name="title" id="rule-tree-field-title" type="text" maxlength="200" required>
             </label>
+            <label>註記（選填，單行）
+                <input type="text" name="note" id="rule-tree-field-note" maxlength="500">
+            </label>
             <label>規則內容（純文字，可換行）
                 <textarea name="content_text" id="rule-tree-field-content" rows="9"></textarea>
-            </label>
-            <label>公開狀態
-                <select name="is_visible" id="rule-tree-field-visible">
-                    <option value="1">顯示</option><option value="0">隱藏</option>
-                </select>
             </label>
             <div class="rule-tree-dialog-actions">
                 <button type="button" class="btn" data-tree-action="close">取消</button>
