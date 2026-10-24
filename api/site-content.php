@@ -25,27 +25,10 @@ try {
         $rows = $db->query('SELECT category,title,url,language,description_html,sort_order FROM SITE_RESOURCE WHERE is_visible=1 ORDER BY FIELD(category,\'learning\',\'playing\'),sort_order,id')->fetchAll(PDO::FETCH_ASSOC);
         echo json_encode(['resources' => $rows], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     } elseif ($kind === 'rule_tree') {
-        // Use real parent IDs, not hard-coded rule names or category slugs.
-        // Hidden parents suppress their children on the public page.
-        $rows = $db->query('SELECT id,parent_id,title,content_text
-            FROM SITE_RULE_ITEM WHERE is_visible=1
-            ORDER BY (parent_id IS NOT NULL),sort_order,id')->fetchAll(PDO::FETCH_ASSOC);
-        $roots = [];
-        $locations = [];
-        foreach ($rows as $row) {
-            if ($row['parent_id'] !== null) continue;
-            $id = (int)$row['id'];
-            $locations[$id] = count($roots);
-            $roots[] = ['id'=>$id,'title'=>$row['title'],'content_text'=>$row['content_text'],'children'=>[]];
-        }
-        foreach ($rows as $row) {
-            if ($row['parent_id'] === null) continue;
-            $parent = (int)$row['parent_id'];
-            if (!array_key_exists($parent, $locations)) continue;
-            $roots[$locations[$parent]]['children'][] = [
-                'id'=>(int)$row['id'],'title'=>$row['title'],'content_text'=>$row['content_text']
-            ];
-        }
+        // The helper excludes hidden nodes and orphaned children.
+        $rows = $db->query('SELECT id,parent_id,title,content_text,is_visible
+            FROM SITE_RULE_ITEM ORDER BY (parent_id IS NOT NULL),sort_order,id')->fetchAll(PDO::FETCH_ASSOC);
+        $roots = siteContentBuildRuleTree($rows);
         echo json_encode(['roots'=>$roots], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     } elseif (isset($_GET['slug'])) {
         $slug = (string)$_GET['slug'];
