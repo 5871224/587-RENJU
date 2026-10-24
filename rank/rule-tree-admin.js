@@ -58,7 +58,7 @@
             ? window.RenjuRuleTreeContent.formatHtml(item.content_text, isRoot ? 'game' : 'opening')
             : escapeHtml(item.content_text);
         const body = open && item.content_text ? '<div class="rule-tree-node-body">' + formatted + '</div>' : '';
-        const note = item.note.trim() ? '<span class="rule-tree-item-note">' + escapeHtml(item.note) + '</span>' : '';
+        const note = item.note.trim() ? '<span class="rule-tree-item-note" title="' + escapeHtml(item.note) + '">' + escapeHtml(item.note) + '</span>' : '';
         const countBadge = isRoot && count ? '<span class="rule-tree-child-count">' + count + '</span>' : '';
         return '<article class="rule-tree-entry' + (active ? ' is-selected' : '') +
             '" data-id="' + item.id + '" data-parent="' + (item.parent_id ?? '') + '">' +
