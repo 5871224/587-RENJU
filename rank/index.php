@@ -614,7 +614,7 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>台灣連珠排名管理</title>
 <link rel="stylesheet" href="../renju.css">
-<link rel="stylesheet" href="admin.css?v=20261024r">
+<link rel="stylesheet" href="admin.css?v=20261024s">
 <?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="rule-tree-admin.css?v=20261024r">
 <?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="../rule-tree-visual.css?v=20261024n"><?php endif; ?>
 <?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="../rule-tree-content.css?v=20261024k"><?php endif; ?><?php endif; ?>
@@ -626,8 +626,6 @@ try {
 <?php $rankTopbarActive = $view; require __DIR__ . '/topbar.php'; ?>
 
 <main class="main">
-<?php if ($error !== ''): ?><div class="error">操作失敗：<?= h($error) ?></div><?php endif; ?>
-<?php if ($message !== ''): ?><div class="success"><?= h($message) ?></div><?php endif; ?>
 
 <?php if ($view === 'rating-tools'): ?>
     <section class="panel tools-panel">
@@ -799,7 +797,25 @@ try {
     </section>
 <?php endif; ?>
 </main>
+<?php if ($error !== '' || $message !== ''): ?>
+<div class="rank-toast <?= $error !== '' ? 'rank-toast--error' : 'rank-toast--success' ?>"
+    data-rank-toast<?= $error === '' ? ' data-auto-dismiss="3800"' : '' ?>
+    role="<?= $error !== '' ? 'alert' : 'status' ?>">
+    <span class="rank-toast-symbol" aria-hidden="true">
+        <?php if ($error !== ''): ?>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 17h.01"/></svg>
+        <?php else: ?>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>
+        <?php endif; ?>
+    </span>
+    <span class="rank-toast-message"><?= $error !== '' ? '操作失敗：' . h($error) : h($message) ?></span>
+    <button type="button" class="rank-toast-close" data-rank-toast-close aria-label="關閉提示" title="關閉">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
 </div>
+<?php endif; ?>
+</div>
+<script src="rank-toast.js?v=20261024s"></script>
 <script src="table-tools.js?v=20261023e"></script>
 <script src="inline-create.js?v=20261023b"></script>
 <script src="bottom-scroll.js?v=20261024a"></script>
