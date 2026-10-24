@@ -546,7 +546,7 @@ function siteContentRuleTreeSections(PDO $db): array
         if (!array_key_exists($key, $sections)) continue;
         $sections[$key] = [
             'title' => (string)$row['title'],
-            'note' => (string)$row['note'],
+            'note' => trim((string)preg_replace('/\\s+/u', ' ', (string)$row['note'])),
         ];
     }
     return $sections;
