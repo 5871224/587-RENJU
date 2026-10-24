@@ -73,6 +73,8 @@ jobs:
               'net.htm',
               'rule.htm',
               'rank/index.php',
+              'rank/admin.css',
+              'rank/rank-toast.js',
               'rank/pagination.js',
                'rank/pagination.css',
                'rank/server-pagination.php',

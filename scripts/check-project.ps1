@@ -50,7 +50,7 @@ if ($LASTEXITCODE -ne 0) {
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
     throw 'Node.js is required for Swiss JavaScript syntax validation.'
 }
-foreach ($file in @('rank/swiss-ui.js', 'rank/swiss-admin-ui.js', 'rank/sched-import.js', 'rank/resource-drag.js', 'rank/rule-tree-admin.js', 'rule-tree.js', 'rule-tree-connectors.js', 'rule-tree-content.js', 'scripts/check-rule-tree-format.js')) {
+foreach ($file in @('rank/swiss-ui.js', 'rank/swiss-admin-ui.js', 'rank/sched-import.js', 'rank/resource-drag.js', 'rank/rank-toast.js', 'rank/rule-tree-admin.js', 'rule-tree.js', 'rule-tree-connectors.js', 'rule-tree-content.js', 'scripts/check-rule-tree-format.js')) {
     node --check $file
     if ($LASTEXITCODE -ne 0) {
         throw "JavaScript syntax check failed: $file"
@@ -75,6 +75,11 @@ if ($LASTEXITCODE -ne 0) {
 node scripts/check-rank-style-structure.js
 if ($LASTEXITCODE -ne 0) {
     throw 'Rank stylesheet structure regression failed.'
+}
+
+node scripts/check-rank-toast.js
+if ($LASTEXITCODE -ne 0) {
+    throw 'Rank centered notification regression failed.'
 }
 
 $credentialFiles = @(
