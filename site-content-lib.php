@@ -119,6 +119,7 @@ function siteContentEnsureTables(PDO $db): void
         siteContentMigrateRuleItems($db);
         siteContentMigrateRuleText($db);
         siteContentMigrateRuleHierarchy($db);
+        siteContentEnsureRuleItemNotes($db);
     } finally {
         $db->query("SELECT RELEASE_LOCK('site_content_seed_587')");
     }
@@ -472,28 +473,58 @@ function siteContentMigrateRuleHierarchy(PDO $db): void
 
 
 /** Pure tree projection, useful for both public API and regression testing. */
+/**
+ * Non-destructive schema update: rule captions are plain text.
+ * Retain is_visible for legacy readers, but the rule tree no longer uses it.
+ */
+function siteContentEnsureRuleItemNotes(PDO $db): void
+{
+    $column = $db->query("SHOW COLUMNS FROM SITE_RULE_ITEM LIKE 'note'")->fetch(PDO::FETCH_ASSOC);
+    if (!$column) {
+        $db->exec("ALTER TABLE SITE_RULE_ITEM ADD COLUMN note VARCHAR(500)
+            NOT NULL DEFAULT '' AFTER title");
+    }
+    $key = 'rule-items-always-visible-v5';
+    $check = $db->prepare('SELECT 1 FROM SITE_CONTENT_META WHERE meta_key=?');
+    $check->execute([$key]);
+    if (!$check->fetchColumn()) {
+        $db->beginTransaction();
+        try {
+            $db->exec('UPDATE SITE_RULE_ITEM SET is_visible=1 WHERE is_visible<>1');
+            $db->prepare('INSERT IGNORE INTO SITE_CONTENT_META(meta_key) VALUES (?)')->execute([$key]);
+            $db->commit();
+        } catch (Throwable $error) {
+            if ($db->inTransaction()) $db->rollBack();
+            throw $error;
+        }
+    }
+}
+
+/** All rule-tree entries are public; no per-rule visibility toggle. */
 function siteContentBuildRuleTree(array $rows): array
 {
     $roots = [];
     $locations = [];
     foreach ($rows as $row) {
-        if ($row['parent_id'] !== null || (int)($row['is_visible'] ?? 1) !== 1) continue;
+        if ($row['parent_id'] !== null) continue;
         $id = (int)$row['id'];
         $locations[$id] = count($roots);
         $roots[] = [
             'id'=>$id,
             'title'=>(string)$row['title'],
+            'note'=>(string)($row['note'] ?? ''),
             'content_text'=>(string)($row['content_text'] ?? ''),
             'children'=>[],
         ];
     }
     foreach ($rows as $row) {
-        if ($row['parent_id'] === null || (int)($row['is_visible'] ?? 1) !== 1) continue;
+        if ($row['parent_id'] === null) continue;
         $parent = (int)$row['parent_id'];
         if (!isset($locations[$parent])) continue;
         $roots[$locations[$parent]]['children'][] = [
             'id'=>(int)$row['id'],
             'title'=>(string)$row['title'],
+            'note'=>(string)($row['note'] ?? ''),
             'content_text'=>(string)($row['content_text'] ?? ''),
         ];
     }
