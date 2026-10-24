@@ -288,9 +288,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>轉移棋手｜台灣連珠排名管理</title>
 <link rel="stylesheet" href="../renju.css">
-<link rel="stylesheet" href="admin.css?v=20260820">
+<link rel="stylesheet" href="admin.css?v=20261024a">
 <link rel="stylesheet" href="player-transfer.css?v=20260827">
-<link rel="stylesheet" href="table-tools.css?v=20261023e">
+<link rel="stylesheet" href="table-tools.css?v=20261024a">
 </head>
 <body>
 <div class="app">
@@ -378,6 +378,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </main>
 </div>
 <script src="table-tools.js?v=20261023a"></script>
-<script src="bottom-scroll.js?v=20261023a"></script>
+<script src="bottom-scroll.js?v=20261024a"></script>
 </body>
 </html>

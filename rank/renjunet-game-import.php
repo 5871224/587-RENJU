@@ -51,9 +51,9 @@ foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>從 RenjuNet 匯入棋譜｜排名管理</title>
 <link rel="stylesheet" href="../renju.css">
-<link rel="stylesheet" href="admin.css?v=20260820">
+<link rel="stylesheet" href="admin.css?v=20261024a">
 <link rel="stylesheet" href="renjunet-game-import.css?v=3">
-<link rel="stylesheet" href="table-tools.css?v=20261023e">
+<link rel="stylesheet" href="table-tools.css?v=20261024a">
 </head>
 <body>
 <div class="app">
@@ -208,5 +208,5 @@ foreach($matches as $c)if(($c['auto']??0)>0)$auto++;
 <?php endif; ?>
 </main></div>
 <script src="table-tools.js?v=20261023a"></script>
-<script src="bottom-scroll.js?v=20261023a"></script>
+<script src="bottom-scroll.js?v=20261024a"></script>
 </body></html>

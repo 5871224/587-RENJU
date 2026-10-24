@@ -85,10 +85,10 @@ if ($tour > 0) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>瑞士制戰績表</title>
 <link rel="stylesheet" href="../renju.css?v=20260828a">
-<link rel="stylesheet" href="admin.css?v=20260828a">
+<link rel="stylesheet" href="admin.css?v=20261024a">
 <link rel="stylesheet" href="swiss.css?v=20260901c">
 <link rel="stylesheet" href="swiss-admin-ui.css?v=20260828a">
-<link rel="stylesheet" href="table-tools.css?v=20261023e">
+<link rel="stylesheet" href="table-tools.css?v=20261024a">
 </head>
 <body>
 <div class="app">
@@ -147,6 +147,6 @@ if ($tour <= 0) {
 <script src="swiss-ui.js?v=20260901c"></script>
 <script src="swiss-admin-ui.js?v=20260828a"></script>
 <script src="table-tools.js?v=20261023a"></script>
-<script src="bottom-scroll.js?v=20261023a"></script>
+<script src="bottom-scroll.js?v=20261024a"></script>
 </body>
 </html>

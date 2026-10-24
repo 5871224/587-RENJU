@@ -560,10 +560,10 @@ if (isset($_SESSION['rank_sched_import_flash'])) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Sched 比賽匯入｜台灣連珠排名管理</title>
 <link rel="stylesheet" href="../renju.css">
-<link rel="stylesheet" href="admin.css?v=20260820">
+<link rel="stylesheet" href="admin.css?v=20261024a">
 <link rel="stylesheet" href="sched-import.css?v=5">
 <script src="sched-import.js?v=4" defer></script>
-<link rel="stylesheet" href="table-tools.css?v=20261023e">
+<link rel="stylesheet" href="table-tools.css?v=20261024a">
 </head>
 <body>
 <div class="app">
@@ -706,5 +706,5 @@ foreach ($games as $game):
 </main>
 </div>
 <script src="table-tools.js?v=20261023a"></script>
-<script src="bottom-scroll.js?v=20261023a"></script>
+<script src="bottom-scroll.js?v=20261024a"></script>
 </body></html>
