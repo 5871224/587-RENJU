@@ -82,6 +82,16 @@ if ($LASTEXITCODE -ne 0) {
     throw 'Rank centered notification regression failed.'
 }
 
+node --check js/home-info.js
+if ($LASTEXITCODE -ne 0) {
+    throw 'Homepage information JavaScript syntax check failed.'
+}
+
+node scripts/check-home-info.js
+if ($LASTEXITCODE -ne 0) {
+    throw 'Homepage activity/notice integration regression failed.'
+}
+
 $credentialFiles = @(
     'riftw/login.php',
     'CH/testlogin.php',
