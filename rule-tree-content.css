@@ -8,14 +8,14 @@
     font:700 13px/1 "Microsoft JhengHei","微軟正黑體",sans-serif;
 }
 .rule-text-copy{min-width:0;line-height:1.75;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal}
-/* 行棋規則：獨立霧藍短直條，無圓形底框，也不連接相鄰項目。 */
+/* 行棋規則：小型實心霧藍圓點，沒有圓形底框或項目連接線。 */
 .rule-text-group--game .rule-text-bullet:not(.rule-text-nested):not(.rule-text-note) .rule-text-marker{
     width:22px;height:22px;margin-left:2px;margin-top:2px;
     border-radius:0;background:transparent;color:transparent;font-size:0;
 }
 .rule-text-group--game .rule-text-bullet:not(.rule-text-nested):not(.rule-text-note) .rule-text-marker::before{
-    content:"";display:block;width:4px;height:13px;
-    border-radius:999px;background:#729fbd;
+    content:"";display:block;width:7px;height:7px;
+    border-radius:50%;background:#6292b2;
 }
 .rule-text-step .rule-text-marker{
     background:#daeefa;border:1px solid #a9cee6;border-radius:8px;
