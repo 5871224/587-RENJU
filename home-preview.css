@@ -143,7 +143,7 @@ body.tra-home {
 }
 .tra-hero-copy { max-width: 790px; position: relative; z-index: 2; }
 .tra-overline { margin: 0 0 18px; font: 600 11px/1.4 system-ui,sans-serif; letter-spacing: .43em; color: #577c86; }
-.tra-hero-title { margin: 0; font-family: "Noto Serif TC", "PMingLiU", "Songti TC", Georgia, serif; font-weight: 750; letter-spacing: .13em; font-size: clamp(38px, 4.6vw, 67px); line-height: 1.28; color: #12313b; }
+.tra-hero-title { margin: 0; font-family: "Noto Serif TC", "Source Han Serif TC", "Songti TC", "PMingLiU", serif; font-weight: 800; letter-spacing: .08em; font-size: clamp(38px, 4.6vw, 67px); line-height: 1.28; color: #12313b; text-shadow: 0 1px 0 rgba(255,255,255,.4); }
 .tra-hero-subtitle { margin: 15px 0 0; max-width: 660px; color: #374c55; font-size: clamp(15px, 1.35vw, 18px); letter-spacing: .075em; }
 .tra-hero-rule { display: block; width: 54px; height: 3px; margin-top: 26px; background: var(--tra-gold); }
 /* 常用入口 */
