@@ -111,24 +111,26 @@ body.tra-home {
 .tra-hero {
   position: relative; isolation: isolate; min-height: 390px; overflow: hidden;
   background:
-    radial-gradient(ellipse at 37% 40%, rgba(255,255,255,.92), transparent 51%),
-    linear-gradient(108deg, #faf9f3 0%, #f1efe7 55%, #dce7e7 100%);
+    radial-gradient(ellipse at 29% 35%, rgba(255,255,255,.88), transparent 57%),
+    linear-gradient(108deg, #faf8f2 0%, #eceae4 54%, #c6d0ce 100%);
 }
 .tra-hero::before {
-  content: ""; position: absolute; inset: 0; z-index: -1; opacity: .6;
-  background-image: repeating-linear-gradient(13deg, transparent 0 79px, rgba(167, 153, 129, .035) 80px 81px);
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: .53;
+  background:
+    radial-gradient(ellipse at 36% 100%, rgba(91,119,122,.28), transparent 36%),
+    repeating-radial-gradient(ellipse at -4% 109%, transparent 0 10px, rgba(176,143,93,.15) 11px 12px, transparent 13px 20px);
 }
 .tra-hero .tra-hero-art {
   position: absolute;
   z-index: 0;
   top: 0;
   right: 0;
-  width: min(60%, 950px);
+  width: min(57%, 900px);
   height: 100%;
   overflow: hidden;
   pointer-events: none;
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 30%);
-  mask-image: linear-gradient(to right, transparent, #000 30%);
+  -webkit-mask-image: linear-gradient(to right, transparent, rgba(0,0,0,.7) 24%, #000 37%);
+  mask-image: linear-gradient(to right, transparent, rgba(0,0,0,.7) 24%, #000 37%);
 }
 .tra-hero .tra-hero-art img {
   display: block;
@@ -136,7 +138,7 @@ body.tra-home {
   height: 100%;
   object-fit: cover;
   object-position: center;
-  filter: contrast(1.10) saturate(1.04);
+  filter: contrast(1.07) saturate(1.02);
 }
 .tra-hero-inner {
   position: relative; min-height: 390px; display: flex; align-items: center;
@@ -144,7 +146,7 @@ body.tra-home {
 }
 .tra-hero-copy { max-width: 790px; position: relative; z-index: 2; }
 .tra-overline { margin: 0 0 18px; font: 600 11px/1.4 system-ui,sans-serif; letter-spacing: .43em; color: #577c86; }
-.tra-hero-title { margin: 0; font-family: "Noto Serif TC", "Source Han Serif TC", "Songti TC", "PMingLiU", serif; font-weight: 800; letter-spacing: .08em; font-size: clamp(38px, 4.6vw, 67px); line-height: 1.28; color: #12313b; text-shadow: 0 1px 0 rgba(255,255,255,.4); }
+.tra-hero-title { margin: 0; font-family: "Noto Serif TC", "Source Han Serif TC", "Songti TC", "PMingLiU", serif; font-weight: 800; letter-spacing: .075em; font-size: clamp(38px, 4.6vw, 67px); line-height: 1.28; color: #0c2933; text-shadow: 0 1px 0 rgba(255,255,255,.4); }
 .tra-hero-subtitle { margin: 15px 0 0; max-width: 660px; color: #374c55; font-size: clamp(15px, 1.35vw, 18px); letter-spacing: .075em; }
 .tra-hero-rule { display: block; width: 54px; height: 3px; margin-top: 26px; background: var(--tra-gold); }
 /* 常用入口 */
