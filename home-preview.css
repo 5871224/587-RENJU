@@ -187,7 +187,7 @@ body.tra-home {
 .tra-home .home-info-more {
   min-height: auto; flex: 0 0 auto; padding: 5px 2px; margin: 0;
   border: 0; border-radius: 0; background: none; box-shadow: none;
-  font: 700 13px/1.4 inherit; color: #356679;
+  font-family: inherit; font-size: 13px; font-weight: 700; line-height: 1.4; color: #356679;
 }
 .tra-home .home-info-more:hover { text-decoration: underline; text-underline-offset: 4px; color: #184a59; }
 .tra-home .home-info-more[hidden] { display: none !important; }
