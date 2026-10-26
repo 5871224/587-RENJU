@@ -1,0 +1,307 @@
+/* 台灣五子棋協會新版首頁預覽：獨立樣式，不修改既有共用 CSS */
+:root {
+  --tra-navy: #103642;
+  --tra-navy-dark: #0b2b36;
+  --tra-ink: #203743;
+  --tra-muted: #72818a;
+  --tra-gold: #b9965a;
+  --tra-line: #e6e8e5;
+  --tra-paper: #f8f8f5;
+  --tra-card: #fff;
+  --tra-mint: #e7f2ed;
+  --tra-shadow: 0 10px 28px rgba(26, 48, 53, 0.065);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body.tra-home {
+  margin: 0;
+  background: var(--tra-paper);
+  color: var(--tra-ink);
+  font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  line-height: 1.65;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+.tra-home a { color: inherit; text-decoration: none; }
+.tra-home button { font: inherit; cursor: pointer; }
+.tra-home a:focus-visible, .tra-home button:focus-visible {
+  outline: 3px solid #d7af63;
+  outline-offset: 3px;
+}
+.tra-shell { width: min(1410px, calc(100% - 88px)); margin-inline: auto; }
+
+/* 頂部浮動導覽沿用 menu.html 的四大分類與原順序 */
+.tra-site-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1000;
+  background: rgba(12, 48, 60, 0.985);
+  color: #f8f7f1;
+  box-shadow: 0 3px 16px rgba(22, 40, 45, .14);
+}
+.tra-header-inner {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  justify-content: space-between;
+}
+.tra-brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+.tra-brand:hover { color: #fff; }
+.tra-logo { display: block; width: 45px; height: 45px; flex-shrink: 0; }
+.tra-brand-lines { display: flex; flex-direction: column; line-height: 1.15; gap: 5px; }
+.tra-brand-name { white-space: nowrap; font-size: 20px; font-weight: 700; letter-spacing: .045em; }
+.tra-brand-en { white-space: nowrap; font-family: Georgia, "Times New Roman", serif; font-size: 11px; letter-spacing: .095em; color: #d5d7d3; }
+.tra-menu-host { align-self: stretch; display: flex; align-items: stretch; justify-content: center; flex: 1 1 auto; min-width: 0; }
+.tra-menu-loading { align-self: center; font-size: 13px; color: #b9cac9; }
+.tra-home #menu { height: 100%; width: 100%; display: flex; align-items: center; justify-content: flex-end; }
+.tra-home #menu .menu-main,
+.tra-home #menu .submenu { margin: 0; padding: 0; list-style: none; }
+.tra-home #menu .menu-main { display: flex; align-items: stretch; gap: 22px; height: 100%; }
+.tra-home #menu .menu-group { display: flex; align-items: stretch; position: relative; }
+.tra-home #menu .menu-parent {
+  border: 0; background: none; box-shadow: none; border-radius: 0;
+  display: flex; align-items: center; justify-content: center;
+  gap: 9px; padding: 0 13px;
+  color: #f5f7f6; font-size: 16px; font-weight: 650; letter-spacing: .11em;
+  border-bottom: 3px solid transparent;
+  transition: border-color .17s, color .17s;
+}
+.tra-home #menu .menu-group:first-child .menu-parent { color: #f3d39a; border-bottom-color: #c7a26b; }
+.tra-home #menu .menu-parent:hover,
+.tra-home #menu .menu-group.menu-open .menu-parent,
+.tra-home #menu .menu-group:focus-within .menu-parent { color: #f4d7aa; }
+.tra-home #menu .menu-arrow {
+  display: block; width: 7px; height: 7px;
+  border-bottom: 1.6px solid currentColor; border-right: 1.6px solid currentColor;
+  transform: translateY(-2px) rotate(45deg); transition: transform .16s;
+}
+.tra-home #menu .menu-group.menu-open .menu-arrow,
+.tra-home #menu .menu-group:hover .menu-arrow { transform: translateY(2px) rotate(225deg); }
+.tra-home #menu .submenu {
+  position: absolute; top: calc(100% - 1px); right: -18px;
+  min-width: 190px; padding: 9px; background: #fff;
+  color: var(--tra-ink); border: 1px solid #e3e9e9; border-radius: 0 0 12px 12px;
+  box-shadow: 0 15px 32px rgba(23, 43, 48, .15);
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity .15s, visibility .15s, transform .15s;
+}
+.tra-home #menu .menu-group:hover .submenu,
+.tra-home #menu .menu-group:focus-within .submenu,
+.tra-home #menu .menu-group.menu-open .submenu {
+  opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0);
+}
+.tra-home #menu .submenu a {
+  display: block; padding: 9px 13px; border-radius: 7px;
+  color: #29434b; font-size: 14px; white-space: nowrap;
+}
+.tra-home #menu .submenu a:hover,
+.tra-home #menu .submenu a:focus-visible { color: #0c4950; background: #eaf4f0; }
+.tra-menu-toggle { display: none; border: 1px solid #607c84; border-radius: 8px; padding: 9px 10px; background: none; color: #fff; }
+.tra-menu-toggle svg { display: block; }
+
+/* 主視覺：僅右側裁切木質棋盤，不放刻意散落的棋子 */
+.tra-hero {
+  position: relative; isolation: isolate; min-height: 390px; overflow: hidden;
+  background:
+    radial-gradient(ellipse at 37% 40%, rgba(255,255,255,.92), transparent 51%),
+    linear-gradient(108deg, #faf9f3 0%, #f1efe7 55%, #dce7e7 100%);
+}
+.tra-hero::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: .6;
+  background-image: repeating-linear-gradient(13deg, transparent 0 79px, rgba(167, 153, 129, .035) 80px 81px);
+}
+.tra-hero .tra-hero-art {
+  position: absolute; z-index: -1; height: 100%; width: 100%;
+  top: 0; right: 0; pointer-events: none;
+}
+.tra-hero-inner {
+  position: relative; min-height: 390px; display: flex; align-items: center;
+  padding-block: 48px 84px;
+}
+.tra-hero-copy { max-width: 790px; position: relative; z-index: 2; }
+.tra-overline { margin: 0 0 18px; font: 600 11px/1.4 system-ui,sans-serif; letter-spacing: .43em; color: #577c86; }
+.tra-hero-title { margin: 0; font-family: "Noto Serif TC", "PMingLiU", "Songti TC", Georgia, serif; font-weight: 750; letter-spacing: .13em; font-size: clamp(38px, 4.6vw, 67px); line-height: 1.28; color: #12313b; }
+.tra-hero-subtitle { margin: 15px 0 0; max-width: 660px; color: #374c55; font-size: clamp(15px, 1.35vw, 18px); letter-spacing: .075em; }
+.tra-hero-rule { display: block; width: 54px; height: 3px; margin-top: 26px; background: var(--tra-gold); }
+.tra-hero-caption { margin: 19px 0 0; max-width: 580px; font-size: 14px; color: #70818a; }
+.tra-hero-note {
+  position: absolute; bottom: 42px; right: 3px;
+  writing-mode: vertical-rl; letter-spacing: .42em;
+  color: #536f70; font-size: 12px;
+}
+
+/* 常用入口 */
+.tra-features {
+  position: relative; z-index: 2; margin-top: -52px;
+  display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px;
+}
+.tra-feature {
+  display: flex; align-items: center; gap: 18px;
+  padding: 20px 21px; min-height: 104px;
+  border: 1px solid var(--tra-line); border-radius: 12px;
+  background: rgba(255,255,255,.975); box-shadow: var(--tra-shadow);
+  transition: transform .17s ease, box-shadow .17s ease, border-color .17s ease;
+}
+.tra-feature:hover { transform: translateY(-3px); border-color: #bfd5cb; box-shadow: 0 15px 32px rgba(26,48,53,.105); }
+.tra-feature-icon {
+  width: 58px; height: 58px; display: grid; place-items: center; flex-shrink: 0;
+  border-radius: 14px; color: #456a5c; background: #eaf3ec;
+}
+.tra-feature:nth-child(2) .tra-feature-icon { background: #f7eddb; color: #b78c49; }
+.tra-feature:nth-child(3) .tra-feature-icon { background: #e8f0ee; color: #5c8485; }
+.tra-feature:nth-child(4) .tra-feature-icon { background: #e9f1f5; color: #698da0; }
+.tra-feature-icon svg { width: 27px; height: 27px; stroke: currentColor; stroke-width: 1.7; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.tra-feature-text { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
+.tra-feature-text strong { font-size: 18px; font-weight: 760; letter-spacing: .08em; color: #24414a; }
+.tra-feature-text small { font-size: 12px; line-height: 1.5; color: #818b8f; }
+.tra-feature-arrow { margin-left: auto; font-size: 22px; color: #6d8684; font-weight: 300; }
+.tra-feature:hover .tra-feature-arrow { color: #b18d57; }
+
+/* 雙欄資訊：沿用 home-info.js 的現有 ID 和資料來源 */
+.tra-news-grid {
+  margin-top: 19px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr));
+  align-items: start; gap: 18px;
+}
+.tra-news-card {
+  min-width: 0; padding: 22px 26px 19px;
+  background: #fff; border: 1px solid var(--tra-line);
+  border-radius: 13px; box-shadow: var(--tra-shadow);
+}
+.tra-news-heading {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 8px; min-height: 38px;
+}
+.tra-news-heading h2 {
+  display: flex; align-items: center; gap: 11px;
+  margin: 0; color: #21404b; font-weight: 760; font-size: 22px; letter-spacing: .085em;
+}
+.tra-news-heading h2::before { content: ""; display: inline-block; height: 28px; width: 5px; border-radius: 5px; background: var(--tra-gold); }
+.tra-home .home-info-more {
+  min-height: auto; flex: 0 0 auto; padding: 5px 2px; margin: 0;
+  border: 0; border-radius: 0; background: none; box-shadow: none;
+  font: 700 13px/1.4 inherit; color: #356679;
+}
+.tra-home .home-info-more:hover { text-decoration: underline; text-underline-offset: 4px; color: #184a59; }
+.tra-home .home-info-more[hidden] { display: none !important; }
+.tra-home .home-info-more:disabled { opacity: .55; cursor: progress; }
+.tra-home .home-info-table {
+  border-spacing: 0; border-collapse: collapse; width: 100%; table-layout: fixed; background: transparent;
+}
+.tra-home .home-info-table td { padding: 11px 8px; border-bottom: 1px solid #ebedeb; font-size: 14px; vertical-align: middle; background: transparent; }
+.tra-home .home-info-table tr:last-child td { border-bottom: 0; }
+.tra-home .home-info-table tbody tr:hover td { background: #f6f9f7; }
+.tra-home .home-info-date {
+  width: 112px; color: #98733f; font-size: 12px !important;
+  font-weight: 650; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.tra-home .home-info-title, .tra-home .home-info-content {
+  overflow-wrap: anywhere; color: #35454d; line-height: 1.65;
+}
+.tra-home .home-info-title a, .tra-home .home-info-content a { color: #2c404b; font-weight: 570; }
+.tra-home .home-info-title a:hover, .tra-home .home-info-content a:hover { color: #0f7376; text-decoration: underline; text-underline-offset: 3px; }
+.tra-home .home-info-featured a { color: #9d6b33; font-weight: 700; }
+.tra-home .home-info-empty { color: #7c888a; text-align: center; padding-block: 22px; }
+
+/* 底部簡約，避免與四個快捷入口重複連結 */
+.tra-footer { margin-top: 32px; background: #103540; color: #e9efec; }
+.tra-footer-inner { min-height: 82px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.tra-footer-brand { display: flex; gap: 10px; align-items: center; }
+.tra-footer-brand .tra-logo { width: 35px; height: 35px; }
+.tra-footer-names { display: flex; flex-direction: column; line-height: 1.35; }
+.tra-footer-names strong { font-size: 14px; letter-spacing: .03em; }
+.tra-footer-names small { font-size: 12px; opacity: .8; font-family: Georgia, serif; }
+.tra-footer-copy { font-size: 12px; color: #c5d5d7; }
+.tra-to-top { display: grid; place-items: center; width: 39px; height: 39px; flex-shrink: 0; border: 1px solid #537783; border-radius: 50%; background: transparent; color: #ebf0ef; }
+.tra-to-top:hover { background: #27525b; }
+
+@media (max-width: 1170px) {
+  .tra-shell { width: min(100% - 48px, 1410px); }
+  .tra-header-inner { gap: 12px; }
+  .tra-brand-name { font-size: 17px; }
+  .tra-brand-en { font-size: 9px; }
+  .tra-home #menu .menu-main { gap: 6px; }
+  .tra-home #menu .menu-parent { font-size: 14px; padding-inline: 10px; }
+  .tra-feature { gap: 12px; padding: 15px; }
+  .tra-feature-icon { width: 47px; height: 47px; }
+  .tra-feature-text strong { font-size: 16px; }
+  .tra-feature-text small { font-size: 11px; }
+}
+@media (max-width: 850px) {
+  .tra-shell { width: min(100% - 32px, 720px); }
+  .tra-header-inner { min-height: 64px; }
+  .tra-logo { width: 38px; height: 38px; }
+  .tra-brand-name { font-size: 16px; }
+  .tra-brand-en { font-size: 9px; }
+  .tra-menu-toggle { display: block; margin-left: auto; }
+  .tra-menu-host {
+    display: none; position: absolute; left: 0; right: 0; top: 100%;
+    align-self: auto; background: #103642; padding: 0 16px 15px;
+    border-top: 1px solid #345763; box-shadow: 0 20px 24px rgba(0,0,0,.16);
+  }
+  .tra-site-header.nav-open .tra-menu-host { display: block; }
+  .tra-home #menu { display: block; }
+  .tra-home #menu .menu-main { flex-direction: column; gap: 0; }
+  .tra-home #menu .menu-group { display: block; border-bottom: 1px solid #355762; }
+  .tra-home #menu .menu-parent {
+    width: 100%; height: 51px; display: flex; justify-content: space-between;
+    padding: 0 7px; border-bottom: 0; font-size: 16px;
+  }
+  .tra-home #menu .menu-group:first-child .menu-parent { border-bottom: 0; }
+  .tra-home #menu .submenu {
+    position: static; width: 100%; min-width: 0; padding: 0;
+    transform: none; box-shadow: none; border: 0; background: transparent; border-radius: 0;
+    display: none; opacity: 1; visibility: visible; pointer-events: auto;
+  }
+  .tra-home #menu .menu-group.menu-open .submenu,
+  .tra-home #menu .menu-group:focus-within .submenu { display: block; }
+  .tra-home #menu .submenu a { color: #dce9e8; font-size: 14px; padding: 11px 18px; }
+  .tra-home #menu .submenu a:hover { background: #28515b; color: #fff; }
+  .tra-hero, .tra-hero-inner { min-height: 320px; }
+  .tra-hero-inner { padding: 45px 0 74px; }
+  .tra-hero-title { font-size: clamp(34px, 6vw, 53px); }
+  .tra-hero-art { opacity: .5; }
+  .tra-hero-note { display: none; }
+  .tra-features { grid-template-columns: repeat(2,minmax(0,1fr)); margin-top: -38px; }
+  .tra-news-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .tra-shell { width: calc(100% - 28px); }
+  .tra-brand-name { font-size: 14px; }
+  .tra-brand-en { font-size: 8px; letter-spacing: .015em; }
+  .tra-brand { gap: 9px; }
+  .tra-hero, .tra-hero-inner { min-height: 308px; }
+  .tra-hero-inner { padding-top: 44px; padding-bottom: 70px; }
+  .tra-overline { font-size: 9px; letter-spacing: .22em; }
+  .tra-hero-title { font-size: clamp(31px, 8vw, 42px); letter-spacing: .045em; }
+  .tra-hero-subtitle { font-size: 14px; max-width: 320px; }
+  .tra-hero-caption { font-size: 12px; max-width: 290px; }
+  .tra-features { gap: 10px; }
+  .tra-feature { min-height: 122px; flex-wrap: wrap; gap: 8px; padding: 15px; align-content: center; }
+  .tra-feature-icon { width: 42px; height: 42px; }
+  .tra-feature-icon svg { width: 23px; height: 23px; }
+  .tra-feature-text { flex: 1 1 calc(100% - 54px); }
+  .tra-feature-text strong { font-size: 15px; }
+  .tra-feature-text small { font-size: 11px; }
+  .tra-feature-arrow { display: none; }
+  .tra-news-card { padding: 17px 15px 14px; }
+  .tra-news-heading h2 { font-size: 18px; }
+  .tra-news-heading h2::before { height: 23px; }
+  .tra-home .home-info-table td { padding: 10px 3px; font-size: 13px; }
+  .tra-home .home-info-date { width: 90px; font-size: 11px !important; }
+  .tra-footer-inner { flex-wrap: wrap; padding-block: 17px; gap: 12px; }
+  .tra-footer-copy { order: 3; width: 100%; }
+  .tra-to-top { margin-left: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .tra-feature, .tra-home #menu .submenu, .tra-home #menu .menu-arrow { transition: none; }
+  .tra-feature:hover { transform: none; }
+}
