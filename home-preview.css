@@ -136,6 +136,7 @@ body.tra-home {
   height: 100%;
   object-fit: cover;
   object-position: center;
+  filter: contrast(1.10) saturate(1.04);
 }
 .tra-hero-inner {
   position: relative; min-height: 390px; display: flex; align-items: center;
