@@ -69,14 +69,11 @@
 		$db = $row['db'];
 	}
 	echo "</div>"; // End container
-	$statement = $MYSQL->query("SELECT MIN(level) 'VC4MIN', MAX(level) 'VC4MAX' FROM VC4");
-	foreach ($statement as $row) {
-	}
 	?>
 
 	<script>
-		var VC4MIN = <?php echo json_encode($row['VC4MIN']) ?>;
-		var VC4MAX = <?php echo json_encode($row['VC4MAX']) ?>;
+		var VC4MIN = 3;
+		var VC4MAX = 14;
 		var select = "";
 		var levelMemoryKey = "CH_VC4_LEVEL";
 		var typeMemoryKey = "CH_TYPE";
