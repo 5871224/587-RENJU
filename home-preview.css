@@ -88,9 +88,9 @@ body.tra-home {
 .tra-home #menu .submenu {
   position: absolute;
   top: calc(100% - 1px);
-  right: -18px;
-  min-width: 214px;
-  padding: 11px 10px 10px;
+  right: -12px;
+  min-width: 160px;
+  padding: 9px 7px 8px;
   background: linear-gradient(145deg, rgba(255,254,250,.99), rgba(247,247,242,.99));
   color: var(--tra-ink);
   border: 1px solid rgba(194,183,161,.45);
@@ -125,9 +125,9 @@ body.tra-home {
 .tra-home #menu .submenu a {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 9px;
   min-height: 44px;
-  padding: 9px 12px;
+  padding: 8px 9px;
   border-radius: 8px;
   color: #294750;
   font-size: 16px;
