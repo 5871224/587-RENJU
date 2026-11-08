@@ -23,6 +23,8 @@ jobs:
         run: ./scripts/check-project.ps1
       - name: Check Python maintenance and deployment verification syntax
         run: python -m py_compile scripts/renjunet_sync.py scripts/verify-rule-tree-deployment.py scripts/canonical_domain.py
+      - name: Check canonical menu links
+        run: python scripts/check-canonical-menu.py
 
   deploy:
     needs: validate
