@@ -1139,7 +1139,7 @@ if ($isResultsRequest) {
 </style>
 <script src="record-sticky-header.js?v=20261023b" defer></script>
 <script src="world-record-async.js?v=20261024a" defer></script>
-<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+<script src="/js/jquery-3.7.1.min.js"></script>
 <script>
 $(function(){ $.ajax({url:"/menu.html",async:false,success:function(text){$("#myDiv").html(text);}}); });
 function wrUpdateLabel(){

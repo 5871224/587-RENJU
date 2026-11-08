@@ -7,7 +7,7 @@
   <link href="js/jquery-ui.min.css" rel="stylesheet">
   <link href="../../renju.css?v=20261109buttons1" rel="stylesheet" type="text/css">
 
-  <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+  <script src="/js/jquery-3.7.1.min.js"></script>
   <script src="js/jquery-ui.min.js"></script>
   <script type="text/javascript">
     $(document).ready(function() {

@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="../../renju.css?v=20261109buttons1" rel="stylesheet" type="text/css">
 <link href="player.css?v=1" rel="stylesheet" type="text/css">
-<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+<script src="/js/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 <script type="text/javascript">
