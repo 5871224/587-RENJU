@@ -2,7 +2,7 @@
    Connectors and rule-count badges have one source of truth. */
 .rule-tree-layout,
 .rule-tree-grid {
-    --rule-tree-link-color: #90b5ce;
+    --rule-tree-link-color: #9ab9ae;
     --rule-tree-opening-bg: #fcf8f1;
 }
 
@@ -10,7 +10,7 @@
    These selectors override renju.css's global button:hover without !important. */
 .rule-tree-layout .rule-tree-card-button:is(:hover, :focus-visible),
 .rule-tree-grid .rule-tree-node-toggle:is(:hover, :focus-visible) {
-    background: #edf6fc;
+    background: #e7f2ed;
     color: var(--renju-primary-dark, #24577F);
 }
 

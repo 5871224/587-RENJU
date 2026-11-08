@@ -9,8 +9,8 @@
 .rule-tree-panel--children .rule-tree-list{margin-top:22px}
 
 .rule-tree-card{position:relative;border:1px solid var(--renju-border,#D8E1E7);background:rgba(255,255,255,.98);border-radius:10px;box-shadow:0 2px 5px rgba(31,61,85,.025);transition:border-color .15s,background-color .15s,box-shadow .15s}
-.rule-tree-card:hover{border-color:#9fc6e0}
-.rule-tree-card.is-selected{background:#e9f4fc;border-color:var(--renju-primary,#5B93BE);box-shadow:0 0 0 1px var(--renju-primary,#5B93BE)}
+.rule-tree-card:hover{border-color:#bfd5cb}
+.rule-tree-card.is-selected{background:#e7f2ed;border-color:var(--renju-primary,#285860);box-shadow:0 0 0 1px var(--renju-primary,#285860)}
 
 
 .rule-tree-card-button{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:14px 16px;border:0;background:transparent;font:inherit;font-weight:700;font-size:17px;line-height:1.45;color:var(--renju-primary-dark,#24577F);cursor:pointer;border-radius:10px}
@@ -32,7 +32,7 @@
 
 
 .rule-tree-panel--roots{
-    background:linear-gradient(180deg,#edf6fc 0%,#f6fafd 100%);
+    background:linear-gradient(180deg,#eef5f0 0%,#fafbf8 100%);
 }
 .rule-tree-panel--children{
     background:linear-gradient(180deg,#fcf8f1 0%,#fcfaf6 100%);

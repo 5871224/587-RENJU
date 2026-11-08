@@ -8,7 +8,7 @@
 .swiss-subsection { margin: 12px 0 16px; }
 .swiss-subhead { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .swiss-subhead h3,
-.table-heading { margin: 0; color: #334155; font-size: 18px; }
+.table-heading { margin: 0; color: #21404b; font-size: 18px; }
 
 .swiss-btn {
     display: inline-block;
@@ -28,7 +28,7 @@
 .swiss-cross,
 .swiss-mini,
 .game-list {
-    border: 1px solid #d7e0e7;
+    border: 1px solid #e1e6e2;
     border-collapse: separate;
     border-spacing: 0;
     border-radius: 10px;
@@ -44,10 +44,10 @@
 .swiss-mini th,
 .game-list th {
     padding: 8px 10px;
-    border-right: 1px solid #d7e0e7;
-    border-bottom: 1px solid #cad7e0;
-    background: #eaf3f8;
-    color: #334155;
+    border-right: 1px solid rgba(255,255,255,.14);
+    border-bottom: 2px solid #b9965a;
+    background: #174550;
+    color: #faf9f3;
     font-weight: 700;
     text-align: center;
 }
@@ -57,9 +57,9 @@
 .swiss-mini td,
 .game-list td {
     padding: 8px 10px;
-    border-right: 1px solid #e3e9ee;
-    border-bottom: 1px solid #e3e9ee;
-    background: #fff;
+    border-right: 1px solid #e7eae5;
+    border-bottom: 1px solid #e7eae5;
+    background: #fffefa;
     color: #263238;
     text-align: center;
 }
@@ -85,7 +85,7 @@
     filter: none;
 }
 .swiss-rank tbody tr:hover > td {
-    background: #fff;
+    background: #fffefa;
     box-shadow: none;
     filter: none;
 }
@@ -134,7 +134,7 @@
 .swiss-cross .place { font-weight: 800; }
 
 .swiss-component a {
-    color: #2563a6;
+    color: #356679;
     font-weight: 600;
     text-decoration: none;
 }

@@ -1,16 +1,16 @@
 :root {
-	--renju-primary: #5B93BE;
-	--renju-primary-dark: #24577F;
-	--renju-primary-soft: #E3F0F8;
-	--renju-page: #F5F2EC;
-	--renju-surface: #FBF8F2;
-	--renju-nav: #A9CBE1;
-	--renju-accent: #C49A54;
-	--renju-text: #29465F;
-	--renju-text-muted: #71889B;
-	--renju-border: #D8E1E7;
-	--renju-link: #3E7EAE;
-	--renju-link-hover: #24577F;
+	--renju-primary: #285860;
+	--renju-primary-dark: #103642;
+	--renju-primary-soft: #e7f2ed;
+	--renju-page: #f8f8f5;
+	--renju-surface: #fffefa;
+	--renju-nav: #103642;
+	--renju-accent: #b9965a;
+	--renju-text: #203743;
+	--renju-text-muted: #72818a;
+	--renju-border: #e1e6e2;
+	--renju-link: #356679;
+	--renju-link-hover: #174953;
 	--renju-danger: #B1534C;
 }
 
@@ -22,9 +22,28 @@ body {
 	margin: 0 auto; padding: 90px clamp(40px, 6vw, 100px) 32px;
 }
 *, *::before, *::after { box-sizing: inherit; }
-h1 { font-size: 1.7rem; font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; font-weight: 700; color: var(--renju-primary-dark); text-shadow: none; }
-h2 { font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--renju-primary); }
-h3 { font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; font-size: 1.15rem; font-weight: 700; color: var(--renju-primary-dark); }
+/* 舊內容頁標題：延續首頁深青文字與金色直線的視覺階層 */
+h1 {
+  margin: 0 0 15px;
+  padding: 3px 0 3px 14px;
+  border-left: 5px solid var(--renju-accent);
+  color: var(--renju-primary-dark);
+  font-family: "Noto Sans TC", "Microsoft JhengHei", "微軟正黑體", sans-serif;
+  font-size: 1.75rem;
+  font-weight: 750;
+  line-height: 1.4;
+  text-shadow: none;
+}
+h2 {
+  padding-left: 11px;
+  border-left: 4px solid var(--renju-accent);
+  color: #21404b;
+  font-family: "Noto Sans TC", "Microsoft JhengHei", "微軟正黑體", sans-serif;
+  font-size: 1.42rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+h3 { color: #315b60; font-family: "Noto Sans TC", "Microsoft JhengHei", "微軟正黑體", sans-serif; font-size: 1.16rem; font-weight: 700; }
 p { margin-top: 0; margin-bottom: 1em; }
 hr { border: 0; border-top: 1px solid var(--renju-border); margin: 1.25rem 0; }
 
@@ -133,14 +152,35 @@ hr { border: 0; border-top: 1px solid var(--renju-border); margin: 1.25rem 0; }
   #menu .menu-parent { font-size: 16px; padding-inline: 10px; }
 }
 
-/* 共用表格 */
-table.tb, table.rank { width: 100%; max-width: 100%; table-layout: auto; border-collapse: separate; border-spacing: 0; background: var(--renju-surface); border: 1px solid var(--renju-border); border-radius: 10px; box-shadow: 0 3px 12px rgba(36, 69, 95, 0.08); overflow: hidden; line-height: 1.45; }
-table.tb th, table.rank th { padding: 9px 12px; background: var(--renju-primary); color: #FBF8F2; font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; font-weight: 700; text-align: center; border-right: 1px solid rgba(251, 248, 242, 0.28); border-bottom: 1px solid var(--renju-primary-dark); white-space: nowrap; }
-table.tb td, table.rank td { padding: 8px 12px; background: var(--renju-surface); color: var(--renju-text); font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; font-weight: 400; border-right: 1px solid #E3E1DC; border-bottom: 1px solid #E3E1DC; transition: background-color 0.15s ease; }
+/* 舊頁表格：與首頁活動資訊一致的深青表頭、暖白資料列 */
+table.tb, table.rank {
+  width: 100%; max-width: 100%; table-layout: auto;
+  border-collapse: separate; border-spacing: 0;
+  background: var(--renju-surface);
+  border: 1px solid var(--renju-border); border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(20, 49, 55, .065);
+  overflow: hidden; line-height: 1.45;
+}
+table.tb th, table.rank th {
+  padding: 10px 12px;
+  background: #174550; color: #faf9f3;
+  font-family: "Noto Sans TC", "Microsoft JhengHei", "微軟正黑體", sans-serif;
+  font-weight: 700; text-align: center;
+  border-right: 1px solid rgba(255,255,255,.14);
+  border-bottom: 2px solid var(--renju-accent); white-space: nowrap;
+}
+table.tb td, table.rank td {
+  padding: 9px 12px;
+  background: var(--renju-surface); color: var(--renju-text);
+  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
+  font-weight: 400; border-right: 1px solid #e7eae5;
+  border-bottom: 1px solid #e7eae5;
+  transition: background-color .15s ease;
+}
 table.rank td { text-align: center; }
 table.tb tr:last-child td, table.rank tr:last-child td { border-bottom: 0; }
 table.tb th:last-child, table.tb td:last-child, table.rank th:last-child, table.rank td:last-child { border-right: 0; }
-table.tb tbody tr:nth-child(even) td, table.rank tbody tr:nth-child(even) td { background: #F0EEE9; }
+table.tb tbody tr:nth-child(even) td, table.rank tbody tr:nth-child(even) td { background: #f5f7f3; }
 table.tb tbody tr:hover td, table.rank tbody tr:hover td { background: var(--renju-primary-soft); }
 
 /* 共用連結 */
@@ -148,14 +188,14 @@ a, a:visited { color: var(--renju-link); text-decoration: none; text-underline-o
 a:hover { color: var(--renju-link-hover); background-color: transparent; text-decoration: underline; text-decoration-thickness: 1px; }
 a:focus-visible { outline: 2px solid var(--renju-primary); outline-offset: 2px; border-radius: 3px; }
 table.tb a, table.rank a, table.tb a:visited, table.rank a:visited { color: var(--renju-link); font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; font-weight: 400; }
-table.tb a:hover, table.rank a:hover { color: var(--renju-link-hover); background: transparent; text-decoration-color: #9CB8CD; }
+table.tb a:hover, table.rank a:hover { color: var(--renju-link-hover); background: transparent; text-decoration-color: #a7c3b8; }
 table.tb a:focus-visible, table.rank a:focus-visible { outline: 2px solid var(--renju-primary); outline-offset: 2px; border-radius: 3px; }
 
 /* 共用表單 */
 input, select, textarea, button { font-family: inherit; font-size: 1rem; }
 input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input[type="number"], input[type="password"], input[type="date"], input[type="datetime-local"], input[type="month"], input[type="time"], select, textarea { max-width: 100%; padding: 9px 12px; border: 1px solid var(--renju-border); border-radius: 8px; background: var(--renju-surface); color: var(--renju-text); outline: none; transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease; }
 textarea { resize: vertical; line-height: 1.5; }
-input[type="text"]:focus, input[type="search"]:focus, input[type="email"]:focus, input[type="url"]:focus, input[type="tel"]:focus, input[type="number"]:focus, input[type="password"]:focus, input[type="date"]:focus, input[type="datetime-local"]:focus, input[type="month"]:focus, input[type="time"]:focus, select:focus, textarea:focus { border-color: var(--renju-primary); box-shadow: 0 0 0 3px rgba(91, 147, 190, 0.18); background: #FFFCF7; }
+input[type="text"]:focus, input[type="search"]:focus, input[type="email"]:focus, input[type="url"]:focus, input[type="tel"]:focus, input[type="number"]:focus, input[type="password"]:focus, input[type="date"]:focus, input[type="datetime-local"]:focus, input[type="month"]:focus, input[type="time"]:focus, select:focus, textarea:focus { border-color: var(--renju-primary); box-shadow: 0 0 0 3px rgba(40, 88, 96, .16); background: #FFFCF7; }
 button, input[type="button"], input[type="submit"], input[type="reset"] { min-height: 40px; padding: 8px 15px; border: 1px solid var(--renju-primary-dark); border-radius: 8px; background: var(--renju-primary); color: #FBF8F2; font-weight: 600; cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease; }
 button:hover, input[type="button"]:hover, input[type="submit"]:hover, input[type="reset"]:hover { background: var(--renju-primary-dark); border-color: var(--renju-primary-dark); }
 button:active, input[type="button"]:active, input[type="submit"]:active, input[type="reset"]:active { transform: translateY(1px); }
