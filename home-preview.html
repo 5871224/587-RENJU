@@ -128,10 +128,18 @@
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const nav = doc.getElementById('menu');
         if (!nav) throw new Error('menu not found');
+        const mobileMenu = window.matchMedia('(max-width: 850px)');
+        mobileMenu.addEventListener('change', () => closeMobile());
         nav.querySelectorAll('.menu-parent').forEach(button => {
           button.removeAttribute('onclick');
           button.setAttribute('aria-expanded', 'false');
-          button.addEventListener('click', () => {
+          button.addEventListener('click', event => {
+            if (!mobileMenu.matches) {
+              // Desktop menus are hover-driven; a mouse click must not pin them open.
+              closeGroups();
+              if (event.detail !== 0) button.blur();
+              return;
+            }
             const group = button.closest('.menu-group');
             const next = !group.classList.contains('menu-open');
             closeGroups(group);
