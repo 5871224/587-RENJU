@@ -75,10 +75,17 @@ body.tra-home {
   border-bottom: 3px solid transparent;
   transition: border-color .17s, color .17s;
 }
-.tra-home #menu .menu-group:first-child .menu-parent { color: #f3d39a; border-bottom-color: #c7a26b; }
+.tra-home #menu .menu-group.is-current > .menu-parent { color: #f3d39a; border-bottom-color: #c7a26b; }
 .tra-home #menu .menu-parent:hover,
 .tra-home #menu .menu-group.menu-open .menu-parent,
-.tra-home #menu .menu-group:focus-within .menu-parent { color: #f4d7aa; }
+.tra-home #menu .menu-group:focus-within .menu-parent {
+  color: #f4d7aa; border-bottom-color: #c7a26b;
+}
+@media (hover: hover) and (min-width: 851px) {
+  .tra-home #menu:has(.menu-group:hover) .menu-group.is-current:not(:hover) > .menu-parent {
+    color: #f5f7f6; border-bottom-color: transparent;
+  }
+}
 .tra-home #menu .menu-arrow {
   display: block; width: 7px; height: 7px;
   border-bottom: 1.6px solid currentColor; border-right: 1.6px solid currentColor;

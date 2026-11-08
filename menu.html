@@ -72,6 +72,35 @@
 			</li>
 		</ul>
 	</nav>
+	<script>
+	// All public pages load this one menu fragment. Highlight the section for the current URL.
+	(function () {
+		'use strict';
+		const nav = document.getElementById('menu');
+		if (!nav) return;
+		const groups = Array.from(nav.querySelectorAll('.menu-main > .menu-group'));
+		const path = decodeURIComponent(window.location.pathname).toLowerCase();
+		let section = 0;
+		if (path === '/rule.htm' || path === '/open.htm' || path === '/teach.htm' || path.startsWith('/teach/')) {
+			section = 1;
+		} else if (path.startsWith('/riftw/') || path.startsWith('/game/') || path.startsWith('/sched/')) {
+			section = 2;
+		} else if (path === '/net.htm' || path === '/program.htm' || path === '/test.htm' ||
+			path === '/5.php' || path.startsWith('/program/') || path.startsWith('/bb/') ||
+			path.startsWith('/ch/') || path.startsWith('/bd/') || path.startsWith('/bd1/')) {
+			section = 3;
+		}
+		groups.forEach((group, index) => group.classList.toggle('is-current', index === section));
+		nav.querySelectorAll('.submenu a').forEach(link => {
+			const destination = new URL(link.href, window.location.href);
+			if (destination.origin === window.location.origin &&
+				(destination.pathname.toLowerCase() === path ||
+					(path.startsWith('/teach/') && destination.pathname.toLowerCase() === '/teach.htm'))) {
+				link.setAttribute('aria-current', 'page');
+			}
+		});
+	})();
+	</script>
 </body>
 
 </html>

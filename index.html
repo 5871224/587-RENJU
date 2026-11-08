@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="home-preview.css?v=20261109sharednav1">
+  <link rel="stylesheet" href="home-preview.css?v=20261109active1">
   <script src="js/home-info.js?v=20261024a" defer></script>
   <script src="js/home-preview-dates.js?v=20261026a" defer></script>
 </head>
@@ -134,6 +134,8 @@
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const nav = doc.getElementById('menu');
         if (!nav) throw new Error('menu not found');
+        // The preview/official landing page belongs to the Home section.
+        nav.querySelector('.menu-main > .menu-group')?.classList.add('is-current');
         const mobileMenu = window.matchMedia('(max-width: 850px)');
         mobileMenu.addEventListener('change', () => closeMobile());
         nav.querySelectorAll('.menu-parent').forEach(button => {
