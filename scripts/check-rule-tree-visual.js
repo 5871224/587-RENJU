@@ -24,13 +24,13 @@ assert.equal((shared.match(/stroke:\s*var\(--rule-tree-link-color\)/g) || []).le
 // Public and admin rule-tree buttons must share one hover/focus declaration.
 const hover = shared.match(/\.rule-tree-layout \.rule-tree-card-button:is\(:hover, :focus-visible\),\s*\.rule-tree-grid \.rule-tree-node-toggle:is\(:hover, :focus-visible\)\s*\{([^}]*)\}/);
 assert.ok(hover, 'both views must use the same shared hover style');
-assert.match(hover[1], /background:\s*#edf6fc/i);
-assert.match(hover[1], /color:\s*var\(--renju-primary-dark,\s*#24577F\)/i);
+assert.match(hover[1], /background:\s*#e7f2ed/i);
+assert.match(hover[1], /color:\s*var\(--renju-primary-dark,\s*#103642\)/i);
 assert.doesNotMatch(publicCss, /\.rule-tree-card-button:hover\s*\{/,
     'public rule button hover must not override shared style');
 assert.doesNotMatch(adminCss, /\.rule-tree-node-toggle:(?:hover|focus-visible)\s*\{/,
     'admin rule button hover must not override shared style');
-assert.match(read('rule.htm'), /rule-tree-visual\.css\?v=20261024v/);
-assert.match(read('rank/index.php'), /rule-tree-visual\.css\?v=20261024v/);
+assert.match(read('rule.htm'), /rule-tree-visual\.css\?v=20261109theme1/);
+assert.match(read('rank/index.php'), /rule-tree-visual\.css\?v=20261109theme1/);
 assert.match(read('.github/workflows/deploy.yml'), /'rule-tree-visual\.css'/);
 console.log('Rule visual palette: shared connector strokes, warm count badges and deployment paths OK');

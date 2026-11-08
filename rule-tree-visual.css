@@ -11,7 +11,7 @@
 .rule-tree-layout .rule-tree-card-button:is(:hover, :focus-visible),
 .rule-tree-grid .rule-tree-node-toggle:is(:hover, :focus-visible) {
     background: #e7f2ed;
-    color: var(--renju-primary-dark, #24577F);
+    color: var(--renju-primary-dark, #103642);
 }
 
 /* All segments (root stem, bends, shared trunk and child branches)

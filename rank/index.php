@@ -616,7 +616,7 @@ try {
 <link rel="stylesheet" href="../renju.css">
 <link rel="stylesheet" href="admin.css?v=20261024s">
 <?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="rule-tree-admin.css?v=20261024v">
-<?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="../rule-tree-visual.css?v=20261024v"><?php endif; ?>
+<?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="../rule-tree-visual.css?v=20261109theme1"><?php endif; ?>
 <?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="../rule-tree-content.css?v=20261024k"><?php endif; ?><?php endif; ?>
 <link rel="stylesheet" href="pagination.css?v=20261023d">
 <link rel="stylesheet" href="table-tools.css?v=20261024a">
