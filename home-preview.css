@@ -19,7 +19,7 @@ body.tra-home {
   color: var(--tra-ink);
   font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
   line-height: 1.65;
-  font-size: 16px;
+  font-size: 17px;
   -webkit-font-smoothing: antialiased;
 }
 .tra-home a { color: inherit; text-decoration: none; }
@@ -56,10 +56,10 @@ body.tra-home {
 .tra-brand:hover { color: #fff; }
 .tra-logo { display: block; width: 45px; height: 45px; flex-shrink: 0; }
 .tra-brand-lines { display: flex; flex-direction: column; line-height: 1.15; gap: 5px; }
-.tra-brand-name { white-space: nowrap; font-size: 20px; font-weight: 700; letter-spacing: .045em; }
-.tra-brand-en { white-space: nowrap; font-family: Georgia, "Times New Roman", serif; font-size: 11px; letter-spacing: .095em; color: #d5d7d3; }
+.tra-brand-name { white-space: nowrap; font-size: 21px; font-weight: 700; letter-spacing: .045em; }
+.tra-brand-en { white-space: nowrap; font-family: Georgia, "Times New Roman", serif; font-size: 12px; letter-spacing: .095em; color: #d5d7d3; }
 .tra-menu-host { align-self: stretch; display: flex; align-items: stretch; justify-content: center; flex: 1 1 auto; min-width: 0; }
-.tra-menu-loading { align-self: center; font-size: 13px; color: #b9cac9; }
+.tra-menu-loading { align-self: center; font-size: 14px; color: #b9cac9; }
 .tra-home #menu { height: 100%; width: 100%; display: flex; align-items: center; justify-content: flex-end; }
 .tra-home #menu .menu-main,
 .tra-home #menu .submenu { margin: 0; padding: 0; list-style: none; }
@@ -69,7 +69,7 @@ body.tra-home {
   border: 0; background: none; box-shadow: none; border-radius: 0;
   display: flex; align-items: center; justify-content: center;
   gap: 9px; padding: 0 13px;
-  color: #f5f7f6; font-size: 16px; font-weight: 650; letter-spacing: .11em;
+  color: #f5f7f6; font-size: 17px; font-weight: 650; letter-spacing: .11em;
   border-bottom: 3px solid transparent;
   transition: border-color .17s, color .17s;
 }
@@ -130,7 +130,7 @@ body.tra-home {
   padding: 9px 12px;
   border-radius: 8px;
   color: #294750;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 550;
   letter-spacing: .055em;
   white-space: nowrap;
@@ -197,9 +197,9 @@ body.tra-home {
   padding-block: 48px 84px;
 }
 .tra-hero-copy { max-width: 790px; position: relative; z-index: 2; }
-.tra-overline { margin: 0 0 18px; font: 600 11px/1.4 system-ui,sans-serif; letter-spacing: .43em; color: #577c86; }
-.tra-hero-title { margin: 0; font-family: "Noto Serif TC", "Source Han Serif TC", "Songti TC", "PMingLiU", serif; font-weight: 800; letter-spacing: .075em; font-size: clamp(38px, 4.6vw, 67px); line-height: 1.28; color: #0c2933; text-shadow: 0 1px 0 rgba(255,255,255,.4); }
-.tra-hero-subtitle { margin: 15px 0 0; max-width: 660px; color: #374c55; font-size: clamp(15px, 1.35vw, 18px); letter-spacing: .075em; }
+.tra-overline { margin: 0 0 18px; font: 600 12px/1.4 system-ui,sans-serif; letter-spacing: .43em; color: #577c86; }
+.tra-hero-title { margin: 0; font-family: "Noto Serif TC", "Source Han Serif TC", "Songti TC", "PMingLiU", serif; font-weight: 800; letter-spacing: .075em; font-size: clamp(40px, 4.8vw, 70px); line-height: 1.28; color: #0c2933; text-shadow: 0 1px 0 rgba(255,255,255,.4); }
+.tra-hero-subtitle { margin: 15px 0 0; max-width: 660px; color: #374c55; font-size: clamp(16px, 1.5vw, 19px); letter-spacing: .075em; }
 .tra-hero-rule { display: block; width: 54px; height: 3px; margin-top: 26px; background: var(--tra-gold); }
 /* 常用入口 */
 .tra-features {
@@ -223,8 +223,8 @@ body.tra-home {
 .tra-feature:nth-child(4) .tra-feature-icon { background: #e9f1f5; color: #698da0; }
 .tra-feature-icon svg { width: 27px; height: 27px; stroke: currentColor; stroke-width: 1.7; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .tra-feature-text { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
-.tra-feature-text strong { font-size: 18px; font-weight: 760; letter-spacing: .08em; color: #24414a; }
-.tra-feature-text small { font-size: 12px; line-height: 1.5; color: #818b8f; }
+.tra-feature-text strong { font-size: 19px; font-weight: 760; letter-spacing: .08em; color: #24414a; }
+.tra-feature-text small { font-size: 14px; line-height: 1.5; color: #818b8f; }
 .tra-feature-arrow { margin-left: auto; font-size: 22px; color: #6d8684; font-weight: 300; }
 .tra-feature:hover .tra-feature-arrow { color: #b18d57; }
 
@@ -244,13 +244,13 @@ body.tra-home {
 }
 .tra-news-heading h2 {
   display: flex; align-items: center; gap: 11px;
-  margin: 0; color: #21404b; font-weight: 760; font-size: 22px; letter-spacing: .085em;
+  margin: 0; color: #21404b; font-weight: 760; font-size: 24px; letter-spacing: .085em;
 }
 .tra-news-heading h2::before { content: ""; display: inline-block; height: 28px; width: 5px; border-radius: 5px; background: var(--tra-gold); }
 .tra-home .home-info-more {
   min-height: auto; flex: 0 0 auto; padding: 5px 2px; margin: 0;
   border: 0; border-radius: 0; background: none; box-shadow: none;
-  font-family: inherit; font-size: 13px; font-weight: 700; line-height: 1.4; color: #356679;
+  font-family: inherit; font-size: 15px; font-weight: 700; line-height: 1.4; color: #356679;
 }
 .tra-home .home-info-more:hover { text-decoration: underline; text-underline-offset: 4px; color: #184a59; }
 .tra-home .home-info-more[hidden] { display: none !important; }
@@ -258,7 +258,7 @@ body.tra-home {
 .tra-home .home-info-table {
   border-spacing: 0; border-collapse: collapse; width: 100%; table-layout: fixed; background: transparent;
 }
-.tra-home .home-info-table td { padding: 11px 8px; border-bottom: 1px solid #ebedeb; font-size: 14px; vertical-align: middle; background: transparent; }
+.tra-home .home-info-table td { padding: 11px 8px; border-bottom: 1px solid #ebedeb; font-size: 16px; vertical-align: middle; background: transparent; }
 .tra-home .home-info-table tr:last-child td { border-bottom: 0; }
 .tra-home .home-info-table tbody tr:hover td { background: #f6f9f7; }
 .tra-home .home-info-date {
@@ -284,14 +284,14 @@ body.tra-home {
 }
 .tra-date-year {
   color: #7a8689;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: .035em;
 }
 .tra-date-month-day {
   color: #a4793e;
   font-family: Georgia, "Times New Roman", "Noto Serif TC", serif;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -309,30 +309,30 @@ body.tra-home {
 .tra-footer-brand { display: flex; gap: 10px; align-items: center; }
 .tra-footer-brand .tra-logo { width: 35px; height: 35px; }
 .tra-footer-names { display: flex; flex-direction: column; line-height: 1.35; }
-.tra-footer-names strong { font-size: 14px; letter-spacing: .03em; }
-.tra-footer-names small { font-size: 12px; opacity: .8; font-family: Georgia, serif; }
-.tra-footer-copy { font-size: 12px; color: #c5d5d7; }
+.tra-footer-names strong { font-size: 16px; letter-spacing: .03em; }
+.tra-footer-names small { font-size: 13px; opacity: .8; font-family: Georgia, serif; }
+.tra-footer-copy { font-size: 13px; color: #c5d5d7; }
 .tra-to-top { display: grid; place-items: center; width: 39px; height: 39px; flex-shrink: 0; border: 1px solid #537783; border-radius: 50%; background: transparent; color: #ebf0ef; }
 .tra-to-top:hover { background: #27525b; }
 
 @media (max-width: 1170px) {
   .tra-shell { width: min(100% - 48px, 1410px); }
   .tra-header-inner { gap: 12px; }
-  .tra-brand-name { font-size: 17px; }
-  .tra-brand-en { font-size: 9px; }
+  .tra-brand-name { font-size: 19px; }
+  .tra-brand-en { font-size: 10px; }
   .tra-home #menu .menu-main { gap: 6px; }
-  .tra-home #menu .menu-parent { font-size: 14px; padding-inline: 10px; }
+  .tra-home #menu .menu-parent { font-size: 16px; padding-inline: 10px; }
   .tra-feature { gap: 12px; padding: 15px; }
   .tra-feature-icon { width: 47px; height: 47px; }
-  .tra-feature-text strong { font-size: 16px; }
-  .tra-feature-text small { font-size: 11px; }
+  .tra-feature-text strong { font-size: 17px; }
+  .tra-feature-text small { font-size: 13px; }
 }
 @media (max-width: 850px) {
   .tra-shell { width: min(100% - 32px, 720px); }
   .tra-header-inner { min-height: 64px; }
   .tra-logo { width: 38px; height: 38px; }
-  .tra-brand-name { font-size: 16px; }
-  .tra-brand-en { font-size: 9px; }
+  .tra-brand-name { font-size: 17px; }
+  .tra-brand-en { font-size: 10px; }
   .tra-menu-toggle { display: block; margin-left: auto; }
   .tra-menu-host {
     display: none; position: absolute; left: 0; right: 0; top: 100%;
@@ -344,8 +344,8 @@ body.tra-home {
   .tra-home #menu .menu-main { flex-direction: column; gap: 0; }
   .tra-home #menu .menu-group { display: block; border-bottom: 1px solid #355762; }
   .tra-home #menu .menu-parent {
-    width: 100%; height: 51px; display: flex; justify-content: space-between;
-    padding: 0 7px; border-bottom: 0; font-size: 16px;
+    width: 100%; height: 53px; display: flex; justify-content: space-between;
+    padding: 0 7px; border-bottom: 0; font-size: 17px;
   }
   .tra-home #menu .menu-group:first-child .menu-parent { border-bottom: 0; }
   .tra-home #menu .submenu {
@@ -369,7 +369,7 @@ body.tra-home {
   .tra-home #menu .menu-group:focus-within .submenu { display: block; }
   .tra-home #menu .submenu a {
     color: #dce9e8;
-    font-size: 14px;
+    font-size: 16px;
     padding: 10px 15px;
     background: transparent;
   }
@@ -379,7 +379,7 @@ body.tra-home {
   .tra-home #menu .submenu a:focus-visible { background: #28515b; color: #fff; }
   .tra-hero, .tra-hero-inner { min-height: 320px; }
   .tra-hero-inner { padding: 45px 0 74px; }
-  .tra-hero-title { font-size: clamp(34px, 6vw, 53px); }
+  .tra-hero-title { font-size: clamp(36px, 6.3vw, 56px); }
   .tra-hero .tra-hero-art { opacity: .58; }
   .tra-hero .tra-hero-art img { object-position: 63% 35%; }
   .tra-features { grid-template-columns: repeat(2,minmax(0,1fr)); margin-top: -38px; }
@@ -387,30 +387,30 @@ body.tra-home {
 }
 @media (max-width: 520px) {
   .tra-shell { width: calc(100% - 28px); }
-  .tra-brand-name { font-size: 14px; }
-  .tra-brand-en { font-size: 8px; letter-spacing: .015em; }
+  .tra-brand-name { font-size: 16px; }
+  .tra-brand-en { font-size: 9px; letter-spacing: .015em; }
   .tra-brand { gap: 9px; }
   .tra-hero, .tra-hero-inner { min-height: 308px; }
   .tra-hero-inner { padding-top: 44px; padding-bottom: 70px; }
-  .tra-overline { font-size: 9px; letter-spacing: .22em; }
-  .tra-hero-title { font-size: clamp(31px, 8vw, 42px); letter-spacing: .045em; }
-  .tra-hero-subtitle { font-size: 14px; max-width: 320px; }
+  .tra-overline { font-size: 10px; letter-spacing: .22em; }
+  .tra-hero-title { font-size: clamp(33px, 8.5vw, 44px); letter-spacing: .045em; }
+  .tra-hero-subtitle { font-size: 15px; max-width: 320px; }
   .tra-features { gap: 10px; }
   .tra-feature { min-height: 122px; flex-wrap: wrap; gap: 8px; padding: 15px; align-content: center; }
   .tra-feature-icon { width: 42px; height: 42px; }
   .tra-feature-icon svg { width: 23px; height: 23px; }
   .tra-feature-text { flex: 1 1 calc(100% - 54px); }
-  .tra-feature-text strong { font-size: 15px; }
-  .tra-feature-text small { font-size: 11px; }
+  .tra-feature-text strong { font-size: 16px; }
+  .tra-feature-text small { font-size: 12px; }
   .tra-feature-arrow { display: none; }
   .tra-news-card { padding: 17px 15px 14px; }
-  .tra-news-heading h2 { font-size: 18px; }
+  .tra-news-heading h2 { font-size: 20px; }
   .tra-news-heading h2::before { height: 23px; }
-  .tra-home .home-info-table td { padding: 10px 3px; font-size: 13px; }
+  .tra-home .home-info-table td { padding: 10px 3px; font-size: 15px; }
   .tra-home .home-info-date { width: 87px; padding: 6px 7px 6px 0; }
   .tra-date-badge { width: 76px; min-height: 47px; padding: 5px 2px; }
-  .tra-date-month-day { font-size: 16px; }
-  .tra-date-year { font-size: 10px; }
+  .tra-date-month-day { font-size: 18px; }
+  .tra-date-year { font-size: 11px; }
   .tra-footer-inner { flex-wrap: wrap; padding-block: 17px; gap: 12px; }
   .tra-footer-copy { order: 3; width: 100%; }
   .tra-to-top { margin-left: auto; }
