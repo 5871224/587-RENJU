@@ -613,8 +613,8 @@ try {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>台灣連珠排名管理</title>
-<link rel="stylesheet" href="../renju.css?v=20261109theme1">
-<link rel="stylesheet" href="admin.css?v=20261024s">
+<link rel="stylesheet" href="../renju.css?v=20261109buttons1">
+<link rel="stylesheet" href="admin.css?v=20261109buttons1">
 <?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="rule-tree-admin.css?v=20261024v">
 <?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="../rule-tree-visual.css?v=20261109theme1"><?php endif; ?>
 <?php if ($view === 'site-rules'): ?><link rel="stylesheet" href="../rule-tree-content.css?v=20261024k"><?php endif; ?><?php endif; ?>
