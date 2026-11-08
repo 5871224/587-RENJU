@@ -2,6 +2,11 @@ Options -Indexes
 
 RewriteEngine On
 
+# The former 587 hostname now permanently redirects to the canonical public site.
+# The primary-domain .htaccess internally serves this directory for www requests.
+RewriteCond %{HTTP_HOST} ^587\.renju\.org\.tw$ [NC]
+RewriteRule ^ https://www.renju.org.tw%{REQUEST_URI} [R=301,L,NE]
+
 # Legacy KO1 test site has moved to the dedicated ko1 subdomain.
 # Keep this redirect at the site root so /ko1test/ can be removed completely.
 RewriteRule ^ko1test(?:/.*)?$ https://ko1.renju.org.tw/ [R=301,L,NE,QSD]
