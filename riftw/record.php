@@ -8,7 +8,7 @@
 <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 <script>
 $(function () {
-    $.ajax({url:"https://587.renju.org.tw/menu.html",async:false,success:function(html){$("#myDiv").html(html);}});
+    $.ajax({url:"/menu.html",async:false,success:function(html){$("#myDiv").html(html);}});
 });
 function changeRecord(value) {
     const target = new URL(window.location.href);

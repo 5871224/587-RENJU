@@ -9,7 +9,7 @@
 	<script type="text/javascript">
 		$(document).ready(function() {
 			htmlobj = $.ajax({
-				url: "https://587.renju.org.tw/menu.html",
+				url: "/menu.html",
 				async: false
 			});
 			$("#myDiv").html(htmlobj.responseText);

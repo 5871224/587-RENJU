@@ -9,7 +9,7 @@
   <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
   <script type="text/javascript">
     $(document).ready(function () {
-      htmlobj = $.ajax({ url: "https://587.renju.org.tw/menu.html", async: false });
+      htmlobj = $.ajax({ url: "/menu.html", async: false });
       $("#myDiv").html(htmlobj.responseText);
     });
   </script>

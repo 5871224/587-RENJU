@@ -1141,7 +1141,7 @@ if ($isResultsRequest) {
 <script src="world-record-async.js?v=20261024a" defer></script>
 <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
 <script>
-$(function(){ $.ajax({url:"https://587.renju.org.tw/menu.html",async:false,success:function(text){$("#myDiv").html(text);}}); });
+$(function(){ $.ajax({url:"/menu.html",async:false,success:function(text){$("#myDiv").html(text);}}); });
 function wrUpdateLabel(){
     const checks=[...document.querySelectorAll('#wr-opening-panel .wr-opening-list input[type=checkbox]')];
     const selected=checks.filter(x=>x.checked).length;

@@ -9,7 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 <script type="text/javascript">
 $(document).ready(function(){  
-  htmlobj=$.ajax({url:"https://587.renju.org.tw/menu.html",async:false});
+  htmlobj=$.ajax({url:"/menu.html",async:false});
   $("#myDiv").html(htmlobj.responseText);  
 });
 </script>
