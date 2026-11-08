@@ -230,6 +230,7 @@ table.rank td.rating-score { color: var(--rating-color, var(--renju-text)); font
 
 /* 手機導覽：與首頁相同的漢堡選單及可點擊的單層下拉 */
 @media (max-width: 850px) {
+  body { padding-top: 78px; }
   #menu { height: 64px; padding-inline: 16px; gap: 9px; }
   #menu .site-nav-logo { width: 38px; height: 38px; }
   #menu .site-nav-brand { gap: 9px; }

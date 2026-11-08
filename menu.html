@@ -19,7 +19,7 @@
 		<ul class="menu-main" id="site-nav-items">
 			<li class="menu-group">
 				<button type="button" class="menu-parent" aria-haspopup="true" aria-expanded="false"
-					onclick="if(window.matchMedia('(max-width: 850px)').matches){var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p){i.classList.remove('menu-open');var b=i.querySelector('.menu-parent');if(b)b.setAttribute('aria-expanded','false');}});p.classList.toggle('menu-open');this.setAttribute('aria-expanded',String(p.classList.contains('menu-open')));}else{this.blur();}">
+					onclick="if(window.matchMedia('(max-width: 850px)').matches){var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p){i.classList.remove('menu-open');var b=i.querySelector('.menu-parent');if(b)b.setAttribute('aria-expanded','false');}});p.classList.toggle('menu-open');this.setAttribute('aria-expanded',String(p.classList.contains('menu-open')));}else if(event.detail !== 0){this.blur();}">
 					<span>首頁</span><span class="menu-arrow" aria-hidden="true"></span>
 				</button>
 				<ul class="submenu">
@@ -31,7 +31,7 @@
 
 			<li class="menu-group">
 				<button type="button" class="menu-parent" aria-haspopup="true" aria-expanded="false"
-					onclick="if(window.matchMedia('(max-width: 850px)').matches){var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p){i.classList.remove('menu-open');var b=i.querySelector('.menu-parent');if(b)b.setAttribute('aria-expanded','false');}});p.classList.toggle('menu-open');this.setAttribute('aria-expanded',String(p.classList.contains('menu-open')));}else{this.blur();}">
+					onclick="if(window.matchMedia('(max-width: 850px)').matches){var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p){i.classList.remove('menu-open');var b=i.querySelector('.menu-parent');if(b)b.setAttribute('aria-expanded','false');}});p.classList.toggle('menu-open');this.setAttribute('aria-expanded',String(p.classList.contains('menu-open')));}else if(event.detail !== 0){this.blur();}">
 					<span>教學</span><span class="menu-arrow" aria-hidden="true"></span>
 				</button>
 				<ul class="submenu">
@@ -43,7 +43,7 @@
 
 			<li class="menu-group">
 				<button type="button" class="menu-parent" aria-haspopup="true" aria-expanded="false"
-					onclick="if(window.matchMedia('(max-width: 850px)').matches){var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p){i.classList.remove('menu-open');var b=i.querySelector('.menu-parent');if(b)b.setAttribute('aria-expanded','false');}});p.classList.toggle('menu-open');this.setAttribute('aria-expanded',String(p.classList.contains('menu-open')));}else{this.blur();}">
+					onclick="if(window.matchMedia('(max-width: 850px)').matches){var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p){i.classList.remove('menu-open');var b=i.querySelector('.menu-parent');if(b)b.setAttribute('aria-expanded','false');}});p.classList.toggle('menu-open');this.setAttribute('aria-expanded',String(p.classList.contains('menu-open')));}else if(event.detail !== 0){this.blur();}">
 					<span>比賽</span><span class="menu-arrow" aria-hidden="true"></span>
 				</button>
 				<ul class="submenu">
@@ -59,7 +59,7 @@
 
 			<li class="menu-group">
 				<button type="button" class="menu-parent" aria-haspopup="true" aria-expanded="false"
-					onclick="if(window.matchMedia('(max-width: 850px)').matches){var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p){i.classList.remove('menu-open');var b=i.querySelector('.menu-parent');if(b)b.setAttribute('aria-expanded','false');}});p.classList.toggle('menu-open');this.setAttribute('aria-expanded',String(p.classList.contains('menu-open')));}else{this.blur();}">
+					onclick="if(window.matchMedia('(max-width: 850px)').matches){var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p){i.classList.remove('menu-open');var b=i.querySelector('.menu-parent');if(b)b.setAttribute('aria-expanded','false');}});p.classList.toggle('menu-open');this.setAttribute('aria-expanded',String(p.classList.contains('menu-open')));}else if(event.detail !== 0){this.blur();}">
 					<span>資源</span><span class="menu-arrow" aria-hidden="true"></span>
 				</button>
 				<ul class="submenu">
