@@ -59,8 +59,8 @@ if not re.search(
         "Live shared CSS is stale or missing public rule-button hover selector. "
         "Check FTPS target directory, CDN caching, and the generated CSS URL."
     )
-if not re.search(r"background\s*:\s*#edf6fc", css_compact, re.I):
-    raise RuntimeError("Live shared CSS lacks the requested light-blue hover background.")
+if not re.search(r"background\s*:\s*#e7f2ed", css_compact, re.I):
+    raise RuntimeError("Live shared CSS lacks the requested sage-green hover background.")
 if not re.search(r"\.rule-tree-grid\s+\.rule-tree-node-toggle:is\(", css_compact):
     raise RuntimeError("Live shared CSS lacks the synchronized admin rule hover selector.")
-print("Live stylesheet confirmed: light-blue hover and shared front/admin rules are present.")
+print("Live stylesheet confirmed: sage-green hover and shared front/admin rules are present.")
