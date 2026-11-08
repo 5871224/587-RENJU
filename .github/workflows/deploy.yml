@@ -126,6 +126,18 @@ jobs:
           )
           for forced in forced_files:
               if os.path.isfile(forced) and forced not in files: files.append(forced)
+          # A validation failure can prevent an earlier push's files from being uploaded.
+          # Re-sync pages which consume the common navigation when its source or
+          # deployment workflow changes, so the full group is consistently published.
+          if 'menu.html' in changed or '.github/workflows/deploy.yml' in changed:
+              for directory, subdirs, filenames in os.walk('.'):
+                  subdirs[:] = [d for d in subdirs if d not in ('.git', '.github', 'scripts', 'docs')]
+                  for filename in filenames:
+                      if not filename.lower().endswith(('.php', '.htm', '.html')): continue
+                      relative = os.path.relpath(os.path.join(directory, filename), '.').replace('\\', '/')
+                      if included(relative) and b'menu.html' in open(relative, 'rb').read() and relative not in files:
+                          files.append(relative)
+              print('Resynced shared-menu consumers: ' + str(sum(b'menu.html' in open(p, 'rb').read() for p in files if p.endswith(('.php', '.htm', '.html')))))
           if not files: print('No deployable changed files. Nothing to upload.'); sys.exit(0)
           ftp=ftplib.FTP_TLS(); ftp.connect(server,21,timeout=60); ftp.login(username,password); ftp.prot_p()
           def ensure_dir(path):
