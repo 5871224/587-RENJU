@@ -9,10 +9,17 @@
 
 <body>
 	<nav id="menu" aria-label="主要導覽">
-		<ul class="menu-main">
+		<a class="site-nav-brand" href="https://587.renju.org.tw/" aria-label="台灣五子棋協會，回到首頁">
+			<img class="site-nav-logo" src="https://587.renju.org.tw/p/home-preview-logo.png?v=20261027logo2" width="45" height="45" alt="">
+			<span class="site-nav-names"><strong class="site-nav-name">台灣五子棋協會</strong><small class="site-nav-en" lang="en">Taiwan Renju Federation</small></span>
+		</a>
+		<button type="button" class="site-nav-toggle" aria-label="展開導覽選單" aria-expanded="false" aria-controls="site-nav-items" onclick="var nav=this.closest('#menu');var expanded=nav.classList.toggle('nav-open');this.setAttribute('aria-expanded',String(expanded));this.setAttribute('aria-label',expanded?'收合導覽選單':'展開導覽選單');if(!expanded){nav.querySelectorAll('.menu-open').forEach(function(g){g.classList.remove('menu-open');var b=g.querySelector('.menu-parent');if(b)b.setAttribute('aria-expanded','false');});}">
+			<svg viewBox="0 0 24 24" width="23" height="23" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+		</button>
+		<ul class="menu-main" id="site-nav-items">
 			<li class="menu-group">
-				<button type="button" class="menu-parent" aria-haspopup="true"
-					onclick="var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p)i.classList.remove('menu-open');});p.classList.toggle('menu-open');">
+				<button type="button" class="menu-parent" aria-haspopup="true" aria-expanded="false"
+					onclick="if(window.matchMedia('(max-width: 850px)').matches){var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p){i.classList.remove('menu-open');var b=i.querySelector('.menu-parent');if(b)b.setAttribute('aria-expanded','false');}});p.classList.toggle('menu-open');this.setAttribute('aria-expanded',String(p.classList.contains('menu-open')));}else{this.blur();}">
 					<span>首頁</span><span class="menu-arrow" aria-hidden="true"></span>
 				</button>
 				<ul class="submenu">
@@ -23,8 +30,8 @@
 			</li>
 
 			<li class="menu-group">
-				<button type="button" class="menu-parent" aria-haspopup="true"
-					onclick="var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p)i.classList.remove('menu-open');});p.classList.toggle('menu-open');">
+				<button type="button" class="menu-parent" aria-haspopup="true" aria-expanded="false"
+					onclick="if(window.matchMedia('(max-width: 850px)').matches){var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p){i.classList.remove('menu-open');var b=i.querySelector('.menu-parent');if(b)b.setAttribute('aria-expanded','false');}});p.classList.toggle('menu-open');this.setAttribute('aria-expanded',String(p.classList.contains('menu-open')));}else{this.blur();}">
 					<span>教學</span><span class="menu-arrow" aria-hidden="true"></span>
 				</button>
 				<ul class="submenu">
@@ -35,8 +42,8 @@
 			</li>
 
 			<li class="menu-group">
-				<button type="button" class="menu-parent" aria-haspopup="true"
-					onclick="var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p)i.classList.remove('menu-open');});p.classList.toggle('menu-open');">
+				<button type="button" class="menu-parent" aria-haspopup="true" aria-expanded="false"
+					onclick="if(window.matchMedia('(max-width: 850px)').matches){var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p){i.classList.remove('menu-open');var b=i.querySelector('.menu-parent');if(b)b.setAttribute('aria-expanded','false');}});p.classList.toggle('menu-open');this.setAttribute('aria-expanded',String(p.classList.contains('menu-open')));}else{this.blur();}">
 					<span>比賽</span><span class="menu-arrow" aria-hidden="true"></span>
 				</button>
 				<ul class="submenu">
@@ -51,8 +58,8 @@
 			</li>
 
 			<li class="menu-group">
-				<button type="button" class="menu-parent" aria-haspopup="true"
-					onclick="var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p)i.classList.remove('menu-open');});p.classList.toggle('menu-open');">
+				<button type="button" class="menu-parent" aria-haspopup="true" aria-expanded="false"
+					onclick="if(window.matchMedia('(max-width: 850px)').matches){var p=this.parentElement;p.parentElement.querySelectorAll('.menu-open').forEach(function(i){if(i!==p){i.classList.remove('menu-open');var b=i.querySelector('.menu-parent');if(b)b.setAttribute('aria-expanded','false');}});p.classList.toggle('menu-open');this.setAttribute('aria-expanded',String(p.classList.contains('menu-open')));}else{this.blur();}">
 					<span>資源</span><span class="menu-arrow" aria-hidden="true"></span>
 				</button>
 				<ul class="submenu">

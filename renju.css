@@ -19,7 +19,7 @@ body {
 	font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif;
 	font-size: 1.125rem; line-height: 1.55; color: var(--renju-text);
 	background-color: var(--renju-page); box-sizing: border-box; width: 100%; max-width: 1600px;
-	margin: 0 auto; padding: 76px clamp(40px, 6vw, 100px) 32px;
+	margin: 0 auto; padding: 90px clamp(40px, 6vw, 100px) 32px;
 }
 *, *::before, *::after { box-sizing: inherit; }
 h1 { font-size: 1.7rem; font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; font-weight: 700; color: var(--renju-primary-dark); text-shadow: none; }
@@ -28,21 +28,110 @@ h3 { font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; font-size
 p { margin-top: 0; margin-bottom: 1em; }
 hr { border: 0; border-top: 1px solid var(--renju-border); margin: 1.25rem 0; }
 
-/* 共用頂部導覽：深藍導航＋霧藍米色 */
-#menu { position: fixed; z-index: 9999; top: 0; left: 0; right: 0; height: 58px; background: rgba(169, 203, 225, 0.97); border-bottom: 1px solid rgba(36, 87, 127, 0.22); box-shadow: 0 5px 18px rgba(36, 69, 95, 0.12); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; }
-#menu .menu-main, #menu .submenu { list-style: none; margin: 0; padding: 0; }
-#menu .menu-main { height: 100%; max-width: 760px; margin: 0 auto; padding: 6px 12px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-#menu .menu-group { position: relative; flex: 1 1 0; max-width: 170px; }
-#menu .menu-parent { width: 100%; height: 44px; margin: 0; padding: 0 15px; border: 0; border-radius: 9px; background: transparent; color: #173F60; font: inherit; font-size: 17px; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease; }
-#menu .menu-arrow { width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg) translateY(-2px); transition: transform 0.16s ease; }
-#menu .menu-group:hover > .menu-parent, #menu .menu-group:focus-within > .menu-parent, #menu .menu-group.menu-open > .menu-parent { background: var(--renju-primary-dark); color: #FBF8F2; box-shadow: 0 2px 8px rgba(36, 87, 127, 0.2); }
-#menu .menu-group:hover .menu-arrow, #menu .menu-group:focus-within .menu-arrow, #menu .menu-group.menu-open .menu-arrow { transform: rotate(225deg) translate(-1px, -1px); }
-#menu .submenu { position: absolute; top: 100%; left: 50%; width: max-content; min-width: 180px; padding: 7px; background: var(--renju-surface); border: 1px solid var(--renju-border); border-radius: 10px; box-shadow: 0 12px 28px rgba(36, 69, 95, 0.15); opacity: 0; visibility: hidden; pointer-events: none; transform: translate(-50%, -4px); transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease; }
-#menu .menu-group:hover > .submenu, #menu .menu-group:focus-within > .submenu, #menu .menu-group.menu-open > .submenu { opacity: 1; visibility: visible; pointer-events: auto; transform: translate(-50%, 0); }
+/* 共用頂部導覽：與協會首頁一致的深青色、金線、米白選單 */
+#menu {
+  position: fixed;
+  z-index: 9999;
+  top: 0; left: 0; right: 0;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 0 max(24px, calc((100vw - 1410px) / 2));
+  color: #f8f7f1;
+  background: rgba(12, 48, 60, .985);
+  box-shadow: 0 3px 16px rgba(22, 40, 45, .14);
+  font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+}
+#menu .site-nav-brand,
+#menu .site-nav-brand:visited {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  flex-shrink: 0;
+  color: #f8f7f1;
+  text-decoration: none;
+}
+#menu .site-nav-brand:hover { color: #fff; background: none; text-decoration: none; }
+#menu .site-nav-logo { display: block; width: 45px; height: 45px; flex-shrink: 0; }
+#menu .site-nav-names { display: flex; flex-direction: column; gap: 5px; line-height: 1.15; white-space: nowrap; }
+#menu .site-nav-name { font-size: 21px; font-weight: 700; letter-spacing: .045em; }
+#menu .site-nav-en { font: 12px Georgia, "Times New Roman", serif; letter-spacing: .095em; color: #d5d7d3; }
+#menu .site-nav-toggle { display: none; border: 1px solid #607c84; border-radius: 8px; padding: 9px 10px; background: none; color: #fff; cursor: pointer; }
+#menu .site-nav-toggle svg { display: block; }
+#menu .menu-main, #menu .submenu { margin: 0; padding: 0; list-style: none; }
+#menu .menu-main { display: flex; align-items: stretch; justify-content: flex-end; flex: 1 1 auto; gap: 22px; height: 100%; min-width: 0; }
+#menu .menu-group { display: flex; align-items: stretch; position: relative; flex: 0 0 auto; }
+#menu .menu-parent {
+  margin: 0; padding: 0 13px;
+  border: 0; border-bottom: 3px solid transparent; border-radius: 0;
+  background: none; box-shadow: none;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  color: #f5f7f6; font-size: 17px; font-weight: 650; letter-spacing: .11em;
+  cursor: pointer;
+  transition: border-color .17s, color .17s;
+}
+#menu .menu-group:first-child .menu-parent { color: #f3d39a; border-bottom-color: #c7a26b; }
+#menu .menu-parent:hover,
+#menu .menu-group:focus-within .menu-parent { color: #f4d7aa; background: none; box-shadow: none; }
+#menu .menu-arrow {
+  display: block; width: 7px; height: 7px;
+  border-bottom: 1.6px solid currentColor; border-right: 1.6px solid currentColor;
+  transform: translateY(-2px) rotate(45deg); transition: transform .16s;
+}
+#menu .menu-group:hover .menu-arrow,
+#menu .menu-group:focus-within .menu-arrow { transform: translateY(2px) rotate(225deg); }
+#menu .submenu {
+  position: absolute; top: calc(100% - 1px); right: 0;
+  width: max-content; min-width: 128px; max-width: min(90vw, 220px);
+  padding: 9px 7px 8px;
+  background: linear-gradient(145deg, rgba(255,254,250,.99), rgba(247,247,242,.99));
+  color: #203743;
+  border: 1px solid rgba(194,183,161,.45); border-top: 2px solid #c5a36b;
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 20px 40px rgba(9,36,41,.19), inset 0 1px 0 rgba(255,255,255,.94);
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transform: translateY(-5px);
+  transition: opacity .16s ease, visibility .16s ease, transform .16s ease;
+}
+#menu .submenu::before {
+  content: ""; display: block; width: 30px; height: 2px; margin: 1px 0 7px 13px;
+  background: linear-gradient(to right, #b48c51, rgba(180,140,81,0));
+}
+#menu .menu-group:hover > .submenu,
+#menu .menu-group:focus-within > .submenu {
+  opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0);
+}
 #menu .submenu li { margin: 0; padding: 0; }
-#menu .submenu a, #menu .submenu a:visited { display: block; padding: 10px 14px; border-radius: 7px; color: var(--renju-text); font-size: 15.5px; font-weight: 500; line-height: 1.35; text-align: left; text-decoration: none; white-space: nowrap; transition: background-color 0.14s ease, color 0.14s ease; }
-#menu .submenu a:hover, #menu .submenu a:focus-visible { background: var(--renju-primary-soft); color: var(--renju-primary-dark); text-decoration: none; outline: none; }
-#menu .menu-parent:focus-visible { outline: 2px solid var(--renju-accent); outline-offset: 2px; }
+#menu .submenu li + li { border-top: 1px solid rgba(41,78,78,.075); }
+#menu .submenu a,
+#menu .submenu a:visited {
+  display: flex; align-items: center; gap: 9px;
+  min-height: 44px; padding: 8px 9px;
+  border-radius: 8px; color: #294750;
+  font-size: 16px; font-weight: 550; line-height: 1.45; letter-spacing: .055em;
+  white-space: nowrap; text-align: left; text-decoration: none;
+  transition: color .16s ease, background-color .16s ease, box-shadow .16s ease;
+}
+#menu .submenu a::before {
+  content: ""; width: 6px; height: 6px; flex: none;
+  border: 1.2px solid #b99b6c; transform: rotate(45deg); opacity: .85;
+}
+#menu .submenu a:hover,
+#menu .submenu a:focus-visible {
+  color: #0e4e52; background: #e7f0eb; box-shadow: inset 3px 0 0 #b99a65;
+  text-decoration: none;
+}
+#menu .menu-parent:focus-visible,
+#menu .site-nav-toggle:focus-visible,
+#menu .site-nav-brand:focus-visible { outline: 3px solid #d7af63; outline-offset: 3px; }
+@media (max-width: 1170px) and (min-width: 851px) {
+  #menu { gap: 12px; padding-inline: 24px; }
+  #menu .site-nav-name { font-size: 19px; }
+  #menu .site-nav-en { font-size: 10px; }
+  #menu .menu-main { gap: 6px; }
+  #menu .menu-parent { font-size: 16px; padding-inline: 10px; }
+}
 
 /* 共用表格 */
 table.tb, table.rank { width: 100%; max-width: 100%; table-layout: auto; border-collapse: separate; border-spacing: 0; background: var(--renju-surface); border: 1px solid var(--renju-border); border-radius: 10px; box-shadow: 0 3px 12px rgba(36, 69, 95, 0.08); overflow: hidden; line-height: 1.45; }
@@ -138,16 +227,59 @@ table.rank td.rating-score { color: var(--rating-color, var(--renju-text)); font
 .result-draw { color: #4F6F91 !important; font-weight: 600; }
 .result-note { color: var(--renju-text-muted) !important; }
 
+
+/* 手機導覽：與首頁相同的漢堡選單及可點擊的單層下拉 */
+@media (max-width: 850px) {
+  #menu { height: 64px; padding-inline: 16px; gap: 9px; }
+  #menu .site-nav-logo { width: 38px; height: 38px; }
+  #menu .site-nav-brand { gap: 9px; }
+  #menu .site-nav-name { font-size: 17px; }
+  #menu .site-nav-en { font-size: 10px; letter-spacing: .015em; }
+  #menu .site-nav-toggle { display: block; margin-left: auto; }
+  #menu .menu-main {
+    display: none; position: absolute; left: 0; right: 0; top: 100%;
+    height: auto; min-width: 0; max-height: calc(100vh - 64px); overflow-y: auto;
+    padding: 0 16px 15px; gap: 0;
+    flex-direction: column;
+    background: #103642; border-top: 1px solid #345763;
+    box-shadow: 0 20px 24px rgba(0,0,0,.16);
+  }
+  #menu.nav-open .menu-main { display: flex; }
+  #menu .menu-group { display: block; width: 100%; border-bottom: 1px solid #355762; }
+  #menu .menu-parent {
+    width: 100%; height: 53px; display: flex; justify-content: space-between;
+    padding: 0 7px; border-bottom: 0; font-size: 17px;
+  }
+  #menu .menu-group:first-child .menu-parent { border-bottom: 0; }
+  #menu .submenu {
+    position: static; display: none; width: 100%; min-width: 0; max-width: none;
+    padding: 0 0 10px 10px; border: 0; border-radius: 0;
+    background: transparent; box-shadow: none;
+    transform: none; opacity: 1; visibility: visible; pointer-events: auto;
+  }
+  #menu .submenu::before { display: none; }
+  #menu .submenu li + li { border-top: 0; }
+  #menu .menu-group.menu-open > .submenu { display: block; }
+  #menu .menu-group.menu-open .menu-parent { color: #f4d7aa; }
+  #menu .menu-group.menu-open .menu-arrow { transform: translateY(2px) rotate(225deg); }
+  #menu .submenu a,
+  #menu .submenu a:visited {
+    color: #dce9e8; font-size: 16px; padding: 10px 15px; background: transparent;
+  }
+  #menu .submenu a::before { border-color: #c5a36b; }
+  #menu .submenu a:hover,
+  #menu .submenu a:focus-visible { background: #28515b; color: #fff; box-shadow: none; }
+}
+@media (max-width: 520px) {
+  #menu .site-nav-name { font-size: 16px; }
+  #menu .site-nav-en { font-size: 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #menu .submenu, #menu .menu-arrow { transition: none; }
+}
+
 @media (max-width: 768px) {
-	body { padding: 66px 12px 24px; }
-	#menu { height: 54px; }
-	#menu .menu-main { max-width: none; padding: 5px 6px; gap: 3px; }
-	#menu .menu-group { max-width: none; }
-	#menu .menu-parent { height: 44px; padding: 0 5px; border-radius: 7px; font-size: clamp(14px, 4.2vw, 17px); letter-spacing: 0; gap: 5px; }
-	#menu .menu-arrow { width: 6px; height: 6px; }
-	#menu .submenu { position: fixed; top: 60px; left: 12px; right: 12px; width: auto; min-width: 0; max-height: calc(100vh - 76px); overflow-y: auto; transform: translateY(-6px); }
-	#menu .menu-group:hover > .submenu, #menu .menu-group:focus-within > .submenu, #menu .menu-group.menu-open > .submenu { transform: translateY(0); }
-	#menu .submenu a, #menu .submenu a:visited { padding: 12px 14px; font-size: 16px; text-align: center; }
+	body { padding: 78px 12px 24px; }
 	table.tb, table.rank { font-size: 0.95rem; }
 	table.tb th, table.tb td, table.rank th, table.rank td { padding: 7px 9px; }
 	input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input[type="number"], input[type="password"], input[type="date"], input[type="datetime-local"], input[type="month"], input[type="time"], select, textarea { width: 100%; }
