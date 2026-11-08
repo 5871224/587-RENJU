@@ -56,6 +56,7 @@ jobs:
           forced_files=(
               'bb/keyinsql.php',
               'index.html',
+              'renju.css',
               'home-info.php',
               'js/home-info.js',
               'site-content-lib.php',
@@ -153,7 +154,7 @@ jobs:
             if not str(exc).startswith('550'): raise
           # Confirm files reached the target directory, not merely that STOR succeeded.
           # A mismatched FTP root or incomplete upload must fail the deployment.
-          for relative in ('rule.htm', 'rule-tree-visual.css', 'rank/index.php', 'rank/rule-tree-admin.css'):
+          for relative in ('renju.css', 'rule.htm', 'rule-tree-visual.css', 'rank/index.php', 'rank/rule-tree-admin.css'):
             ftp.cwd(base_dir); ensure_dir(posixpath.dirname(relative))
             chunks=[]
             ftp.retrbinary('RETR ' + posixpath.basename(relative), chunks.append)
