@@ -72,10 +72,11 @@ def configure_primary_domain(ftp: ftplib.FTP_TLS, base_dir: str, commit_sha: str
             ftp.retrbinary("RETR .htaccess", chunks.append)
             original = b"".join(chunks)
         except ftplib.error_perm as exc:
-            # Many fresh public_html roots have no .htaccess file yet.
-            if not str(exc).startswith("550"):
-                raise
-            original = b""
+            # Never mistake an unreadable .htaccess for a missing file.
+            # The current server file must be read before it can be preserved.
+            raise RuntimeError(
+                "Cannot safely read public_html/.htaccess over FTPS; aborting without changing it"
+            ) from exc
 
         updated = merge_routes(original)
         if updated == original:
