@@ -12,7 +12,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 
-BASE = "https://587.renju.org.tw"
+BASE = "https://www.renju.org.tw"
 COMMIT = os.environ.get("CURRENT_SHA", "local-check")
 
 
