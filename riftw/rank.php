@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link href="js/jquery-ui.min.css" rel="stylesheet">
-  <link href="../../renju.css" rel="stylesheet" type="text/css">
+  <link href="../../renju.css?v=20261109theme1" rel="stylesheet" type="text/css">
 
   <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
   <script src="js/jquery-ui.min.js"></script>
