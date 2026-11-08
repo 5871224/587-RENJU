@@ -201,36 +201,10 @@ body.tra-home {
 .tra-hero-title { margin: 0; font-family: "Noto Serif TC", "Source Han Serif TC", "Songti TC", "PMingLiU", serif; font-weight: 800; letter-spacing: .075em; font-size: clamp(40px, 4.8vw, 70px); line-height: 1.28; color: #0c2933; text-shadow: 0 1px 0 rgba(255,255,255,.4); }
 .tra-hero-subtitle { margin: 15px 0 0; max-width: 660px; color: #374c55; font-size: clamp(16px, 1.5vw, 19px); letter-spacing: .075em; }
 .tra-hero-rule { display: block; width: 54px; height: 3px; margin-top: 26px; background: var(--tra-gold); }
-/* 常用入口 */
-.tra-features {
-  position: relative; z-index: 2; margin-top: -52px;
-  display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px;
-}
-.tra-feature {
-  display: flex; align-items: center; gap: 18px;
-  padding: 20px 21px; min-height: 104px;
-  border: 1px solid var(--tra-line); border-radius: 12px;
-  background: rgba(255,255,255,.975); box-shadow: var(--tra-shadow);
-  transition: transform .17s ease, box-shadow .17s ease, border-color .17s ease;
-}
-.tra-feature:hover { transform: translateY(-3px); border-color: #bfd5cb; box-shadow: 0 15px 32px rgba(26,48,53,.105); }
-.tra-feature-icon {
-  width: 58px; height: 58px; display: grid; place-items: center; flex-shrink: 0;
-  border-radius: 14px; color: #456a5c; background: #eaf3ec;
-}
-.tra-feature:nth-child(2) .tra-feature-icon { background: #f7eddb; color: #b78c49; }
-.tra-feature:nth-child(3) .tra-feature-icon { background: #e8f0ee; color: #5c8485; }
-.tra-feature:nth-child(4) .tra-feature-icon { background: #e9f1f5; color: #698da0; }
-.tra-feature-icon svg { width: 27px; height: 27px; stroke: currentColor; stroke-width: 1.7; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.tra-feature-text { display: flex; flex-direction: column; min-width: 0; gap: 3px; }
-.tra-feature-text strong { font-size: 19px; font-weight: 760; letter-spacing: .08em; color: #24414a; }
-.tra-feature-text small { font-size: 14px; line-height: 1.5; color: #818b8f; }
-.tra-feature-arrow { margin-left: auto; font-size: 22px; color: #6d8684; font-weight: 300; }
-.tra-feature:hover .tra-feature-arrow { color: #b18d57; }
-
 /* 雙欄資訊：沿用 home-info.js 的現有 ID 和資料來源 */
 .tra-news-grid {
-  margin-top: 19px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr));
+  position: relative; z-index: 2; margin-top: -52px;
+  display: grid; grid-template-columns: repeat(2,minmax(0,1fr));
   align-items: start; gap: 18px;
 }
 .tra-news-card {
@@ -322,10 +296,6 @@ body.tra-home {
   .tra-brand-en { font-size: 10px; }
   .tra-home #menu .menu-main { gap: 6px; }
   .tra-home #menu .menu-parent { font-size: 16px; padding-inline: 10px; }
-  .tra-feature { gap: 12px; padding: 15px; }
-  .tra-feature-icon { width: 47px; height: 47px; }
-  .tra-feature-text strong { font-size: 17px; }
-  .tra-feature-text small { font-size: 13px; }
 }
 @media (max-width: 850px) {
   .tra-shell { width: min(100% - 32px, 720px); }
@@ -382,8 +352,7 @@ body.tra-home {
   .tra-hero-title { font-size: clamp(36px, 6.3vw, 56px); }
   .tra-hero .tra-hero-art { opacity: .58; }
   .tra-hero .tra-hero-art img { object-position: 63% 35%; }
-  .tra-features { grid-template-columns: repeat(2,minmax(0,1fr)); margin-top: -38px; }
-  .tra-news-grid { grid-template-columns: 1fr; }
+  .tra-news-grid { grid-template-columns: 1fr; margin-top: -38px; }
 }
 @media (max-width: 520px) {
   .tra-shell { width: calc(100% - 28px); }
@@ -395,14 +364,6 @@ body.tra-home {
   .tra-overline { font-size: 10px; letter-spacing: .22em; }
   .tra-hero-title { font-size: clamp(33px, 8.5vw, 44px); letter-spacing: .045em; }
   .tra-hero-subtitle { font-size: 15px; max-width: 320px; }
-  .tra-features { gap: 10px; }
-  .tra-feature { min-height: 122px; flex-wrap: wrap; gap: 8px; padding: 15px; align-content: center; }
-  .tra-feature-icon { width: 42px; height: 42px; }
-  .tra-feature-icon svg { width: 23px; height: 23px; }
-  .tra-feature-text { flex: 1 1 calc(100% - 54px); }
-  .tra-feature-text strong { font-size: 16px; }
-  .tra-feature-text small { font-size: 12px; }
-  .tra-feature-arrow { display: none; }
   .tra-news-card { padding: 17px 15px 14px; }
   .tra-news-heading h2 { font-size: 20px; }
   .tra-news-heading h2::before { height: 23px; }
@@ -417,6 +378,5 @@ body.tra-home {
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .tra-feature, .tra-home #menu .submenu, .tra-home #menu .menu-arrow { transition: none; }
-  .tra-feature:hover { transform: none; }
+  .tra-home #menu .submenu, .tra-home #menu .menu-arrow { transition: none; }
 }
