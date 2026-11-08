@@ -1076,7 +1076,7 @@ if ($isResultsRequest) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>世界紀錄｜五子棋・連珠</title>
-<link href="../renju.css" rel="stylesheet">
+<link href="../renju.css?v=20261109theme1" rel="stylesheet">
 <style>
 .wr-main{max-width:1150px;margin:0 auto;padding:18px 18px 50px;box-sizing:border-box}
 .wr-main h1{margin:8px 0 12px}
