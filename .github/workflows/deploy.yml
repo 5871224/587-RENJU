@@ -22,7 +22,7 @@ jobs:
         shell: pwsh
         run: ./scripts/check-project.ps1
       - name: Check Python maintenance and deployment verification syntax
-        run: python -m py_compile scripts/renjunet_sync.py scripts/verify-rule-tree-deployment.py
+        run: python -m py_compile scripts/renjunet_sync.py scripts/verify-rule-tree-deployment.py scripts/canonical_domain.py
 
   deploy:
     needs: validate
@@ -46,6 +46,8 @@ jobs:
           CURRENT_SHA: ${{ github.sha }}
         run: |
           import ftplib, os, posixpath, subprocess, sys, hashlib
+          sys.path.insert(0, os.getcwd())
+          from scripts.canonical_domain import configure_primary_domain
           def trim_linebreaks(value): return value.strip('\r\n')
           server=trim_linebreaks(os.environ['FTP_SERVER']); username=trim_linebreaks(os.environ['FTP_USERNAME']); password=trim_linebreaks(os.environ['FTP_PASSWORD']); server_dir=trim_linebreaks(os.environ.get('FTP_SERVER_DIR','')).strip(); event_name=os.environ.get('EVENT_NAME',''); before_sha=os.environ.get('BEFORE_SHA',''); current_sha=os.environ.get('CURRENT_SHA','HEAD'); zero_sha='0'*40
           command=['git','diff','--name-only','-z','--diff-filter=ACMRTUXB',before_sha,current_sha] if event_name=='push' and before_sha and before_sha!=zero_sha else ['git','diff-tree','--no-commit-id','--name-only','-r','-z',current_sha]
@@ -133,6 +135,10 @@ jobs:
               try: ftp.cwd(part)
               except ftplib.error_perm: ftp.mkd(part); ftp.cwd(part)
           ensure_dir(server_dir); base_dir=ftp.pwd()
+          # Configure the parent web root first; if FTP is scoped to the 587 folder,
+          # abort before uploading the redirect that would point visitors to the old site.
+          if '.htaccess' in files:
+            configure_primary_domain(ftp, base_dir, current_sha)
           for local_path in files:
             remote_path=local_path.replace('\\','/'); ftp.cwd(base_dir); ensure_dir(posixpath.dirname(remote_path))
             with open(local_path,'rb') as fh: ftp.storbinary(f'STOR {posixpath.basename(remote_path)}',fh)
@@ -170,11 +176,28 @@ jobs:
           CURRENT_SHA: ${{ github.sha }}
         run: python scripts/verify-rule-tree-deployment.py
 
+      - name: Verify canonical hostname redirects
+        shell: bash
+        run: |
+          set -euo pipefail
+          canonical='https://www.renju.org.tw'
+          for old in 'https://renju.org.tw' 'https://587.renju.org.tw'; do
+            result="$(curl -k -sS -o /dev/null -w '%{http_code} %{redirect_url}' --max-time 30 "$old/rule.htm")"
+            echo "$old/rule.htm -> $result"
+            if [ "$result" != "301 $canonical/rule.htm" ]; then
+              echo "Canonical redirect check failed for $old" >&2
+              exit 1
+            fi
+          done
+          code="$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 30 "$canonical/rule.htm")"
+          echo "$canonical/rule.htm -> $code"
+          [ "$code" = '200' ]
+
       - name: Verify public security boundaries
         shell: bash
         run: |
           set -euo pipefail
-          base='https://587.renju.org.tw'
+          base='https://www.renju.org.tw'
           # /riftw/tourtest.php is managed and verified by the private 587renju-admin repository.
           paths=(
             '/riftw/officialweb-query.php'
