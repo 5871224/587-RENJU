@@ -337,7 +337,6 @@ body.tra-home {
   .tra-hero, .tra-hero-inner { min-height: 320px; }
   .tra-hero-inner { padding: 45px 0 74px; }
   .tra-hero-title { font-size: clamp(36px, 6.3vw, 56px); }
-  .tra-hero .tra-hero-art { opacity: .58; }
   .tra-hero .tra-hero-art img { object-position: 63% 35%; }
   .tra-news-grid { grid-template-columns: 1fr; margin-top: -38px; }
 }
