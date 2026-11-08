@@ -11,6 +11,12 @@
 	--renju-border: #e1e6e2;
 	--renju-link: #356679;
 	--renju-link-hover: #174953;
+	--renju-button-primary: #285860;
+	--renju-button-primary-hover: #103642;
+	--renju-button-secondary: #fffefa;
+	--renju-button-secondary-hover: #e7f2ed;
+	--renju-button-secondary-border: #b9cfc4;
+	--renju-button-secondary-text: #21404b;
 	--renju-danger: #B1534C;
 }
 
@@ -196,10 +202,51 @@ input, select, textarea, button { font-family: inherit; font-size: 1rem; }
 input[type="text"], input[type="search"], input[type="email"], input[type="url"], input[type="tel"], input[type="number"], input[type="password"], input[type="date"], input[type="datetime-local"], input[type="month"], input[type="time"], select, textarea { max-width: 100%; padding: 9px 12px; border: 1px solid var(--renju-border); border-radius: 8px; background: var(--renju-surface); color: var(--renju-text); outline: none; transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease; }
 textarea { resize: vertical; line-height: 1.5; }
 input[type="text"]:focus, input[type="search"]:focus, input[type="email"]:focus, input[type="url"]:focus, input[type="tel"]:focus, input[type="number"]:focus, input[type="password"]:focus, input[type="date"]:focus, input[type="datetime-local"]:focus, input[type="month"]:focus, input[type="time"]:focus, select:focus, textarea:focus { border-color: var(--renju-primary); box-shadow: 0 0 0 3px rgba(40, 88, 96, .16); background: #FFFCF7; }
-button, input[type="button"], input[type="submit"], input[type="reset"] { min-height: 40px; padding: 8px 15px; border: 1px solid var(--renju-primary-dark); border-radius: 8px; background: var(--renju-primary); color: #FBF8F2; font-weight: 600; cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease; }
-button:hover, input[type="button"]:hover, input[type="submit"]:hover, input[type="reset"]:hover { background: var(--renju-primary-dark); border-color: var(--renju-primary-dark); }
-button:active, input[type="button"]:active, input[type="submit"]:active, input[type="reset"]:active { transform: translateY(1px); }
-button:focus-visible, input[type="button"]:focus-visible, input[type="submit"]:focus-visible, input[type="reset"]:focus-visible { outline: 2px solid var(--renju-accent); outline-offset: 2px; }
+/* 全站一般操作按鈕：共用主色與次要樣式，棋盤及選單控制沿用各自元件規則。 */
+button, input[type="button"], input[type="submit"], input[type="reset"],
+.record-search-clear, .wr-filters .wr-action,
+.wr-filters .wr-opening-all, .wr-filters .wr-opening-done,
+.swiss-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  box-sizing: border-box; min-height: 40px; padding: 8px 15px;
+  border: 1px solid var(--renju-button-primary); border-radius: 8px;
+  background: var(--renju-button-primary); color: #faf9f3;
+  font-family: inherit; font-size: 15px; font-weight: 650; line-height: 1.4;
+  text-align: center; text-decoration: none; white-space: nowrap; cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease,
+              color .15s ease, box-shadow .15s ease, transform .08s ease;
+}
+button:hover, input[type="button"]:hover, input[type="submit"]:hover, input[type="reset"]:hover,
+.wr-filters .wr-action:hover, .wr-filters .wr-opening-done:hover {
+  background: var(--renju-button-primary-hover);
+  border-color: var(--renju-button-primary-hover); color: #fff;
+}
+.record-search-clear, .record-search-clear:visited,
+.wr-filters .wr-action:not(.wr-action-primary),
+.wr-filters .wr-action:not(.wr-action-primary):visited,
+.wr-filters .wr-opening-all,
+.swiss-btn, .swiss-btn:visited {
+  background: var(--renju-button-secondary);
+  border-color: var(--renju-button-secondary-border);
+  color: var(--renju-button-secondary-text);
+}
+.record-search-clear:hover, .record-search-clear:focus-visible,
+.wr-filters .wr-action:not(.wr-action-primary):hover,
+.wr-filters .wr-opening-all:hover,
+.swiss-btn:hover {
+  background: var(--renju-button-secondary-hover);
+  border-color: #9fbeb0; color: var(--renju-primary-dark); text-decoration: none;
+}
+button:active, input[type="button"]:active, input[type="submit"]:active, input[type="reset"]:active,
+.record-search-clear:active, .wr-filters .wr-action:active, .swiss-btn:active {
+  transform: translateY(1px);
+}
+button:focus-visible, input[type="button"]:focus-visible, input[type="submit"]:focus-visible,
+input[type="reset"]:focus-visible, .record-search-clear:focus-visible,
+.wr-filters .wr-action:focus-visible, .wr-filters .wr-opening-all:focus-visible,
+.wr-filters .wr-opening-done:focus-visible, .swiss-btn:focus-visible {
+  outline: 2px solid var(--renju-accent); outline-offset: 3px;
+}
 button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: not-allowed; opacity: 0.58; }
 
 /* 共用內容元件 */

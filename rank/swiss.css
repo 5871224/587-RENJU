@@ -10,18 +10,6 @@
 .swiss-subhead h3,
 .table-heading { margin: 0; color: #21404b; font-size: 18px; }
 
-.swiss-btn {
-    display: inline-block;
-    padding: 5px 10px;
-    border: 1px solid #9fb8c8;
-    border-radius: 7px;
-    background: #fff;
-    color: #245c78;
-    font-weight: 700;
-    text-decoration: none;
-}
-.swiss-btn:hover { background: #f2f8fb; }
-
 .swiss-scroll { width: 100%; overflow-x: auto; }
 
 .swiss-rank,
@@ -246,20 +234,11 @@
     border-radius: 6px;
     background: #fff;
 }
-.swiss-form button,
-.swiss-edit button {
-    padding: 7px 12px;
-    border: 1px solid #9fb8c8;
-    border-radius: 7px;
-    background: #fff;
-    cursor: pointer;
-}
 .swiss-edit { max-width: 1000px; }
 .swiss-edit table { width: 100%; border-collapse: collapse; }
 .swiss-edit th,
 .swiss-edit td { padding: 7px; border-bottom: 1px solid #e5e7eb; text-align: left; }
 .swiss-edit .actions { display: flex; gap: 8px; margin-top: 14px; }
-.swiss-edit .primary { background: #245c78; color: #fff; }
 .den-score { color: #1565c0; font-weight: 800; }
 
 /* 輪次分數與對手欄採固定緊湊寬度。 */

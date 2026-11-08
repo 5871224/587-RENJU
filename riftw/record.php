@@ -29,10 +29,6 @@ function changeRecord(value) {
 .record-player-field label {font-weight:600;white-space:nowrap;}
 .record-player-field input {font:inherit;width:195px;min-width:0;height:42px;box-sizing:border-box;padding:8px 11px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#182432;}
 .record-player-field input:focus {border-color:#5286b4;outline:2px solid #5286b433;outline-offset:1px;}
-.record-search-button,.record-search-clear {display:inline-flex;align-items:center;justify-content:center;min-height:42px;box-sizing:border-box;padding:8px 14px;border:1px solid #2474b7;border-radius:8px;background:#2474b7;color:#fff;font:inherit;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;white-space:nowrap;}
-.record-search-button:hover {background:#195c95;border-color:#195c95;}
-.record-search-clear {background:#fff;color:#23384e;border-color:#c6d1de;}
-.record-search-clear:hover {background:#eaf1f8;}
 .record-title {margin:8px 0 4px;}
 .record-description {color:#586579;margin-bottom:16px;}
 .record-table-wrap {width:100%;overflow-x:auto;}
