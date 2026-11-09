@@ -597,9 +597,7 @@ function clickbutton() {
 
   $("#start").click(function () {
     if ($('#nickname').val().trim() != '') {
-
-      document.cookie = "nickname=" + encodeURIComponent($("#nickname").val().trim()) + "; path=/; max-age=31536000";;
-
+      // 暱稱由 puzzle.php 的 persistNickname 統一儲存。
       $("#start").hide()
       $("#menu").hide()
       $("#TL").hide()
