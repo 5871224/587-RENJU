@@ -1362,7 +1362,7 @@ function autogrow(textarea) {
     if ($thisdiv.find(".Tnumhide").val() != "0") {
       SETMODE += "&numhide=" + $thisdiv.find(".Tnumhide").val()
     }
-    $thisdiv.find(".sharetext").val("https://587.renju.org.tw/5.php?move=" + $thisdiv.data("ALLBU") + SETMODE)
+    $thisdiv.find(".sharetext").val(window.location.origin + "/5.php?move=" + $thisdiv.data("ALLBU") + SETMODE)
   }
 
   $.fn.newboard = function (boardsize) {

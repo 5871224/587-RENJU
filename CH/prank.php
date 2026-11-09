@@ -3,7 +3,7 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=1000">
 	<link rel=stylesheet href="puzzle.css">
-	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+	<script src="/js/jquery-3.7.1.min.js"></script>
 
 <script>
 // 全域變數

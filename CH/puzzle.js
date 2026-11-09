@@ -354,7 +354,7 @@ function readset() {
         standtime += puzzlearr[i][3] * 1 + puzzlearr[i][4] * 1
       }
       totaltime += puzzlearr[i][5] * 1
-      result += "<tr>" + rowContent + "</td><td>　<a href='https://587.renju.org.tw/5.php?" + puzzlearr[i][1] + "&heading=F&comment=F&num=0' target='new'>" + "<font size='3' color='#ffffff'>題目:" + puzzlearr[i][0] + "</font></a></td></tr>"
+      result += "<tr>" + rowContent + "</td><td>　<a href='/5.php?" + puzzlearr[i][1] + "&heading=F&comment=F&num=0' target='new'>" + "<font size='3' color='#ffffff'>題目:" + puzzlearr[i][0] + "</font></a></td></tr>"
     }
     var exact = Math.round(right * 100 * Math.pow(0.95, $('.board587').data('renew')))
     var speed = Math.round(Math.pow(standtime / totaltime, (1 / 2)) * (1 + bstar / ($('.board587').data('no') - 1)) * 100)
@@ -598,9 +598,7 @@ function clickbutton() {
   $("#start").click(function () {
     if ($('#nickname').val().trim() != '') {
 
-      var date = new Date();
-      date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000)); // 設置 cookie 的有效期為 30 天
-      document.cookie = "nickname=" + encodeURIComponent(nickname) + "; expires=" + date.toUTCString() + "; path=/; domain=.587.renju.org.tw;";
+      document.cookie = "nickname=" + encodeURIComponent($("#nickname").val().trim()) + "; path=/; max-age=31536000";;
 
       $("#start").hide()
       $("#menu").hide()
@@ -1105,7 +1103,7 @@ function autogrow(textarea) {
     // if ($thisdiv.find('.Tnumhide').val() != '0') {
     //   SETMODE += '&numhide=' + $thisdiv.find('.Tnumhide').val()
     // }
-    // $thisdiv.find('.sharetext').val('https://587.renju.org.tw/5.php?move=' + $thisdiv.data('ALLBU') + SETMODE)
+    // $thisdiv.find('.sharetext').val(window.location.origin + '/5.php?move=' + $thisdiv.data('ALLBU') + SETMODE)
   }
 
   $.fn.newboard = function (boardsize) {

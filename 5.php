@@ -5,8 +5,8 @@
 	<meta charset="UTF-8" />	
 	<meta name="viewport" content="width=454, user-scalable=no">
 	<link rel=stylesheet href="bb/bb.css?v=3">
-	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
-	<script src="bb/bb55.js?v=3"></script>
+	<script src="/js/jquery-3.7.1.min.js"></script>
+	<script src="bb/bb55.js?v=4"></script>
 	<?php
 
 	$title = "《Renju Gomoku》";

@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=450px, initial-scale=0.85, maximum-scale=1.3">
     <link rel="stylesheet" href="puzzle.css?v=2">
-    <script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
-    <script src="puzzle.js?v=1"></script>
+    <script src="/js/jquery-3.7.1.min.js"></script>
+    <script src="puzzle.js?v=2"></script>
     <style>
         body {
     text-align: center;

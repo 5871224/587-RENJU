@@ -4,7 +4,7 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=450px, initial-scale=0.9">
 	<link rel="stylesheet" href="puzzle.css">
-	<script src="https://587.renju.org.tw/js/jquery-3.7.1.min.js"></script>
+	<script src="/js/jquery-3.7.1.min.js"></script>
 </HEAD>
 <body class="bg-dark">
 
