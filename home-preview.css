@@ -319,6 +319,7 @@ body.tra-home {
     position: static;
     width: 100%;
     min-width: 0;
+    max-width: none;
     padding: 0 0 10px 10px;
     transform: none;
     box-shadow: none;
