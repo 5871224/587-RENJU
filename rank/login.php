@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * 排名後台使用 /Sched/ 的 users / auth_tokens 作為唯一身份及權限來源。
+ * 只有 Sched users.permission = 'admin' 可進入 /rank/。
+ * PHP session 僅保存後台 CSRF / 頁面狀態，不再另設帳號密碼。
+ */
 declare(strict_types=1);
 
 $rankTimeZone = new DateTimeZone('Asia/Taipei');
@@ -7,7 +11,8 @@ $rankNow = new DateTimeImmutable('now', $rankTimeZone);
 $rankToday = $rankNow->format('Y-m-d');
 $rankTomorrow = $rankNow->modify('tomorrow')->setTime(0, 0, 0);
 $sessionLifetime = max(60, $rankTomorrow->getTimestamp() - $rankNow->getTimestamp());
-$secureCookie = (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off');
+$secureCookie = ((!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off')
+    || strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https');
 if (session_status() !== PHP_SESSION_ACTIVE) {
     ini_set('session.use_strict_mode', '1');
     ini_set('session.gc_maxlifetime', '90000');
@@ -27,64 +32,40 @@ header('Referrer-Policy: same-origin');
 header("Content-Security-Policy: frame-ancestors 'self'; base-uri 'self'; form-action 'self'");
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
-$configFile = dirname(__DIR__) . '/config.local.php';
-$config = is_file($configFile) ? require $configFile : [];
-if (!is_array($config)) {
-    $config = [];
+$schedAuthDir = dirname(__DIR__) . '/Sched/api';
+require_once $schedAuthDir . '/AuthTokenService.php';
+$schedAuthConfig = require $schedAuthDir . '/config.php';
+try {
+    $db = $schedAuthConfig['db'];
+    $schedDsn = sprintf('mysql:host=%s;dbname=%s;charset=%s', $db['host'], $db['dbname'], $db['charset']);
+    $schedAuthPdo = new PDO($schedDsn, $db['user'], $db['pass'], [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ]);
+    $schedAuthUser = authCurrentUser($schedAuthPdo, $schedAuthConfig);
+} catch (Throwable $e) {
+    error_log('rank shared auth error: ' . $e->getMessage());
+    http_response_code(503);
+    exit('登入系統暫時無法使用，請稍後再試。');
 }
 
-$rankAdminUser = trim((string)($config['rank_admin_user'] ?? ''));
-$rankAdminPasswordHash = trim((string)($config['rank_admin_password_hash'] ?? ''));
-$rankAdminConfigured = ($rankAdminUser !== '' && $rankAdminPasswordHash !== '');
-
 if (isset($_GET['logout']) && $_GET['logout'] === '1') {
+    authLogoutCurrentToken($schedAuthPdo);
     $_SESSION = [];
-    if (ini_get('session.use_cookies')) {
-        $params = session_get_cookie_params();
-        setcookie(session_name(), '', [
-            'expires' => time() - 42000,
-            'path' => $params['path'],
-            'domain' => $params['domain'] ?? '',
-            'secure' => (bool)$params['secure'],
-            'httponly' => (bool)$params['httponly'],
-            'samesite' => $params['samesite'] ?? 'Strict',
-        ]);
-    }
-    session_destroy();
-    header('Location: ./');
+    session_regenerate_id(true);
+    header('Location: /Sched/');
     exit;
 }
 
-$loginError = $rankAdminConfigured ? '' : '管理登入尚未設定。';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['rank_auth_action'] ?? '') === 'login') {
-    $username = trim((string)($_POST['username'] ?? ''));
-    $password = (string)($_POST['password'] ?? '');
-    if ($rankAdminConfigured && hash_equals($rankAdminUser, $username) && password_verify($password, $rankAdminPasswordHash)) {
-        session_regenerate_id(true);
-        $_SESSION['rank_admin_authenticated'] = true;
-        $_SESSION['rank_admin_login_date'] = $rankToday;
-        unset($_SESSION['rank_admin_last_activity']);
-        $target = (string)($_SERVER['REQUEST_URI'] ?? '/rank/');
-        header('Location: ' . $target);
-        exit;
-    }
-    usleep(350000);
-    $loginError = $rankAdminConfigured ? '帳號或密碼錯誤。' : '管理登入尚未設定。';
-}
-
-$sessionAuthenticated = ($_SESSION['rank_admin_authenticated'] ?? false) === true;
-$sessionLoginDate = (string)($_SESSION['rank_admin_login_date'] ?? '');
-$authenticated = $sessionAuthenticated && $sessionLoginDate !== '' && hash_equals($rankToday, $sessionLoginDate);
-if ($sessionAuthenticated && !$authenticated) {
-    $_SESSION = [];
-    session_regenerate_id(true);
-    $loginError = '登入已跨日，請重新登入。';
-}
-
-if (!$authenticated) {
-    http_response_code(401);
-    $errorHtml = $loginError !== '' ? '<div class="error">' . htmlspecialchars($loginError, ENT_QUOTES, 'UTF-8') . '</div>' : '';
-    echo '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>排名管理登入</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#eef3f8;font-family:Arial,"Microsoft JhengHei",sans-serif;color:#172033}.card{width:min(92vw,390px);background:#fff;border:1px solid #dbe4ee;border-radius:14px;padding:26px;box-shadow:0 12px 35px rgba(15,23,42,.1)}h1{font-size:23px;margin:0 0 6px}.sub{color:#64748b;font-size:14px;margin-bottom:20px}label{display:block;font-weight:700;font-size:13px;margin:12px 0 6px}input{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:16px}button{width:100%;margin-top:18px;padding:10px;border:0;border-radius:8px;background:#1769aa;color:#fff;font-size:16px;font-weight:700;cursor:pointer}.error{margin:0 0 14px;padding:10px 12px;border-radius:8px;background:#fff1f2;color:#9f1239;border:1px solid #fecdd3}</style></head><body><main class="card"><h1>排名管理登入</h1><div class="sub">登入後才能存取排名資料管理與重算工具。</div>' . $errorHtml . '<form method="post" autocomplete="off"><input type="hidden" name="rank_auth_action" value="login"><label for="username">帳號</label><input id="username" name="username" type="text" autocomplete="username" required autofocus><label for="password">密碼</label><input id="password" name="password" type="password" autocomplete="current-password" required><button type="submit">登入</button></form></main></body></html>';
+if (!$schedAuthUser || ($schedAuthUser['permission'] ?? '') !== 'admin') {
+    http_response_code($schedAuthUser ? 403 : 401);
+    $title = $schedAuthUser ? '沒有管理員權限' : '請先登入';
+    $desc = $schedAuthUser
+        ? '目前登入的賽程帳號沒有管理員權限，請聯絡賽程管理員設定。'
+        : '排名後台已改用賽程系統的帳號及權限。請先至賽程登入，再返回本頁。';
+    echo '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>排名管理登入</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#eef3f8;font-family:Arial,"Microsoft JhengHei",sans-serif;color:#172033}.card{width:min(92vw,420px);background:#fff;border:1px solid #dbe4ee;border-radius:14px;padding:26px;box-shadow:0 12px 35px rgba(15,23,42,.1)}h1{font-size:23px;margin:0 0 12px}.sub{color:#64748b;font-size:15px;line-height:1.7;margin-bottom:22px}.btn{display:block;text-decoration:none;text-align:center;padding:11px;border-radius:9px;background:#1769aa;color:#fff;font-weight:700}</style></head><body><main class="card"><h1>'
+        . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h1><div class="sub">'
+        . htmlspecialchars($desc, ENT_QUOTES, 'UTF-8') . '</div><a class="btn" href="/Sched/">前往賽程登入</a></main></body></html>';
     exit;
 }
 
@@ -100,12 +81,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $expectedHostOnly = strtolower((string)(parse_url('https://' . $expectedHost, PHP_URL_HOST) ?? $expectedHost));
     $fetchSite = strtolower(trim((string)($_SERVER['HTTP_SEC_FETCH_SITE'] ?? '')));
-    if ($sourceHost === '' || !hash_equals($expectedHostOnly, $sourceHost) || ($fetchSite !== '' && $fetchSite !== 'same-origin')) {
+    if ($sourceHost === '' || !hash_equals($expectedHostOnly, $sourceHost)
+        || ($fetchSite !== '' && $fetchSite !== 'same-origin')) {
         http_response_code(403);
         header('Content-Type: text/plain; charset=UTF-8');
-        echo 'Forbidden';
-        exit;
+        exit('Forbidden');
     }
 }
 
+// 保留排名資料庫連線與原本所有後台操作。
 require_once dirname(__DIR__) . '/riftw/login.php';
