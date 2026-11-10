@@ -170,6 +170,16 @@ if ($rankLogin -match 'rank_admin_password_hash|rank_admin_authenticated|passwor
     throw 'rank/login.php must not fall back to legacy independent credentials.'
 }
 
+# 未登入時必須留在 /rank/ 掛載同一個瑞士制登入元件，不可跳去賽程列表。
+foreach ($required in @('/Sched/assets/rank-auth.js', '/Sched/assets/rank-auth.css', 'rank-auth-app')) {
+    if ($rankLogin -notmatch [regex]::Escape($required)) {
+        throw "rank/login.php is missing inline shared login entry: $required"
+    }
+}
+if ($rankLogin -match 'Location:\s*/Sched/index\.html|login=rank') {
+    throw 'rank/login.php must open the shared login dialog in place instead of redirecting.'
+}
+
 $rankProtectedPages = @(
     'rank/index.php',
     'rank/sched-import.php',
