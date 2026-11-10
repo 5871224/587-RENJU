@@ -157,18 +157,17 @@ if ($keyinSource -notmatch "\['VC4',\s*'X33',\s*'X43',\s*'X44',\s*'1M43'\]") {
 }
 
 $rankLogin = Get-Content -Raw 'rank/login.php'
-foreach ($required in @('password_verify', 'session_regenerate_id', "'samesite' => 'Strict'", 'rank_admin_authenticated')) {
+# /rank/ 不再使用獨立管理員密碼；驗證 Sched 共用登入與 admin 權限。
+foreach ($required in @('authCurrentUser', 'authLogoutCurrentToken', "['permission'] ?? ''", "!== 'admin'", 'session_regenerate_id', "'samesite' => 'Strict'", "/Sched/api")) {
     if ($rankLogin -notmatch [regex]::Escape($required)) {
-        throw "rank/login.php is missing required authentication control: $required"
+        throw "rank/login.php is missing shared Sched authentication control: $required"
     }
 }
 if ($rankLogin -match '\$2[aby]\$\d{2}\$[A-Za-z0-9./]{20,}') {
     throw 'rank/login.php must not contain a hard-coded password hash.'
 }
-foreach ($required in @('$rankAdminConfigured', "rank_admin_user'] ?? ''", "rank_admin_password_hash'] ?? ''")) {
-    if ($rankLogin -notmatch [regex]::Escape($required)) {
-        throw "rank/login.php is missing fail-closed configuration control: $required"
-    }
+if ($rankLogin -match 'rank_admin_password_hash|rank_admin_authenticated|password_verify') {
+    throw 'rank/login.php must not fall back to legacy independent credentials.'
 }
 
 $rankProtectedPages = @(
