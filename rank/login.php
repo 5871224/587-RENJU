@@ -57,14 +57,32 @@ if (isset($_GET['logout']) && $_GET['logout'] === '1') {
     exit;
 }
 
-// 未登入時直接使用瑞士制現有的 Google／Email 登入視窗，不維護第二套登入畫面。
+// 未登入時停留在 /rank/；由瑞士制產出的 JS 直接掛載同一個 EmailAuthDialog。
+// 不複製登入表單，也不導頁到 /Sched/index.html。
 if (!$schedAuthUser) {
-    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
-        header('Location: /Sched/index.html?login=rank', true, 302);
-        exit;
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+        http_response_code(401);
+        exit('請先登入。');
     }
-    http_response_code(401);
-    exit('請先登入。');
+
+    $authAssetsDir = dirname(__DIR__) . '/Sched/assets';
+    $authJs = $authAssetsDir . '/rank-auth.js';
+    $authCss = $authAssetsDir . '/rank-auth.css';
+    $authJsVersion = is_file($authJs) ? (string)filemtime($authJs) : '0';
+    $authCssVersion = is_file($authCss) ? (string)filemtime($authCss) : '0';
+    header('Content-Type: text/html; charset=UTF-8');
+    echo '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">'
+        . '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        . '<title>排名管理登入</title>'
+        . '<script src="https://accounts.google.com/gsi/client" async defer></script>'
+        . '<script src="/Sched/assets/open-external-browser.js" defer></script>'
+        . '<link rel="stylesheet" href="/Sched/assets/rank-auth.css?v=' . $authCssVersion . '">'
+        . '<script type="module" src="/Sched/assets/rank-auth.js?v=' . $authJsVersion . '"></script>'
+        . '</head><body style="margin:0">'
+        . '<div id="rank-auth-app"><main style="min-height:100vh;display:grid;place-items:center;font-family:Arial,sans-serif">載入登入視窗…</main></div>'
+        . '<noscript>請開啟 JavaScript，才能登入排名管理後台。</noscript>'
+        . '</body></html>';
+    exit;
 }
 
 if (($schedAuthUser['permission'] ?? '') !== 'admin') {
