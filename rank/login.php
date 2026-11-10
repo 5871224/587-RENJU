@@ -57,15 +57,19 @@ if (isset($_GET['logout']) && $_GET['logout'] === '1') {
     exit;
 }
 
-if (!$schedAuthUser || ($schedAuthUser['permission'] ?? '') !== 'admin') {
-    http_response_code($schedAuthUser ? 403 : 401);
-    $title = $schedAuthUser ? '沒有管理員權限' : '請先登入';
-    $desc = $schedAuthUser
-        ? '目前登入的賽程帳號沒有管理員權限，請聯絡賽程管理員設定。'
-        : '排名後台已改用賽程系統的帳號及權限。請先至賽程登入，再返回本頁。';
-    echo '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>排名管理登入</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#eef3f8;font-family:Arial,"Microsoft JhengHei",sans-serif;color:#172033}.card{width:min(92vw,420px);background:#fff;border:1px solid #dbe4ee;border-radius:14px;padding:26px;box-shadow:0 12px 35px rgba(15,23,42,.1)}h1{font-size:23px;margin:0 0 12px}.sub{color:#64748b;font-size:15px;line-height:1.7;margin-bottom:22px}.btn{display:block;text-decoration:none;text-align:center;padding:11px;border-radius:9px;background:#1769aa;color:#fff;font-weight:700}</style></head><body><main class="card"><h1>'
-        . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h1><div class="sub">'
-        . htmlspecialchars($desc, ENT_QUOTES, 'UTF-8') . '</div><a class="btn" href="/Sched/">前往賽程登入</a></main></body></html>';
+// 未登入時直接使用瑞士制現有的 Google／Email 登入視窗，不維護第二套登入畫面。
+if (!$schedAuthUser) {
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
+        header('Location: /Sched/index.html?login=rank', true, 302);
+        exit;
+    }
+    http_response_code(401);
+    exit('請先登入。');
+}
+
+if (($schedAuthUser['permission'] ?? '') !== 'admin') {
+    http_response_code(403);
+    echo '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>排名管理權限</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#eef3f8;font-family:Arial,"Microsoft JhengHei",sans-serif;color:#172033}.card{width:min(92vw,420px);background:#fff;border:1px solid #dbe4ee;border-radius:14px;padding:26px;box-shadow:0 12px 35px rgba(15,23,42,.1)}h1{font-size:23px;margin:0 0 12px}.sub{color:#64748b;font-size:15px;line-height:1.7;margin-bottom:22px}.btn{display:block;text-decoration:none;text-align:center;padding:11px;border-radius:9px;background:#1769aa;color:#fff;font-weight:700}</style></head><body><main class="card"><h1>沒有管理員權限</h1><div class="sub">目前登入的賽程帳號沒有管理員權限，請聯絡賽程管理員設定。</div><a class="btn" href="/Sched/">返回賽程</a></main></body></html>';
     exit;
 }
 
