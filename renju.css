@@ -122,7 +122,7 @@ hr { border: 0; border-top: 1px solid var(--renju-border); margin: 1.25rem 0; }
   padding: 9px 7px 8px;
   background: linear-gradient(145deg, rgba(255,254,250,.99), rgba(247,247,242,.99));
   color: #203743;
-  border: 1px solid rgba(194,183,161,.45); border-top: 2px solid #c5a36b;
+  border: 1px solid rgba(194,183,161,.45);
   border-radius: 0 0 14px 14px;
   box-shadow: 0 20px 40px rgba(9,36,41,.19), inset 0 1px 0 rgba(255,255,255,.94);
   opacity: 0; visibility: hidden; pointer-events: none;
