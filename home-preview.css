@@ -114,14 +114,6 @@ body.tra-home {
   transform: translateY(-5px);
   transition: opacity .16s ease, visibility .16s ease, transform .16s ease;
 }
-.tra-home #menu .submenu::before {
-  content: "";
-  display: block;
-  width: 30px;
-  height: 2px;
-  margin: 1px 0 7px 13px;
-  background: linear-gradient(to right, #b48c51, rgba(180,140,81,0));
-}
 .tra-home #menu .menu-group:hover .submenu,
 .tra-home #menu .menu-group:focus-within .submenu,
 .tra-home #menu .menu-group.menu-open .submenu {
@@ -145,12 +137,12 @@ body.tra-home {
   font-weight: 550;
   letter-spacing: .055em;
   white-space: nowrap;
-  transition: color .16s ease, background-color .16s ease, box-shadow .16s ease;
+  transition: color .16s ease, background-color .16s ease;
 }
 .tra-home #menu .submenu a::before {
   content: "";
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   flex: none;
   border: 1.2px solid #b99b6c;
   transform: rotate(45deg);
@@ -160,7 +152,6 @@ body.tra-home {
 .tra-home #menu .submenu a:focus-visible {
   color: #0e4e52;
   background-color: #e7f0eb;
-  box-shadow: inset 3px 0 0 #b99a65;
 }
 .tra-menu-toggle { display: none; border: 1px solid #607c84; border-radius: 8px; padding: 9px 10px; background: none; color: #fff; }
 .tra-menu-toggle svg { display: block; }
@@ -331,7 +322,6 @@ body.tra-home {
     visibility: visible;
     pointer-events: auto;
   }
-  .tra-home #menu .submenu::before { display: none; }
   .tra-home #menu .submenu li + li { border-top: 0; }
   .tra-home #menu .menu-group.menu-open .submenu,
   .tra-home #menu .menu-group:focus-within .submenu { display: block; }
