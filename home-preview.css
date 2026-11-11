@@ -23,6 +23,7 @@ body.tra-home {
   -webkit-font-smoothing: antialiased;
 }
 .tra-home a { color: inherit; text-decoration: none; }
+.tra-home a:hover { text-decoration: none; }
 .tra-home button { font: inherit; cursor: pointer; }
 .tra-home a:focus-visible, .tra-home button:focus-visible {
   outline: 3px solid #d7af63;
