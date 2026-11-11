@@ -19,9 +19,9 @@ try {
     $pdo = connectDatabase('renjuorg_587');
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-    // SITE_NOTICE 中的比賽訊息與瑞士制系統已公開的活動，合併為「活動資訊」。
-    // 一律依日期新到舊排列，只有同日期才使用置頂及自訂順序決定先後。
-    // 未填日期的活動排最後，且不對外揭露未公開活動。
+    // SITE_NOTICE 中的比賽公告與「已勾選首頁顯示」的所有瑞士制賽事合併為「活動資訊」。
+    // 不依 brief_public 篩選：協會首頁是否刊登只受 events.show_on_homepage 控制。
+    // 一律依日期新到舊排列，同日才參考置頂與自訂順序。
     $activitySql = "
         SELECT 'notice' AS source, id AS source_id,
             DATE_FORMAT(notice_date, '%Y-%m-%d') AS published_date,
@@ -37,14 +37,14 @@ try {
         FROM SITE_NOTICE
         WHERE is_visible = 1 AND type = 'TOURNAMENT'
         UNION ALL
-        SELECT 'activity' AS source, id AS source_id,
+        SELECT 'event' AS source, id AS source_id,
             DATE_FORMAT(event_date, '%Y-%m-%d') AS published_date,
             name AS title,
-            CONCAT('/Sched/activity.html?id=', id) AS url,
+            CONCAT('/Sched/brief.html?id=', id) AS url,
             0 AS is_featured,
             0 AS sort_order
-        FROM `renjuorg_Sched`.`activities`
-        WHERE brief_public = 1
+        FROM `renjuorg_Sched`.`events`
+        WHERE show_on_homepage = 1
         ORDER BY published_date DESC, is_featured DESC, sort_order DESC, source DESC, source_id DESC
         {$limitSql}
     ";
@@ -67,8 +67,8 @@ try {
     $noticeTotal = (int)$pdo->query(
         "SELECT COUNT(*) FROM SITE_NOTICE WHERE is_visible = 1 AND type = 'TOURNAMENT'"
     )->fetchColumn();
-    $publishedActivitiesTotal = (int)$pdo->query(
-        "SELECT COUNT(*) FROM `renjuorg_Sched`.`activities` WHERE brief_public = 1"
+    $homepageEventsTotal = (int)$pdo->query(
+        "SELECT COUNT(*) FROM `renjuorg_Sched`.`events` WHERE show_on_homepage = 1"
     )->fetchColumn();
     $updateTotal = (int)$pdo->query(
         "SELECT COUNT(*) FROM SITE_NOTICE WHERE is_visible = 1 AND type IN ('UPDATE', 'NEWS')"
@@ -78,7 +78,7 @@ try {
         'activities' => $activities,
         'updates' => $updates,
         'totals' => [
-            'activities' => $noticeTotal + $publishedActivitiesTotal,
+            'activities' => $noticeTotal + $homepageEventsTotal,
             'updates' => $updateTotal,
         ],
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
