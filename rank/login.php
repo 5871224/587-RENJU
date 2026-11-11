@@ -65,23 +65,20 @@ if (!$schedAuthUser) {
         exit('請先登入。');
     }
 
-    $authAssetsDir = dirname(__DIR__) . '/Sched/assets';
-    $authJs = $authAssetsDir . '/rank-auth.js';
-    $authCss = $authAssetsDir . '/rank-auth.css';
-    $authJsVersion = is_file($authJs) ? (string)filemtime($authJs) : '0';
-    $authCssVersion = is_file($authCss) ? (string)filemtime($authCss) : '0';
+    // /Sched/rank-auth.html 是 Vite 正式產生的完整入口；它列出登入元件所需的
+    // 所有 CSS、shared chunks 和 JS。不能在這裡只手寫固定的兩個資產路徑，
+    // 否則共用對話框可能因樣式或模組遺漏而無法顯示。
+    $rankAuthEntry = dirname(__DIR__) . '/Sched/rank-auth.html';
+    if (!is_readable($rankAuthEntry)) {
+        error_log('rank shared login entry missing: ' . $rankAuthEntry);
+        http_response_code(503);
+        header('Content-Type: text/plain; charset=UTF-8');
+        exit('登入頁面暫時無法載入，請聯絡網站管理員。');
+    }
+
+    http_response_code(401);
     header('Content-Type: text/html; charset=UTF-8');
-    echo '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">'
-        . '<meta name="viewport" content="width=device-width,initial-scale=1">'
-        . '<title>排名管理登入</title>'
-        . '<script src="https://accounts.google.com/gsi/client" async defer></script>'
-        . '<script src="/Sched/assets/open-external-browser.js" defer></script>'
-        . '<link rel="stylesheet" href="/Sched/assets/rank-auth.css?v=' . $authCssVersion . '">'
-        . '<script type="module" src="/Sched/assets/rank-auth.js?v=' . $authJsVersion . '"></script>'
-        . '</head><body style="margin:0">'
-        . '<div id="rank-auth-app"><main style="min-height:100vh;display:grid;place-items:center;font-family:Arial,sans-serif">載入登入視窗…</main></div>'
-        . '<noscript>請開啟 JavaScript，才能登入排名管理後台。</noscript>'
-        . '</body></html>';
+    readfile($rankAuthEntry);
     exit;
 }
 
