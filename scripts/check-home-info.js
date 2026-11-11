@@ -15,12 +15,13 @@ assert.match(page, /id="update-info-more"[^>]*hidden/);
 assert.match(page, /js\/home-info\.js\?v=20261024a/);
 
 assert.match(endpoint, /FROM SITE_NOTICE[\s\S]*?type = 'TOURNAMENT'/, '比賽公告必須保留');
-assert.match(endpoint, /FROM `renjuorg_Sched`\.`activities`[\s\S]*?WHERE brief_public = 1/, '公開活動必須合併且不得曝光草稿');
+assert.match(endpoint, /FROM `renjuorg_Sched`\.`events`[\s\S]*?WHERE show_on_homepage = 1/, '協會首頁只顯示勾選首頁顯示的賽事');
+assert.doesNotMatch(endpoint, /FROM `renjuorg_Sched`\.`activities`/, '不得再讀取舊活動資料表');
 assert.match(endpoint, /UNION ALL/, '兩種活動共用一個排序查詢');
 assert.match(endpoint, /ORDER BY published_date DESC, is_featured DESC/, '日期優先於置頂');
-assert.match(endpoint, /CONCAT\('\/Sched\/activity\.html\?id=', id\)/, '活動應連往活動內容頁');
+assert.match(endpoint, /CONCAT\('\/Sched\/brief\.html\?id=', id\)/, '刊登賽事應連往共用簡章頁');
 assert.match(endpoint, /\$limitRaw !== 'all'/, '查看更多必須支援全部筆數');
-assert.match(endpoint, /'activities' => \$noticeTotal \+ \$publishedActivitiesTotal/, '總數包含兩個來源');
+assert.match(endpoint, /'activities' => \$noticeTotal \+ \$homepageEventsTotal/, '總數包含公告與已勾選賽事');
 
 assert.match(frontend, /fetchInfo\('all'\)/);
 assert.match(frontend, /state\.totals\[type\] <= INITIAL_LIMIT/, '超過 5 筆才顯示查看更多');
