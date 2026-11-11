@@ -170,10 +170,11 @@ if ($rankLogin -match 'rank_admin_password_hash|rank_admin_authenticated|passwor
     throw 'rank/login.php must not fall back to legacy independent credentials.'
 }
 
-# 未登入時必須留在 /rank/ 掛載同一個瑞士制登入元件，不可跳去賽程列表。
-foreach ($required in @('/Sched/assets/rank-auth.js', '/Sched/assets/rank-auth.css', 'rank-auth-app')) {
+# 未登入時直接輸出 Vite 完整產生的 Sched 登入頁，確保共用模組及所有 CSS 均被載入。
+# 不再檢查手寫的 JS/CSS URL（曾漏載共用對話框樣式）。
+foreach ($required in @('/Sched/rank-auth.html', 'is_readable($rankAuthEntry)', 'readfile($rankAuthEntry)', 'http_response_code(401)')) {
     if ($rankLogin -notmatch [regex]::Escape($required)) {
-        throw "rank/login.php is missing inline shared login entry: $required"
+        throw "rank/login.php is missing generated shared login entry: $required"
     }
 }
 if ($rankLogin -match 'Location:\s*/Sched/index\.html|login=rank') {
