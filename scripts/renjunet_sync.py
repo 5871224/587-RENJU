@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 from collections import Counter
 from pathlib import Path
 
-BASE_URL = os.environ.get("RENJUNET_SITE_URL", "https://587.renju.org.tw").rstrip("/")
+BASE_URL = os.environ.get("RENJUNET_SITE_URL", "https://www.renju.org.tw").rstrip("/")
 RIF = Path(os.environ.get("RENJUNET_RIF", "/tmp/renjunet.rif"))
 SOURCE_URL = "https://www.renju.net/game/download/xml/"
 TABLE_MAP = {
