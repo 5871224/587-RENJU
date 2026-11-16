@@ -38,7 +38,7 @@
     p.element.remove();
   }
   function enhance(table,settings){
-    if(!table||table.dataset.rankToolsReady==='1')return null;
+    if(!table||table.dataset.rankToolsReady==='1'||table.closest('.swiss-modal-table'))return null;
     const thead=table.tHead, tbody=table.tBodies[0];
     if(!thead||!tbody||!thead.rows.length)return null;
     const headers=Array.from(thead.rows[thead.rows.length-1].cells);
@@ -49,7 +49,7 @@
     if(wrapper)wrapper.classList.add('rank-table-scroll');
     const initialRows=Array.from(tbody.rows);
     const uniform=thead.rows.length===1&&headers.every(h=>h.colSpan===1)&&initialRows.every(r=>r.cells.length===headers.length&&Array.from(r.cells).every(c=>c.colSpan===1));
-    if(!uniform||table.closest('.swiss-modal-table'))return null;
+    if(!uniform)return null;
     const server=settings&&settings.server;
     const filters=new Map();
     if(server && server.filters && typeof server.filters==='object'){
