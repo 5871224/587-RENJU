@@ -45,5 +45,5 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_SERVER_DIR: ${{ vars.FTP_SERVER_DIR }}
           RENJUNET_RIF: /tmp/renjunet.rif
-          RENJUNET_SITE_URL: https://587.renju.org.tw
+          RENJUNET_SITE_URL: https://www.renju.org.tw
         run: python scripts/renjunet_sync.py
