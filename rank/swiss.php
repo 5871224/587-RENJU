@@ -146,7 +146,7 @@ if ($tour <= 0) {
 </div>
 <script src="swiss-ui.js?v=20260901c"></script>
 <script src="swiss-admin-ui.js?v=20260828a"></script>
-<script src="table-tools.js?v=20261023a"></script>
+<script src="table-tools.js?v=20261116b"></script>
 <script src="bottom-scroll.js?v=20261024a"></script>
 </body>
 </html>
